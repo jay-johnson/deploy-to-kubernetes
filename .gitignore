@@ -14,3 +14,4 @@
 *.retry
 *.png
 nohup.out
+postgres/.pgdeployment

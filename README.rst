@@ -186,6 +186,86 @@ Delete Persistent Volume and Claim
         kubectl delete pv redis-pv
         persistentvolume "redis-pv" deleted
 
+Deploy Postgres
+---------------
+
+Install Go
+==========
+
+Using Crunchy Data's postgres containers requires having go installed:
+
+::
+
+    # note this has only been tested on ubuntu 18.04:
+    sudo apt install golang-go
+    export GOPATH=$HOME/go
+    export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    go get github.com/blang/expenv
+
+Start
+=====
+
+::
+
+    ./postgres/deploy.sh
+
+Debug Postgres
+==============
+
+#.  Examine Postgres
+
+    ::
+
+        kubectl describe pod primary
+
+        Type    Reason     Age   From               Message
+        ----    ------     ----  ----               -------
+        Normal  Scheduled  2m    default-scheduler  Successfully assigned default/primary to dev
+        Normal  Pulling    2m    kubelet, dev       pulling image "crunchydata/crunchy-postgres:centos7-10.4-1.8.3"
+        Normal  Pulled     2m    kubelet, dev       Successfully pulled image "crunchydata/crunchy-postgres:centos7-10.4-1.8.3"
+        Normal  Created    2m    kubelet, dev       Created container
+        Normal  Started    2m    kubelet, dev       Started container
+
+#.  Examine Persistent Volume Claim
+
+    ::
+
+        kubectl get pvc
+        NAME                        STATUS    VOLUME           CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+        primary-pgdata              Bound     primary-pgdata   400M       RWX                           4m
+        redis-data-redis-master-0   Bound     redis-pv         10G        RWO                           32m
+
+#.  Examine Persistent Volume
+
+    ::
+
+        kubectl get pv
+        NAME             CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                               STORAGECLASS   REASON    AGE
+        primary-pgdata   400M       RWX            Retain           Bound     default/primary-pgdata                                       3m
+        redis-pv         10G        RWO            Retain           Bound     default/redis-data-redis-master-0                            32m
+
+#.  Check the NFS Server IP
+
+    If you see something about ``mount -t nfs <IP>:/data/k8/postgres``` when running ``describe pod primary`` like:
+
+    ::
+
+        Mounting arguments: --description=Kubernetes transient mount for /var/lib/kubelet/pods/6c1bfb39-8be2-11e8-8381-0800270864a8/volumes/kubernetes.io~nfs/primary-pgdata --scope -- mount -t nfs 192.168.0.35:/data/k8/postgres /var/lib/kubelet/pods/6c1bfb39-8be2-11e8-8381-0800270864a8/volumes/kubernetes.io~nfs/primary-pgdata
+
+    Then please delete the pv, pvc and primary postgres deployment before recreating the pv with the correct host ip address.
+
+    ::
+
+        kubectl delete service primary
+        kubectl delete pod primary
+        kubectl delete pvc primary-pgdata
+        kubectl delete pv primary-pgdata
+
+    ::
+
+        export CCP_NFS_IP=<NFS Server's IP Address>
+        ./postgres/deploy.sh
+
 Reset Cluster
 -------------
 
