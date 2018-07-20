@@ -4,11 +4,11 @@ Deploy to Kubernetes
 This is a work in progress guide for installing a kubernetes cluster with helm on a single Ubuntu host (validated on Ubuntu 18.04). Once the cluster is running, you can deploy the following docker containers:
 
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
+- `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
 
 In Progress
 ===========
 
-- `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
 - `Django REST API with JWT and Swagger <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__
 - `Django REST API Celery Workers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/worker/deployment.yaml>`__
 - `Jupyter <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/jupyter/deployment.yaml>`__
