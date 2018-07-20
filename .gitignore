@@ -1,0 +1,16 @@
+*.pyc
+.idea
+*.swp
+*.swo
+*.o
+*.pickle
+*.zlib
+*.gz
+*.tar
+*.tgz
+*.doctree
+*.bin
+*.xgb
+*.retry
+*.png
+nohup.out
