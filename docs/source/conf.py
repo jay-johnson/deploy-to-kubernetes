@@ -16,6 +16,17 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    'canonical_url': '',
+    'logo_only': False,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    # Toc options
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4
+}
 
 # -- Project information -----------------------------------------------------
 
@@ -78,7 +89,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -132,7 +143,9 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'DeploytoKuberenetes.tex', 'Deploy to Kuberenetes Documentation',
+    (master_doc,
+     'DeploytoKuberenetes.tex',
+     'Deploy to Kuberenetes Documentation',
      'Jay Johnson', 'manual'),
 ]
 
