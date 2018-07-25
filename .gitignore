@@ -15,3 +15,6 @@
 *.png
 nohup.out
 postgres/.pgdeployment
+
+# Sphinx documentation
+docs/build
