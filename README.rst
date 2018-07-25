@@ -6,10 +6,10 @@ This is a work in progress guide for installing a local kubernetes cluster with 
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
 - `Django REST API with JWT and Swagger <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/deployment.yml>`__
-- `Django REST API Celery Workers <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/workers/deployment.yml>`__
-- `Jupyter <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/jupyter/deployment.yaml>`__
+- `Django REST API Celery Workers <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/worker/deployment.yml>`__
+- `Jupyter <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/jupyter/deployment.yml>`__
 - `Core Celery Workers <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/core/deployment.yml>`__
-- `pgAdmin4 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/deployment.yml>`__
+- `pgAdmin4 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/crunchy-template-http.json>`__
 - `(Optional) Splunk with TCP and HEC Service Endpoints <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/splunk/deployment.yml>`__
 
 Getting Started
