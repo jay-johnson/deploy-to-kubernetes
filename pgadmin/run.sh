@@ -70,6 +70,7 @@ if [[ "${test_svc_pg_exists}" == "0" ]]; then
     else
         pushd ${pg_deployment_dir}
         git checkout ./examples/kube/${pg_service_name}/pgadmin4-http.json
+        git checkout ./examples/kube/primary/primary.json
         git pull
         popd
     fi
