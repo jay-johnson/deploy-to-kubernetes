@@ -118,12 +118,25 @@ Validate
 Deploy Redis and Postgres and the Nginx Ingress
 -----------------------------------------------
 
-Deploy Redis, the Postgres database with pgAdmin4, and the nginx-ingress using the following command.
+Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 on the cluster:
 
-.. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or redis will encounter issues
+.. note:: Postgres, pgAdmin4 and Redis use persistent volumes to store data outside the Kubernetes cluster using NFS-mounted volumes
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193476?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193476.png"/></a>
+
+Here are the commands from the video to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 on the cluster:
+
+.. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or Redis will encounter deployment issues
 
 ::
-
+    # note this has only been tested on Ubuntu 18.04:
+    sudo su
+    apt install golang-go
+    export GOPATH=$HOME/go
+    export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    go get github.com/blang/expenv
     ./deploy-resources.sh
 
 If you want to deploy splunk you can add it as an argument:
@@ -400,7 +413,7 @@ Using Crunchy Data's postgres containers requires having go installed:
 
 ::
 
-    # note this has only been tested on ubuntu 18.04:
+    # note this has only been tested on Ubuntu 18.04:
     sudo apt install golang-go
     export GOPATH=$HOME/go
     export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
