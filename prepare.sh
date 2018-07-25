@@ -48,7 +48,10 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 inf ""
 
 inf "installing google kubernetes repository"
-echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list 
+test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep apt.kubernetes.io | wc -l)
+if [[ "${test_if_found}" == "0" ]]; then
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+fi
 apt-get update
 inf ""
 
