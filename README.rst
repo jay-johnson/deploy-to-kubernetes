@@ -206,7 +206,6 @@ Login with:
 
 https://api.example.com/swagger
 
-
 View Jupyter
 ------------
 
@@ -542,6 +541,15 @@ Start
 
     ./jupyter/run.sh
 
+Login to Jupyter
+================
+
+Login with:
+
+- password: ``admin``
+
+https://jupyter.example.com
+
 Get Logs
 ========
 
@@ -566,21 +574,85 @@ Start
 
 ::
 
-    ./jupyter/run.sh
+    ./splunk/run.sh
+
+Login to Splunk
+===============
+
+Login with:
+
+- user: ``trex``
+- password: ``123321``
+
+https://splunk.example.com
+
+Searching in Splunk
+-------------------
+
+Here is the splunk searching command line tool I use with these included applications:
+
+https://github.com/jay-johnson/spylunking
+
+With search example documentation:
+
+https://spylunking.readthedocs.io/en/latest/scripts.html#examples
+
+Search using Spylunking
+-----------------------
+
+Find logs in splunk using the ``sp`` command line tool:
+
+::
+
+    sp -q 'index="antinex" | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Django REST API Logs in Splunk
+-----------------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=api | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Django Celery Worker Logs in Splunk
+----------------------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=worker | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Core Logs in Splunk
+------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=core | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Jupyter Logs in Splunk
+---------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=jupyter | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Example for debugging ``sp`` splunk connectivity from inside an API Pod:
+
+::
+
+    kubectl exec -it api-59496ccb5f-2wp5t -n default echo 'starting search' && /bin/bash -c "source /opt/venv/bin/activate && sp -q 'index="antinex" AND hostname=local' -u trex -p 123321 -a 10.101.107.205:8089 -i antinex"
 
 Get Logs
 ========
 
 ::
 
-    ./jupyter/logs.sh
+    ./splunk/logs.sh
 
-SSH into Jupyter
-================
+SSH into Splunk
+===============
 
 ::
 
-    ./jupyter/ssh.sh
+    ./splunk/ssh.sh
 
 Deploy Nginx Ingress
 --------------------
@@ -675,60 +747,6 @@ View Ingress Config
 ::
 
     ./splunk/view-ingress-config.sh
-
-Searching in Splunk
--------------------
-
-Here is the splunk searching command line tool I use with these included applications:
-
-https://github.com/jay-johnson/spylunking
-
-With search example documentation:
-
-https://spylunking.readthedocs.io/en/latest/scripts.html#examples
-
-Search using Spylunking
------------------------
-
-Find logs in splunk using the ``sp`` command line tool:
-
-::
-    
-    sp -q 'index="antinex" | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
-
-Find Django REST API Logs in Splunk
------------------------------------
-
-::
-
-    sp -q 'index="antinex" AND name=api | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
-
-Find Django Celery Worker Logs in Splunk
-----------------------------------------
-
-::
-
-    sp -q 'index="antinex" AND name=worker | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
-
-Find Core Logs in Splunk
-------------------------
-
-::
-
-    sp -q 'index="antinex" AND name=core | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
-
-Find Jupyter Logs in Splunk
----------------------------
-
-::
-
-    sp -q 'index="antinex" AND name=jupyter | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
-
-Example for debugging ``sp`` splunk connectivity from inside an API Pod:
-
-::
-
-    kubectl exec -it api-59496ccb5f-2wp5t -n default echo 'starting search' && /bin/bash -c "source /opt/venv/bin/activate && sp -q 'index="antinex" AND hostname=local' -u trex -p 123321 -a 10.101.107.205:8089 -i antinex"
 
 Troubleshooting
 ---------------
