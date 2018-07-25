@@ -48,21 +48,14 @@ spec:
         - cd /opt/antinex/core/docker/jupyter &&
           export HOME=/opt/antinex/core/docker/jupyter &&
           . /opt/venv/bin/activate &&
-          source /opt/antinex/api/envs/openshift-dev.env &&
-          env | sort &&
+          source /opt/antinex/api/envs/k8-splunk.env &&
           /opt/antinex/core/docker/jupyter/start-container.sh &&
-          tail -f /var/log/antinex/api/api.log
+          tail -f /var/log/antinex/jupyter/jupyter.log
         env:
-        - name: ANTINEX_URL
-          value: http://api-svc:8010
         - name: ANTINEX_USER
-          value: root
+          value: trex
         - name: ANTINEX_PASSWORD
           value: "123321"
-        - name: BROKER_URL
-          value: redis://redis-master:6379/6
-        - name: JUPYTER_PORT
-          value: "8888"
         - name: JUPYTER_PASS
           value: admin
         - name: DEPLOY_CONFIG
@@ -71,8 +64,6 @@ spec:
           value: jupyter
         - name: ENV_NAME
           value: k8
-        - name: SHARED_LOG_CFG
-          value: /opt/spylunking/spylunking/log/shared-logging.json
         - name: SPLUNK_USER
           value: trex
         - name: SPLUNK_PASSWORD
