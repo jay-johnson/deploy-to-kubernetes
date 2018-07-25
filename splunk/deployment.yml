@@ -1,0 +1,124 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    description: Splunk
+  name: splunk
+  labels:
+    app: splunk
+    purpose: logs
+    layer: logs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: splunk
+  template:
+    metadata:
+      labels:
+        app: splunk
+        purpose: logs
+        layer: logs
+    spec:
+      hostname: splunkenterprise
+      restartPolicy: Always
+      containers:
+      - image: splunk/splunk:7.0.3
+        imagePullPolicy: Always
+        name: splunk
+        ports:
+        - containerPort: 8000
+          name: splunk-web-port
+        - containerPort: 8088
+          name: splunk-api-port
+        - containerPort: 1514
+          name: splunk-tcp-port
+        - containerPort: 8089
+          name: splunk-hec-port
+        resources: {}
+        command: [
+          "/bin/sh",
+          "-c",
+          '/bin/echo "starting entrypoint" && 
+          cd /opt/splunk  && 
+          /bin/date -u +"%Y-%m-%d %H:%M:%S" && 
+          touch ./etc/.ui_login  && 
+          /bin/echo "building splunk starter" && 
+          /bin/echo "#!/bin/bash" > /opt/start-all.sh && 
+          /bin/echo "/usr/bin/nohup /bin/bash /sbin/entrypoint.sh start-service & > /opt/splunk/service.log " >> /opt/start-all.sh && 
+          /bin/chmod 777 /opt/start-all.sh && 
+          /bin/cat /opt/start-all.sh && 
+          /bin/echo "" && 
+          /bin/echo "starting initial splunk service to begin configuration" && 
+          /usr/bin/nohup /opt/start-all.sh &&
+          /bin/echo "sleeping for startup" && 
+          sleep 20 && 
+          /bin/echo "" && 
+          /bin/echo "loading remote login"  && 
+          /bin/date -u +"%Y-%m-%d %H:%M:%S" && 
+          /bin/date -u +"%Y-%m-%d %H:%M:%S" && 
+          /bin/echo "installing remote login support" && 
+          sed -i "/\\[general\\]/aallowRemoteLogin = always" /opt/splunk/etc/system/local/server.conf && 
+          /bin/echo "" && 
+          cat /opt/splunk/etc/system/local/server.conf && 
+          /bin/echo "" && 
+          /bin/date -u +"%Y-%m-%d %H:%M:%S" && 
+          /bin/echo "creating user" && 
+          ./bin/splunk 
+              add user trex 
+              -password 123321 
+              -role admin 
+              -auth admin:changeme && 
+          /bin/echo "" && 
+          /bin/echo "creating index" && 
+          ./bin/splunk 
+              add index antinex 
+              -auth "trex:123321" && 
+          /bin/echo "" && 
+          /bin/echo "enabling HEC in Global Settings" && 
+          ./bin/splunk http-event-collector 
+              enable -uri https://localhost:8089 
+              -auth "trex:123321" && 
+          /bin/echo "" && 
+          /bin/echo "creating token" && 
+          ./bin/splunk http-event-collector 
+              create antinex-token "antinex-token" 
+              -index antinex 
+              -sourcetype json 
+              -uri "https://localhost:8089" 
+              -auth "trex:123321" && 
+          /bin/echo "" && 
+          /bin/echo "enabling Token for HEC access" && 
+          ./bin/splunk http-event-collector 
+              enable -uri https://localhost:8089 
+              -name antinex-token 
+              -auth "trex:123321" && 
+          /bin/echo "" && 
+          /bin/echo "creating tcp interface port 1514" && 
+          /bin/echo "" >> /opt/splunk/etc/system/default/props.conf && 
+          /bin/echo "[usejson]" >> /opt/splunk/etc/system/default/props.conf && 
+          /bin/echo "SHOULD_LINEMERGE = false" >> /opt/splunk/etc/system/default/props.conf && 
+          /bin/echo "KV_MODE = json" >> /opt/splunk/etc/system/default/props.conf && 
+          /bin/echo "TIME_FORMAT = %Y-%m-%dT%H:%M:%S.%6N%:z" >> /opt/splunk/etc/system/default/props.conf && 
+          /bin/echo "" && 
+          /bin/echo "creating tcp interface port 1514" && 
+          ./bin/splunk add 
+              tcp 1514 
+              -sourcetype usejson 
+              -index antinex 
+              -auth "trex:123321" && 
+          /bin/echo "" && 
+          /bin/echo "restarting splunk" && 
+          ./bin/splunk restart && 
+          /bin/echo "done restarting splunk" && 
+          /bin/echo "" && 
+          /bin/echo "Boot completed." && 
+          /bin/date -u +"%Y-%m-%d %H:%M:%S"  && 
+          /bin/echo "" && 
+          tail -f /opt/splunk/service.log'
+        ]
+        env:
+        - name: SPLUNK_START_ARGS
+          value: --accept-license --answer-yes
+        - name: SPLUNK_ENABLE_LISTEN
+          value: "9997"

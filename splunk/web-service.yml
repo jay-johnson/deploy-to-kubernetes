@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: splunk-web-svc
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: splunk-web-port
+  selector:
+    app: splunk

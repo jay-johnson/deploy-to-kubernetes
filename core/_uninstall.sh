@@ -25,5 +25,16 @@ else
     }
 fi
 
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
+warn "------------------------------------------"
+warn "deleting core"
+inf ""
+
+inf "deleting deployment: core"
+kubectl delete deployment core
+inf ""
+
+inf "deleting secrets: core"
+kubectl delete secret core-secret
+inf ""
+
+good "done deleting: core"

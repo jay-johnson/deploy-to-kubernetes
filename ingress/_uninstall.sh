@@ -25,5 +25,12 @@ else
     }
 fi
 
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
+warn "------------------------------------------"
+warn "deleting ingress"
+inf ""
+
+good "kubectl delete -f ingress/nginx-ingress.yml"
+kubectl delete -f ingress/nginx-ingress.yml
+inf ""
+
+good "done deleting: ingress"

@@ -1,0 +1,86 @@
+{
+    "kind": "Service",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "pgadmin4-http",
+        "labels": {
+            "name": "pgadmin4-http"
+        }
+    },
+    "spec": {
+        "ports": [{
+            "name": "pgadmin4-http",
+            "protocol": "TCP",
+            "port": 5050,
+            "targetPort": 5050,
+            "nodePort": 0
+        }],
+        "selector": {
+            "name": "pgadmin4-http"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+    }
+}
+
+{
+    "kind": "Pod",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "pgadmin4-http",
+        "labels": {
+            "name": "pgadmin4-http"
+        }
+    },
+    "spec": {
+        "securityContext": {
+            $CCP_SECURITY_CONTEXT
+        },
+        "volumes": [
+            {
+                "name": "pgadmin",
+                "persistentVolumeClaim": {
+                    "claimName": "pgadmin4-http-data"
+                }
+            },
+            {
+                "name": "run",
+                "emptyDir": {}
+            }
+        ],
+        "containers": [
+            {
+                "name": "pgadmin",
+                "image": "$CCP_IMAGE_PREFIX/crunchy-pgadmin4:$CCP_PGADMIN_IMAGE_TAG",
+                "ports": [
+                    {
+                        "containerPort": 5050,
+                        "protocol": "TCP"
+                    }
+                ],
+                "env": [
+                    {
+                        "name": "PGADMIN_SETUP_EMAIL",
+                        "value": "$PGADMIN_SETUP_EMAIL"
+                    },
+                    {
+                        "name": "PGADMIN_SETUP_PASSWORD",
+                        "value": "$PGADMIN_SETUP_PASSWORD"
+                    }
+                ],
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/lib/pgadmin",
+                        "name": "pgadmin",
+                        "readOnly": false
+                    },
+                    {
+                        "mountPath": "/run/httpd",
+                        "name": "run",
+                        "readOnly": false
+                    }
+                ]
+            }
+        ]
+    }
+}

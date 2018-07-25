@@ -1,0 +1,17 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-config
+  namespace: default
+  annotations:
+    nginx.org/redirect-to-https: "true"
+data:
+  # Adding new entries here will make them appear as files in the deployment.
+  #
+  # Some optimizations guides I found helpful:
+  #
+  # https://github.com/agile6v/awesome-nginx
+  # http://articles.slicehost.com/2009/2/20/centos-nginx-configuration
+  # https://bjornjohansen.no/optimizing-https-nginx
+  # https://github.com/easypath/nginx-secure-configs
+  #

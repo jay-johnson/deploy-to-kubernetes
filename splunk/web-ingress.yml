@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: splunk-web-ingress
+  annotations:
+    nginx.org/redirect-to-https: True
+spec:
+  tls:
+  - hosts:
+    - splunk.example.com
+    secretName: splunk-secret
+  rules:
+  - host: splunk.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: splunk-web-svc
+          servicePort: 8000

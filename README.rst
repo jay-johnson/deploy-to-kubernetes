@@ -1,20 +1,16 @@
 Deploy to Kubernetes
 --------------------
 
-This is a work in progress guide for installing a kubernetes cluster with helm on a single Ubuntu host (validated on Ubuntu 18.04). Once the cluster is running, you can deploy the following docker containers:
+This is a work in progress guide for installing a local kubernetes cluster with helm on a single Ubuntu host (validated on Ubuntu 18.04). Once the cluster is running, you can deploy the following docker containers:
 
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
-
-In Progress
-===========
-
-- `Django REST API with JWT and Swagger <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__
-- `Django REST API Celery Workers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/worker/deployment.yaml>`__
+- `Django REST API with JWT and Swagger <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/deployment.yml>`__
+- `Django REST API Celery Workers <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/workers/deployment.yml>`__
 - `Jupyter <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/jupyter/deployment.yaml>`__
-- `Core Celery Workers <https://github.com/jay-johnson/antinex-core>`__
-- `Network Pipeline Receiver <https://github.com/jay-johnson/network-pipeline>`__
-- `pgAdmin4 <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt/blob/master/openshift/pgadmin4/crunchy-template-http.json>`__
+- `Core Celery Workers <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/core/deployment.yml>`__
+- `pgAdmin4 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/deployment.yml>`__
+- `(Optional) Splunk with TCP and HEC Service Endpoints <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/splunk/deployment.yml>`__
 
 Getting Started
 ---------------
@@ -76,15 +72,32 @@ Validate
     ::
 
         NAME                            READY     STATUS    RESTARTS   AGE
-        coredns-78fcdf6894-gcm2w        1/1       Running   0          34m
-        coredns-78fcdf6894-wjpp2        1/1       Running   0          34m
-        etcd-turbo                      1/1       Running   0          33m
-        kube-apiserver-turbo            1/1       Running   0          33m
-        kube-controller-manager-turbo   1/1       Running   0          33m
-        kube-flannel-ds-cgcq7           1/1       Running   0          34m
-        kube-proxy-f26hh                1/1       Running   0          34m
-        kube-scheduler-turbo            1/1       Running   0          33m
-        tiller-deploy-759cb9df9-khvfz   1/1       Running   0          34m
+        coredns-78fcdf6894-k8srv        1/1       Running   0          4m
+        coredns-78fcdf6894-xx8bt        1/1       Running   0          4m
+        etcd-dev                        1/1       Running   0          3m
+        kube-apiserver-dev              1/1       Running   0          3m
+        kube-controller-manager-dev     1/1       Running   0          3m
+        kube-flannel-ds-m8k9w           1/1       Running   0          4m
+        kube-proxy-p4blg                1/1       Running   0          4m
+        kube-scheduler-dev              1/1       Running   0          3m
+        tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
+
+    Or you can use the script:
+
+    ::
+
+        ./tools/pods-system.sh
+        kubectl get pods -n kube-system
+        NAME                            READY     STATUS    RESTARTS   AGE
+        coredns-78fcdf6894-k8srv        1/1       Running   0          4m
+        coredns-78fcdf6894-xx8bt        1/1       Running   0          4m
+        etcd-dev                        1/1       Running   0          3m
+        kube-apiserver-dev              1/1       Running   0          3m
+        kube-controller-manager-dev     1/1       Running   0          3m
+        kube-flannel-ds-m8k9w           1/1       Running   0          4m
+        kube-proxy-p4blg                1/1       Running   0          4m
+        kube-scheduler-dev              1/1       Running   0          3m
+        tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
 
 #.  Check Helm Verison
 
@@ -94,12 +107,146 @@ Validate
         Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
         Server: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
 
+Deploy Redis and Postgres and the Nginx Ingress
+-----------------------------------------------
+
+Deploy Redis, the Postgres database with pgAdmin4, and the nginx-ingress using the following command.
+
+.. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or redis will encounter issues.
+
+::
+
+    ./deploy-resources.sh
+
+If you want to deploy splunk you can add it as an argument:
+
+::
+
+    ./deploy-resources.sh splunk
+
+Start Applications
+------------------
+
+Start all applications with the command:
+
+::
+
+    ./start.sh
+
+If you want to deploy the splunk-ready application builds, you can add it as an argument:
+
+::
+
+    ./start.sh splunk
+
+Confirm Pods are Running
+========================
+
+Depending on how fast your network connection is the initial container downloads can take a few minutes. Please wait until all pods are ``Running`` before continuing.
+
+::
+
+    kubectl get pods
+
+Run a Database Migration
+------------------------
+
+To apply django database migrations, run the following command:
+
+::
+
+    ./api/migrate-db.sh
+
+Add Ingress Locations to /etc/hosts
+-----------------------------------
+
+When running locally, all ingress urls need to resolve on the network. Please append the following entries to your local ``/etc/hosts`` file on the ``127.0.0.1`` line:
+
+::
+
+    sudo vi /etc/hosts
+
+Append the entries to the existing ``127.0.0.1`` line:
+
+::
+
+    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com splunkapi.example.com splunktcp.example.com
+
+Create a User
+-------------
+
+Create the user ``trex`` with password ``123321`` on the REST API.
+
+::
+
+    ./api/create-user.sh
+
+Deployed Web Applications
+-------------------------
+
+Here are the hosted web application urls. These urls are made accessible by the included nginx-ingress.
+
+View Django REST Framework
+--------------------------
+
+Login with:
+
+- user: ``trex``
+- password: ``123321``
+
+https://api.example.com
+
+View Swagger
+------------
+
+Login with:
+
+- user: ``trex``
+- password: ``123321``
+
+https://api.example.com/swagger
+
+
+View Jupyter
+------------
+
+Login with:
+
+- password: ``admin``
+
+https://jupyter.example.com
+
+View pgAdmin
+------------
+
+Login with:
+
+- user: ``admin@admin.com``
+- password: ``123321``
+
+https://pgadmin.example.com
+
+View Splunk
+-----------
+
+Login with:
+
+- user: ``trex``
+- password: ``123321``
+
+https://splunk.example.com
+
+Standalone Deployments
+----------------------
+
+Below are steps to manually deploy each component in the stack with kubernetes.
+
 Deploy Redis
 ------------
 
 ::
 
-    ./redis/install-with-helm.sh
+    ./redis/run.sh
 
 Or manually with the commands:
 
@@ -205,9 +352,11 @@ Using Crunchy Data's postgres containers requires having go installed:
 Start
 =====
 
+Start the `Postgres container <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/postgres/deployment.yml>`__ within kubernetes:
+
 ::
 
-    ./postgres/deploy.sh
+    ./postgres/run.sh
 
 Debug Postgres
 ==============
@@ -264,10 +413,341 @@ Debug Postgres
     ::
 
         export CCP_NFS_IP=<NFS Server's IP Address>
-        ./postgres/deploy.sh
+        ./postgres/run.sh
+
+Deploy pgAdmin
+--------------
+
+Please confirm go is installed with the `Install Go section <https://github.com/jay-johnson/deploy-to-kubernetes#install-go>`__.
+
+Start
+=====
+
+Start the `pgAdmin4 container <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/deployment.yml>`__ within kubernetes:
+
+::
+
+    ./pgadmin/run.sh
+
+Get Logs
+========
+
+::
+
+    ./pgadmin/logs.sh
+
+SSH into pgAdmin
+================
+
+::
+
+    ./pgadmin/ssh.sh
+
+Deploy Django REST API
+----------------------
+
+Use these commands to manage the `Django REST Framework pods <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/deployment.yml>`__ within kubernetes.
+
+Start
+=====
+
+::
+
+    ./api/run.sh
+
+Run a Database Migration
+========================
+
+To apply a django database migration run the following command:
+
+::
+
+    ./api/migrate-db.sh
+
+Get Logs
+========
+
+::
+
+    ./api/logs.sh
+
+SSH into the API
+================
+
+::
+
+    ./api/ssh.sh
+
+Deploy Django Celery Workers
+----------------------------
+
+Use these commands to manage the `Django Celery Worker pods <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/worker/deployment.yml>`__ within kubernetes.
+
+Start
+=====
+
+::
+
+    ./worker/run.sh
+
+Get Logs
+========
+
+::
+
+    ./worker/logs.sh
+
+SSH into the Worker
+===================
+
+::
+
+    ./worker/ssh.sh
+
+Deploy AntiNex Core
+-------------------
+
+Use these commands to manage the `Backend AntiNex Core pods <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/core/deployment.yml>`__ within kubernetes.
+
+Start
+=====
+
+::
+
+    ./core/run.sh
+
+Get Logs
+========
+
+::
+
+    ./core/logs.sh
+
+SSH into the API
+================
+
+::
+
+    ./core/ssh.sh
+
+Deploy Jupyter
+--------------
+
+Use these commands to manage the `Jupyter pods <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/jupyter/deployment.yml>`__ within kubernetes.
+
+Start
+=====
+
+::
+
+    ./jupyter/run.sh
+
+Get Logs
+========
+
+::
+
+    ./jupyter/logs.sh
+
+SSH into Jupyter
+================
+
+::
+
+    ./jupyter/ssh.sh
+
+Deploy Splunk
+-------------
+
+Use these commands to manage the `Splunk container <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/splunk/deployment.yml>`__ within kubernetes.
+
+Start
+=====
+
+::
+
+    ./jupyter/run.sh
+
+Get Logs
+========
+
+::
+
+    ./jupyter/logs.sh
+
+SSH into Jupyter
+================
+
+::
+
+    ./jupyter/ssh.sh
+
+Deploy Nginx Ingress
+--------------------
+
+This project is currently using the `nginx-ingress <https://github.com/nginxinc/kubernetes-ingress>`__ instead of the `Kubernetes Ingress using nginx <https://github.com/kubernetes/ingress-nginx>`__. Use these commands to manage and debug the nginx ingress within kubernetes.
+
+.. note:: The default Yaml file annotations only work with the `nginx-ingress customizations <https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/customization#customization-of-nginx-configuration>`__.
+
+Start
+=====
+
+::
+
+    ./ingress/run.sh
+
+Get Logs
+========
+
+::
+
+    ./ingress/logs.sh
+
+SSH into the Ingress
+====================
+
+::
+
+    ./ingress/ssh.sh
+
+View Ingress Nginx Config
+-------------------------
+
+When troubleshooting the nginx ingress, it is helpful to view the nginx configs inside the container. Here is how to view the configs:
+
+::
+
+    ./ingress/view-configs.sh
+
+View a Specific Ingress Configuration
+-------------------------------------
+
+If you know the pod name and the namespace for the nginx-ingress, then you can view the configs from the command line with:
+
+
+::
+
+    app_name="jupyter"
+    app_name="pgadmin"
+    app_name="api"
+    use_namespace="default"
+    pod_name=$(kubectl get pods -n ${use_namespace} | awk '{print $1}' | grep nginx | head -1)
+    kubectl exec -it ${pod_name} -n ${use_namespace} cat /etc/nginx/conf.d/${use_namespace}-${app_name}-ingress.conf
+
+Deploy Splunk
+-------------
+
+Start
+=====
+
+To deploy splunk you can add the argument ``splunk`` to the `./deploy-resources.sh splunk <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/deploy-resources.sh>`__ script. Or you can manually run it with the command:
+
+::
+
+    ./splunk/run.sh
+
+Deploy Splunk-Ready Applications
+--------------------------------
+
+After deploying the splunk pod, you can deploy the splunk-ready applications with the command:
+
+::
+
+    ./start.sh splunk
+
+Get Logs
+========
+
+::
+
+    ./splunk/logs.sh
+
+SSH into Splunk
+===============
+
+::
+
+    ./splunk/ssh.sh
+
+View Ingress Config
+===================
+
+::
+
+    ./splunk/view-ingress-config.sh
+
+Searching in Splunk
+-------------------
+
+Here is the splunk searching command line tool I use with these included applications:
+
+https://github.com/jay-johnson/spylunking
+
+With search example documentation:
+
+https://spylunking.readthedocs.io/en/latest/scripts.html#examples
+
+Search using Spylunking
+-----------------------
+
+Find logs in splunk using the ``sp`` command line tool:
+
+::
+    
+    sp -q 'index="antinex" | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Django REST API Logs in Splunk
+-----------------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=api | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Django Celery Worker Logs in Splunk
+----------------------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=worker | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Core Logs in Splunk
+------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=core | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Find Jupyter Logs in Splunk
+---------------------------
+
+::
+
+    sp -q 'index="antinex" AND name=jupyter | head 20 | reverse' -u trex -p 123321 -a $(./splunk/get-api-fqdn.sh) -i antinex
+
+Example for debugging ``sp`` splunk connectivity from inside an API Pod:
+
+::
+
+    kubectl exec -it api-59496ccb5f-2wp5t -n default echo 'starting search' && /bin/bash -c "source /opt/venv/bin/activate && sp -q 'index="antinex" AND hostname=local' -u trex -p 123321 -a 10.101.107.205:8089 -i antinex"
+
+Troubleshooting
+---------------
+
+Out of IP Addresses
+===================
+
+Flannel can exhaust all available ip addresses in the CIDR network range. When this happens please run the following command to clean up the local cni network files:
+
+::
+
+    ./tools/reset-flannel-cni-networks.sh
 
 Reset Cluster
 -------------
+
+Please be careful as these commands will shutdown all containers and reset the Kubernetes cluster.
+
+.. note:: All created data should be persisted in the NFS ``/data/k8`` directories
 
 Run as root:
 
@@ -275,6 +755,14 @@ Run as root:
 
     sudo su
     kubeadm reset -f
+    ./prepare.sh
+
+Or use the file:
+
+::
+
+    sudo su
+    ./tools/cluster-reset.sh
 
 License
 -------

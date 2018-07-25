@@ -25,5 +25,12 @@ else
     }
 fi
 
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
+use_namespace="default"
+app_name="nginx"
+pod_name=$(kubectl get pods -n ${use_namespace} | awk '{print $1}' | grep ${app_name} | head -1)
+
+good "kubectl logs -f ${pod_name} -n ${use_namespace}"
+
+kubectl logs \
+    -f ${pod_name} \
+    -n ${use_namespace}

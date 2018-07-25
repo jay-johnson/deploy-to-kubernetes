@@ -25,5 +25,24 @@ else
     }
 fi
 
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
+warn "------------------------------------------"
+warn "deleting api"
+inf ""
+
+inf "deleting ingress: api-ingress"
+kubectl delete ingress api-ingress
+inf ""
+
+inf "deleting service: api-svc"
+kubectl delete svc api-svc
+inf ""
+
+inf "deleting deployment: api"
+kubectl delete deployment api
+inf ""
+
+inf "deleting secrets: api"
+kubectl delete secret api-secret
+inf ""
+
+good "done deleting: api"

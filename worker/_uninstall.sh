@@ -25,5 +25,16 @@ else
     }
 fi
 
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
+warn "------------------------------------------"
+warn "deleting worker"
+inf ""
+
+inf "deleting deployment: worker"
+kubectl delete deployment worker
+inf ""
+
+inf "deleting secrets: worker"
+kubectl delete secret worker-secret
+inf ""
+
+good "done deleting: worker"

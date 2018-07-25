@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: splunk-tcp-ingress
+spec:
+  rules:
+  - host: splunktcp.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: splunk-tcp-svc
+          servicePort: 1514

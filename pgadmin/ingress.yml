@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pgadmin-ingress
+  annotations:
+    nginx.org/redirect-to-https: True
+spec:
+  tls:
+  - hosts:
+    - pgadmin.example.com
+    secretName: pgadmin-secret
+  rules:
+  - host: pgadmin.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: pgadmin4-http
+          servicePort: 5050

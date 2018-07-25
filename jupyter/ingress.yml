@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jupyter-ingress
+  annotations:
+    nginx.org/websocket-services: "jupyter-svc"
+spec:
+  tls:
+  - hosts:
+    - jupyter.example.com
+    secretName: jupyter-secret
+  rules:
+  - host: jupyter.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jupyter-svc
+          servicePort: 8888

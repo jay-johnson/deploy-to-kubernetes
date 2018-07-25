@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx 
+  namespace: default

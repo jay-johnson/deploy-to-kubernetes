@@ -1,0 +1,117 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: api
+  annotations:
+    description: AntiNex API - Django REST Framework with JWT and Swagger - Celery Producer
+    runtime: python3
+  labels:
+    antinex: api
+    purpose: rest
+    layer: rest
+    auth: jwt
+    toolchain: swagger
+    messaging: redis
+    cache: redis
+    pubsub: publisher
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        purpose: rest
+        layer: rest
+        auth: jwt
+        toolchain: swagger
+        messaging: redis
+        cache: redis
+        pubsub: publisher
+    spec:
+      hostname: api
+      restartPolicy: Always
+      containers:
+      - image: jayjohnson/antinex-api:latest
+        imagePullPolicy: Always
+        name: api
+        ports:
+        - containerPort: 8010
+        resources: {}
+        command:
+        - /bin/bash
+        - -c
+        - cd /opt/antinex/api &&
+          . /opt/venv/bin/activate &&
+          source /opt/antinex/api/envs/openshift-no-hostnames.env &&
+          env | sort &&
+          /opt/antinex/api/run-django.sh
+        env:
+        - name: ANTINEX_AUTH_URL
+          value: redis://redis-master:6379/6
+        - name: ANTINEX_RESULT_AUTH_URL
+          value: redis://redis-master:6379/9
+        - name: ANTINEX_CA_CERTS
+        - name: ANTINEX_CERTFILE
+        - name: ANTINEX_DELIVERY_MODE
+          value: persistent
+        - name: ANTINEX_EXCHANGE_NAME
+          value: webapp.predict.requests
+        - name: ANTINEX_EXCHANGE_TYPE
+          value: topic
+        - name: ANTINEX_KEYFILE
+        - name: ANTINEX_QUEUE_NAME
+          value: webapp.predict.requests
+        - name: ANTINEX_TLS_PROTOCOL
+        - name: ANTINEX_WORKER_ENABLED
+          value: "1"
+        - name: ANTINEX_WORKER_ONLY
+          value: "0"
+        - name: ANTINEX_WORKER_SSL_ENABLED
+          value: "0"
+        - name: CACHEOPS_ENABLED
+          value: "1"
+        - name: CELERY_ENABLED
+          value: "1"
+        - name: COLLECT_STATICS
+          value: "1"
+        - name: DJANGO_ALLOWED_HOSTS
+          value: '*'
+        - name: DJANGO_CONFIGURATION
+          value: Development
+        - name: DJANGO_DEBUG
+          value: "yes"
+        - name: DJANGO_SECRET_KEY
+          value: supersecret
+        - name: DJANGO_TEMPLATE_DEBUG
+          value: "yes"
+        - name: ENVIRONMENT
+          value: Development
+        - name: NUM_WORKERS
+          value: "4"
+        - name: POSTGRES_HOST
+          value: postgres-primary
+        - name: POSTGRES_USER
+          value: antinex
+        - name: POSTGRES_PASSWORD
+          value: antinex
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: webapp
+        - name: REDIS_HOST
+          value: redis-master
+        - name: REDIS_PORT
+          value: "6379"
+        - name: USE_ENV
+          value: openshift-no-hostnames
+        - name: USE_VENV
+          value: /opt/venv
+        - name: WEBAPP_HOST
+          value: 0.0.0.0
+        - name: WEBAPP_PORT
+          value: "8010"
+        - name: HTTP_X_FORWARDED_PROTOCOL_KEY
+          value: HTTP_X_FORWARDED_PROTO

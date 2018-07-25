@@ -1,0 +1,93 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: jupyter
+  annotations:
+    description: Jupyter - Web Application for IPython Notebooks Data Science and Analysis
+    runtime: python3
+  labels:
+    app: jupyter
+    purpose: analysis
+    layer: web
+    users: data-scientists
+    auth: basic
+    messaging: redis
+    cache: redis
+    pubsub: publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter
+  template:
+    metadata:
+      labels:
+        app: jupyter
+        purpose: analysis
+        layer: web
+        users: data-scientists
+        auth: basic
+        messaging: redis
+        cache: redis
+        pubsub: publisher
+    spec:
+      hostname: jupyter
+      restartPolicy: Always
+      containers:
+      - image: jayjohnson/antinex-api:latest
+        name: jupyter
+        ports:
+        - containerPort: 8888
+        - containerPort: 8889
+        - containerPort: 8890
+        - containerPort: 6006
+        resources: {}
+        command:
+        - /bin/bash
+        - -c
+        - cd /opt/antinex/core/docker/jupyter &&
+          export HOME=/opt/antinex/core/docker/jupyter &&
+          . /opt/venv/bin/activate &&
+          source /opt/antinex/api/envs/openshift-dev.env &&
+          env | sort &&
+          /opt/antinex/core/docker/jupyter/start-container.sh &&
+          tail -f /var/log/antinex/api/api.log
+        env:
+        - name: ANTINEX_URL
+          value: http://api-svc:8010
+        - name: ANTINEX_USER
+          value: root
+        - name: ANTINEX_PASSWORD
+          value: "123321"
+        - name: BROKER_URL
+          value: redis://redis-master:6379/6
+        - name: JUPYTER_PORT
+          value: "8888"
+        - name: JUPYTER_PASS
+          value: admin
+        - name: DEPLOY_CONFIG
+          value: splunk
+        - name: LOG_NAME
+          value: jupyter
+        - name: ENV_NAME
+          value: k8
+        - name: SHARED_LOG_CFG
+          value: /opt/spylunking/spylunking/log/shared-logging.json
+        - name: SPLUNK_USER
+          value: trex
+        - name: SPLUNK_PASSWORD
+          value: "123321"
+        - name: SPLUNK_INDEX
+          value: antinex
+        - name: SPLUNK_ADDRESS
+          value: splunk-svc:8088
+        - name: SPLUNK_API_ADDRESS
+          value: splunk-svc:8089
+        - name: SPLUNK_TCP_ADDRESS
+          value: splunk-tcp-svc:1514
+        - name: SPLUNK_HANDLER_NAME
+          value: splunk
+        - name: SPLUNK_VERIFY
+          value: "1"
+        - name: SPLUNK_DEBUG
+          value: "0"
