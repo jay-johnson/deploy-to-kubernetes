@@ -36,12 +36,9 @@ pod_name=$(kubectl get pods -n ${use_namespace} | awk '{print $1}' | grep ${app_
 warn "-----------------------------------------"
 warn "starting database migrations: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/migrate-db.sh"
 warn "with command:"
-warn "kubectl exec -it ${pod_name} -n ${use_namespace} /bin/bash /opt/antinex/api/run-migrations.sh"
+warn "kubectl exec -it ${pod_name} -n ${use_namespace} -- /bin/bash -c \"export USE_ENV=k8 && ./run-migrations.sh\""
 
-kubectl exec -it \
-    ${pod_name} \
-    -n ${use_namespace} \
-    /bin/bash /opt/antinex/api/run-migrations.sh
+kubectl exec -it ${pod_name} -n ${use_namespace} -- /bin/bash -c "export USE_ENV=k8 && ./run-migrations.sh"
 
 good "done migrations"
 
