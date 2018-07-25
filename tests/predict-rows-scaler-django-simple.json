@@ -1,0 +1,100 @@
+{
+    "label": "Django-AntiNex-Simple-Scaler-DNN",
+    "predict_rows": [
+        {
+            "_dataset_index": 10,
+            "eth_type": 2041.0,
+            "idx": 40.0,
+            "ip_ihl": 5.0,
+            "ip_len": 100.0,
+            "ip_tos": 0.0,
+            "ip_version": 4.0,
+            "label_value": 1.0,
+            "tcp_dport": 8080.0,
+            "tcp_fields_options.MSS": 65495.0,
+            "tcp_fields_options.Timestamp": 1653838672.0,
+            "tcp_fields_options.WScale": 7.0,
+            "tcp_seq": 65072.0,
+            "tcp_sport": 38587.0
+        },
+        {
+            "_dataset_index": 11,
+            "eth_type": 2041.0,
+            "idx": 41.0,
+            "ip_ihl": 5.0,
+            "ip_len": 100.0,
+            "ip_tos": 0.0,
+            "ip_version": 4.0,
+            "label_value": 1.0,
+            "tcp_dport": 8080.0,
+            "tcp_fields_options.MSS": 65495.0,
+            "tcp_fields_options.Timestamp": 1653838672.0,
+            "tcp_fields_options.WScale": 7.0,
+            "tcp_seq": 65072.0,
+            "tcp_sport": 38587.0
+        }
+    ],
+    "ml_type": "classification",
+    "predict_feature": "label_value",
+    "features_to_process": [
+        "eth_type",
+        "idx",
+        "ip_ihl",
+        "ip_len",
+        "ip_tos",
+        "ip_version",
+        "tcp_dport",
+        "tcp_fields_options.MSS",
+        "tcp_fields_options.Timestamp",
+        "tcp_fields_options.WScale",
+        "tcp_seq",
+        "tcp_sport"
+    ],
+    "ignore_features": [
+    ],
+    "sort_values": [
+    ],
+    "seed": 42,
+    "test_size": 0.2,
+    "batch_size": 32,
+    "epochs": 10,
+    "num_splits": 2,
+    "loss": "binary_crossentropy",
+    "optimizer": "adam",
+    "metrics": [
+        "accuracy"
+    ],
+    "histories": [
+        "val_loss",
+        "val_acc",
+        "loss",
+        "acc"
+    ],
+    "model_desc": {
+        "layers": [
+            {
+                "num_neurons": 250,
+                "init": "uniform",
+                "activation": "relu"
+            },
+            {
+                "num_neurons": 1,
+                "init": "uniform",
+                "activation": "sigmoid"
+            }
+        ]
+    },
+    "label_rules": {
+        "labels": [
+            "not_attack",
+            "not_attack",
+            "attack"
+        ],
+        "label_values": [
+            -1,
+            0,
+            1
+        ]
+    },
+    "version": 1
+}

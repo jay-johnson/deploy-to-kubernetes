@@ -1,0 +1,38 @@
+{
+  "label": "Scaler-Close-Regression",
+  "dataset": "/opt/antinex/api/webapp/drf_network_pipeline/tests/datasets/stock.csv",
+  "ml_type": "regression",
+  "predict_feature": "close",
+  "features_to_process": [
+    "high",
+    "low",
+    "open",
+    "volume"
+  ],
+  "ignore_features": [],
+  "sort_values": [],
+  "seed": 7,
+  "test_size": 0.2,
+  "batch_size": 32,
+  "epochs": 50,
+  "num_splits": 2,
+  "loss": "mse",
+  "optimizer": "adam",
+  "metrics": [
+    "accuracy"
+  ],
+  "model_desc": {
+    "layers": [
+      {
+        "activation": "relu",
+        "init": "uniform",
+        "num_neurons": 200
+      },
+      {
+        "activation": null,
+        "init": "uniform",
+        "num_neurons": 1
+      }
+    ]
+  }
+}

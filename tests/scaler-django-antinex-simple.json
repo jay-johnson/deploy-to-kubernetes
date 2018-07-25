@@ -1,0 +1,67 @@
+{
+    "label": "Django-AntiNex-Simple-Scaler-DNN",
+    "dataset": "./drf_network_pipeline/tests/datasets/cleaned_attack_scans.csv",
+    "ml_type": "classification",
+    "predict_feature": "label_value",
+    "features_to_process": [
+        "eth_type",
+        "idx",
+        "ip_ihl",
+        "ip_len",
+        "ip_tos",
+        "ip_version",
+        "tcp_dport",
+        "tcp_fields_options.MSS",
+        "tcp_fields_options.Timestamp",
+        "tcp_fields_options.WScale",
+        "tcp_seq",
+        "tcp_sport"
+    ],
+    "ignore_features": [
+    ],
+    "sort_values": [
+    ],
+    "seed": 42,
+    "test_size": 0.2,
+    "batch_size": 32,
+    "epochs": 10,
+    "num_splits": 2,
+    "loss": "binary_crossentropy",
+    "optimizer": "adam",
+    "metrics": [
+        "accuracy"
+    ],
+    "histories": [
+        "val_loss",
+        "val_acc",
+        "loss",
+        "acc"
+    ],
+    "model_desc": {
+        "layers": [
+            {
+                "num_neurons": 250,
+                "init": "uniform",
+                "activation": "relu"
+            },
+            {
+                "num_neurons": 1,
+                "init": "uniform",
+                "activation": "sigmoid"
+            }
+        ]
+    },
+    "label_rules": {
+        "labels": [
+            "not_attack",
+            "not_attack",
+            "attack"
+        ],
+        "label_values": [
+            -1,
+            0,
+            1
+        ]
+    },
+    "version": 1
+}

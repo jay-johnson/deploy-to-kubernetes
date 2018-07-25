@@ -29,12 +29,20 @@ This guide installs the following systems and NFS volumes to prepare the host fo
 Install
 =======
 
+Here is a video showing the install process:
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193463?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193463.png"/></a>
+
 Run this as root.
 
 ::
 
     sudo su
     ./prepare.sh
+
+.. note:: This has only been tested on Ubuntu 18.04 and requires commenting out all swap entries in ``/etc/fstab`` to work
 
 Validate
 --------
@@ -112,7 +120,7 @@ Deploy Redis and Postgres and the Nginx Ingress
 
 Deploy Redis, the Postgres database with pgAdmin4, and the nginx-ingress using the following command.
 
-.. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or redis will encounter issues.
+.. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or redis will encounter issues
 
 ::
 
@@ -234,6 +242,56 @@ Login with:
 - password: ``123321``
 
 https://splunk.example.com
+
+Training AI with the Django REST API
+------------------------------------
+
+These steps install the `AntiNex python client <https://github.com/jay-johnson/antinex-client>`__ for training a deep neural network to predict attack packets from recorded network data (all of which is already included in the docker containers).
+
+#.  Create a virtual environment and install the client
+
+    ::
+
+        virtualenv -p python3 /opt/venv && source /opt/venv/bin/activate
+        pip install antinex-client
+
+#.  Watch the application logs
+
+
+    From a separate terminal, you can tail the Django REST API logs with the command:
+
+    ::
+
+        ./api/logs.sh
+
+    From a separate terminal, you can tail the Django Celery Worker logs with the command:
+
+    ::
+
+        ./worker/logs.sh
+
+    From a separate terminal, you can tail the AntiNex Core Worker logs with the command:
+
+    ::
+
+        ./core/logs.sh
+
+    .. note::  Use ``ctrl + c`` to stop these log tailing commands
+
+Train a Deep Neural Network on Kubernetes
+-----------------------------------------
+
+With virtual environment set up, we can use the client to train a deep neural network with the included datasets:
+
+.. note:: this can take a few minutes to finish depending on your hosting resources
+
+::
+
+    ai_train_dnn.py \
+        -a https://api.example.com \
+        -u trex \
+        -p 123321 \
+        -f ./tests/scaler-full-django-antinex-simple.json
 
 Standalone Deployments
 ----------------------
@@ -659,7 +717,7 @@ Deploy Nginx Ingress
 
 This project is currently using the `nginx-ingress <https://github.com/nginxinc/kubernetes-ingress>`__ instead of the `Kubernetes Ingress using nginx <https://github.com/kubernetes/ingress-nginx>`__. Use these commands to manage and debug the nginx ingress within kubernetes.
 
-.. note:: The default Yaml file annotations only work with the `nginx-ingress customizations <https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/customization#customization-of-nginx-configuration>`__.
+.. note:: The default Yaml file annotations only work with the `nginx-ingress customizations <https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/customization#customization-of-nginx-configuration>`__
 
 Start
 =====

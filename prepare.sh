@@ -51,8 +51,8 @@ inf "installing google kubernetes repository"
 test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep apt.kubernetes.io | wc -l)
 if [[ "${test_if_found}" == "0" ]]; then
     echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+    apt-get update
 fi
-apt-get update
 inf ""
 
 good "installing kubelet kubeadm kubernetes-cni from the google repository"
@@ -62,9 +62,9 @@ apt-get install -y \
     kubernetes-cni
 inf ""
 
-inf "turning off swap - please ensure it is disable in /etc/fstab"
-swapoff -a
+warn "turning off swap - please ensure it is disabled in all entries in /etc/fstab"
 # need to still disable swap in: /etc/fstab
+swapoff -a
 inf ""
 
 # for flannel to work must use the pod network cidr
