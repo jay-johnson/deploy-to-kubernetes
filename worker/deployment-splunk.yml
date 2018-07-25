@@ -110,7 +110,7 @@ spec:
         - name: HTTP_X_FORWARDED_PROTOCOL_KEY
           value: HTTP_X_FORWARDED_PROTO
         - name: BROKER_URL
-          value: redis://redis-master-master:6379/6
+          value: redis://redis-master:6379/6
         - name: SHARED_DIR
           value: /opt/data
         - name: DEPLOY_CONFIG
