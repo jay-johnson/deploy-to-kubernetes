@@ -118,15 +118,15 @@ Validate
 Deploy Redis and Postgres and the Nginx Ingress
 -----------------------------------------------
 
-Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 on the cluster:
-
-.. note:: Postgres, pgAdmin4 and Redis use persistent volumes to store data outside the Kubernetes cluster using NFS-mounted volumes
+Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and the pgAdmin4 as pods in the cluster:
 
 .. raw:: html
 
     <a href="https://asciinema.org/a/193476?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193476.png"/></a>
 
-Here are the commands from the video to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 on the cluster:
+.. note:: Postgres, pgAdmin4 and Redis use persistent volumes to store data outside the Kubernetes cluster using NFS-mounted volumes
+
+Here are the commands to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 in the cluster:
 
 .. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or Redis will encounter deployment issues
 
@@ -137,6 +137,7 @@ Here are the commands from the video to deploy Postgres, Redis, Nginx Ingress, a
     export GOPATH=$HOME/go
     export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
     go get github.com/blang/expenv
+    ./user-install-kubeconfig.sh
     ./deploy-resources.sh
 
 If you want to deploy splunk you can add it as an argument:
@@ -148,7 +149,13 @@ If you want to deploy splunk you can add it as an argument:
 Start Applications
 ------------------
 
-Start all applications with the command:
+Here is a video showing how to start the Django REST Framework, Celery Workers, Jupyter, and the AntiNex Core as pods in the cluster:
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193485?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193485.png"/></a>
+
+Start all applications as your user with the command:
 
 ::
 

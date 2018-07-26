@@ -34,7 +34,7 @@ spec:
       hostname: jupyter
       restartPolicy: Always
       containers:
-      - image: jayjohnson/antinex-api:latest
+      - image: jayjohnson/antinex-jupyter:latest
         name: jupyter
         ports:
         - containerPort: 8888
