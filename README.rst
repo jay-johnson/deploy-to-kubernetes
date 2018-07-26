@@ -325,7 +325,7 @@ While you wait, here is a video showing the training and get results:
 
 .. raw:: html
 
-    <a href="https://asciinema.org/a/193494?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193494.png"/></a>
+    <a href="https://asciinema.org/a/193494?autoplay=1" target="_blank"><img src="https://i.imgur.com/0hcMfti.png"/></a>
 
 Get the AI Job Record
 ---------------------
