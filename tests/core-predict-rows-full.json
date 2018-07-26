@@ -1,0 +1,121 @@
+{
+  "label": "Full-Django-AntiNex-Simple-Scaler-DNN",
+  "dataset": "/opt/antinex/antinex-datasets/v1/webapps/django/training-ready/v1_django_cleaned.csv",
+  "ml_type": "classification",
+  "publish_to_core": true,
+  "predict_feature": "label_value",
+  "features_to_process": [
+    "idx",
+    "arp_hwlen",
+    "arp_hwtype",
+    "arp_id",
+    "arp_op",
+    "arp_plen",
+    "arp_ptype",
+    "dns_default_aa",
+    "dns_default_ad",
+    "dns_default_an",
+    "dns_default_ancount",
+    "dns_default_ar",
+    "dns_default_arcount",
+    "dns_default_cd",
+    "dns_default_id",
+    "dns_default_length",
+    "dns_default_ns",
+    "dns_default_nscount",
+    "dns_default_opcode",
+    "dns_default_qd",
+    "dns_default_qdcount",
+    "dns_default_qr",
+    "dns_default_ra",
+    "dns_default_rcode",
+    "dns_default_rd",
+    "dns_default_tc",
+    "dns_default_z",
+    "dns_id",
+    "eth_id",
+    "eth_type",
+    "icmp_addr_mask",
+    "icmp_code",
+    "icmp_gw",
+    "icmp_id",
+    "icmp_ptr",
+    "icmp_seq",
+    "icmp_ts_ori",
+    "icmp_ts_rx",
+    "icmp_ts_tx",
+    "icmp_type",
+    "icmp_unused",
+    "ip_id",
+    "ip_ihl",
+    "ip_len",
+    "ip_tos",
+    "ip_version",
+    "ipv6_fl",
+    "ipv6_hlim",
+    "ipv6_nh",
+    "ipv6_plen",
+    "ipv6_tc",
+    "ipv6_version",
+    "ipvsix_id",
+    "pad_id",
+    "tcp_dport",
+    "tcp_fields_options.MSS",
+    "tcp_fields_options.NOP",
+    "tcp_fields_options.SAckOK",
+    "tcp_fields_options.Timestamp",
+    "tcp_fields_options.WScale",
+    "tcp_id",
+    "tcp_seq",
+    "tcp_sport",
+    "udp_dport",
+    "udp_id",
+    "udp_len",
+    "udp_sport"
+  ],
+  "ignore_features": [],
+  "sort_values": [],
+  "seed": 42,
+  "test_size": 0.2,
+  "batch_size": 32,
+  "epochs": 15,
+  "num_splits": 2,
+  "loss": "binary_crossentropy",
+  "optimizer": "adam",
+  "metrics": [
+    "accuracy"
+  ],
+  "histories": [
+    "val_loss",
+    "val_acc",
+    "loss",
+    "acc"
+  ],
+  "model_desc": {
+    "layers": [
+      {
+        "num_neurons": 200,
+        "init": "uniform",
+        "activation": "relu"
+      },
+      {
+        "num_neurons": 1,
+        "init": "uniform",
+        "activation": "sigmoid"
+      }
+    ]
+  },
+  "label_rules": {
+    "labels": [
+      "not_attack",
+      "not_attack",
+      "attack"
+    ],
+    "label_values": [
+      -1,
+      0,
+      1
+    ]
+  },
+  "version": 1
+}

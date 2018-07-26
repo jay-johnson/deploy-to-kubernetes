@@ -12,6 +12,10 @@ This is a work in progress guide for installing a local Kubernetes cluster with 
 - `pgAdmin4 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/crunchy-template-http.json>`__
 - `(Optional) Splunk with TCP and HEC Service Endpoints <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/splunk/deployment.yml>`__
 
+Please ensure the Ubuntu host has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot from a recent AI training test with only 3 cores:
+
+.. image:: https://i.imgur.com/KQ7MBdM.png
+
 Getting Started
 ---------------
 
@@ -314,12 +318,7 @@ With virtual environment set up, we can use the client to train a deep neural ne
 
 ::
 
-    ai \
-        -a https://api.example.com \
-        -u trex \
-        -p 123321 \
-        -s \
-        -f ./tests/scaler-full-django-antinex-simple.json
+    ai -a https://api.example.com -u trex -p 123321 -s -f ./tests/scaler-full-django-antinex-simple.json
 
 While you wait, here is a video showing the training and get results:
 
