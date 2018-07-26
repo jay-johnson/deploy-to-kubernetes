@@ -314,11 +314,32 @@ With virtual environment set up, we can use the client to train a deep neural ne
 
 ::
 
-    ai_train_dnn.py \
+    ai \
         -a https://api.example.com \
         -u trex \
         -p 123321 \
+        -s \
         -f ./tests/scaler-full-django-antinex-simple.json
+
+While you wait, here is a video showing the training and get results:
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193494?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193494.png"/></a>
+
+Get the AI Job Record
+---------------------
+
+::
+
+    ai_get_job.py -a https://api.example.com -u trex -p 123321 -i 1
+
+Get the AI Training Job Results
+-------------------------------
+
+::
+
+    ai_get_results.py -a https://api.example.com -u trex -p 123321 -i 1 -s
 
 Standalone Deployments
 ----------------------
