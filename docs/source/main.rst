@@ -131,6 +131,7 @@ Here are the commands to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 in 
 .. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or Redis will encounter deployment issues
 
 ::
+
     # note this has only been tested on Ubuntu 18.04:
     sudo su
     apt install golang-go
@@ -779,7 +780,6 @@ View a Specific Ingress Configuration
 -------------------------------------
 
 If you know the pod name and the namespace for the nginx-ingress, then you can view the configs from the command line with:
-
 
 ::
 
