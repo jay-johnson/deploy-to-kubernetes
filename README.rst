@@ -179,7 +179,13 @@ Depending on how fast your network connection is the initial container downloads
 Run a Database Migration
 ------------------------
 
-To apply django database migrations, run the following command:
+Here is a video showing how to apply database schema migrations in the cluster:
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193491?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193491.png"/></a>
+
+To apply new Django database migrations, run the following command:
 
 ::
 
