@@ -25,13 +25,40 @@ else
     }
 fi
 
+# reload the apps on startup by calling it with:
+# ./start.sh -r
+#
+# reload with splunk enabled:
+# ./start.sh -r splunk
+# or
+# ./start.sh splunk -r
+
+should_cleanup_before_startup=0
 extra_params=""
-if [[ "${SPLUNK_USER}" != "" ]] && [[ "${SPLUNK_PASSWORD}" != "" ]] && [[ "${SPLUNK_TCP_ADDRESS}" != "" ]]; then
-    extra_params="splunk"
-elif [[ "${1}" == "splunk" ]]; then
-    extra_params="splunk"
-elif [[ "${1}" == "splunk/" ]]; then
-    extra_params="splunk"
+for i in "$@"
+do
+    if [[ "${i}" == "splunk" ]] || [[ "${i}" == "splunk/" ]]; then
+        if [[ "${extra_params}" == "" ]]; then
+            extra_params="splunk"
+        else
+            extra_params="${extra_param} splunk"
+        fi
+    elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
+        should_cleanup_before_startup=1
+    fi
+done
+
+if [[ "${should_cleanup_before_startup}" == "1" ]]; then
+    warn "deleting apps before start"
+    anmt " - deleting api"
+    ./api/_uninstall.sh
+    anmt " - deleting worker"
+    ./worker/_uninstall.sh
+    anmt " - deleting core"
+    ./core/_uninstall.sh
+    anmt " - deleting jupyter"
+    ./jupyter/_uninstall.sh
+    inf "done"
 fi
 
 anmt "starting api: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/run.sh ${extra_params}"

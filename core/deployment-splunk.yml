@@ -40,6 +40,7 @@ spec:
         - cd /opt/antinex/core &&
           . /opt/venv/bin/activate &&
           source /opt/antinex/api/envs/k8-splunk.env &&
+          export CORE_EXTRA_ARGS="--without-heartbeat --without-gossip" &&
           /opt/antinex/core/run-antinex-core.sh
         env:
         - name: POSTGRES_USER
