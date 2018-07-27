@@ -1,7 +1,11 @@
-Deploy to Kubernetes
---------------------
+Deploy a Distributed Stack to Kubernetes
+----------------------------------------
 
-This is a work in progress guide for installing a local Kubernetes cluster with helm on a single Ubuntu host (validated on Ubuntu 18.04). Once the cluster is running, you can deploy the following docker containers to run the `AntiNex stack <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__:
+.. image:: https://i.imgur.com/EyGdy9d.png
+
+Install and manage a Kubernetes cluster with helm on a single Ubuntu host. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
+
+This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes cluster:
 
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
