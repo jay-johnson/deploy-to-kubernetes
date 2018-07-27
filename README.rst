@@ -19,7 +19,7 @@ This guide was built for deploying the `AntiNex stack of docker containers <http
 Getting Started
 ---------------
 
-.. note:: please ensure the Ubuntu host has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot from a recent AI training test with only 3 cores:
+.. note:: Please ensure the Ubuntu host has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot from a recent AI training test with only 3 cores:
 
     .. image:: https://i.imgur.com/KQ7MBdM.png
 
