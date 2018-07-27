@@ -1,7 +1,7 @@
 Deploy a Distributed Stack to Kubernetes
 ----------------------------------------
 
-.. image:: https://i.imgur.com/EyGdy9d.png
+.. image:: https://i.imgur.com/qiyhAq9.png
 
 Install and manage a Kubernetes cluster with helm on a single Ubuntu host. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
 
