@@ -21,12 +21,12 @@ This guide was built for deploying the `AntiNex stack of docker containers <http
 - `pgAdmin4 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/pgadmin/crunchy-template-http.json>`__
 - `(Optional) Splunk with TCP and HEC Service Endpoints <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/splunk/deployment.yml>`__
 
+Getting Started
+---------------
+
 .. note:: please ensure the Ubuntu host has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot from a recent AI training test with only 3 cores:
 
     .. image:: https://i.imgur.com/KQ7MBdM.png
-
-Getting Started
----------------
 
 Overview
 ========
