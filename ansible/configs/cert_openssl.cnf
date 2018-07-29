@@ -1,0 +1,22 @@
+[req]
+days                   = 2000
+serial                 = 1
+distinguished_name     = req_distinguished_name
+x509_extensions        = v3_ca
+
+
+[req_distinguished_name]
+countryName            = US
+stateOrProvinceName    = WA
+localityName           = Redmond
+organizationName       = SecureEverything
+organizationalUnitName = SecureEverythingOrgUnit
+commonName             = SecureEverything
+
+[ v3_ca ]
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+basicConstraints       = CA:TRUE
+keyUsage               = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign
+subjectAltName         = DNS:*.localdev.com, DNS:redis.localdev.com, DNS:rabbitmq.localdev.com, DNS:jupyter.localdev.com, DNS:jenkins.localdev.com, DNS:www.localdev.com, DNS:api.localdev.com, DNS:db.localdev.com, DNS:pgadmin.localdev.com, DNS:phpmyadmin.localdev.com, DNS:kibana.localdev.com, DNS:lb.localdev.com, DNS:docker.localdev.com, email:admin@localdev.com
+issuerAltName          = issuer:copy

@@ -1,0 +1,12 @@
+[ req ]
+prompt              = no
+default_bits        = 2048
+distinguished_name  = req_distinguished_name # where to get DN for reqs
+
+[ req_distinguished_name ]
+C  = US
+ST = WA
+L  = Redmond
+O  = SecureEverything
+OU = SecureEverythingOrgUnit
+CN = LocalDev

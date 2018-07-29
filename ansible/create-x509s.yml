@@ -1,0 +1,514 @@
+- hosts: all
+  connection: local
+  gather_facts: no
+
+  pre_tasks:
+    - set_fact: cert_config="./configs/cert_openssl.cnf"
+    - set_fact: src_ca_srl="./configs/ssl/ca.srl"
+    - set_fact: src_ext_file="./configs/extfile.cnf"
+    - set_fact: dst_ext_file="./ssl/extfile.cnf"
+    - set_fact: rabbitmq_server_key="./ssl/rabbitmq_server_key.pem"
+    - set_fact: redis_server_key="./ssl/redis_server_key.pem"
+    - set_fact: jupyter_server_key="./ssl/jupyter_server_key.pem"
+    - set_fact: jenkins_server_key="./ssl/jenkins_server_key.pem"
+    - set_fact: webserver_server_key="./ssl/webserver_server_key.pem"
+    - set_fact: restapi_server_key="./ssl/restapi_server_key.pem"
+    - set_fact: database_server_key="./ssl/database_server_key.pem"
+    - set_fact: pgadmin_server_key="./ssl/pgadmin_server_key.pem"
+    - set_fact: phpmyadmin_server_key="./ssl/phpmyadmin_server_key.pem"
+    - set_fact: kibana_server_key="./ssl/kibana_server_key.pem"
+    - set_fact: nginx_server_key="./ssl/nginx_server_key.pem"
+    - set_fact: docker_server_key="./ssl/docker_server_key.pem"
+    - set_fact: rabbitmq_server_csr="./ssl/rabbitmq_server.csr"
+    - set_fact: redis_server_csr="./ssl/redis_server.csr"
+    - set_fact: jupyter_server_csr="./ssl/jupyter_server.csr"
+    - set_fact: jenkins_server_csr="./ssl/jenkins_server.csr"
+    - set_fact: webserver_server_csr="./ssl/webserver_server.csr"
+    - set_fact: restapi_server_csr="./ssl/restapi_server.csr"
+    - set_fact: database_server_csr="./ssl/database_server.csr"
+    - set_fact: pgadmin_server_csr="./ssl/pgadmin_server.csr"
+    - set_fact: phpmyadmin_server_csr="./ssl/phpmyadmin_server.csr"
+    - set_fact: kibana_server_csr="./ssl/kibana_server.csr"
+    - set_fact: nginx_server_csr="./ssl/nginx_server.csr"
+    - set_fact: docker_server_csr="./ssl/docker_server.csr"
+    - set_fact: rabbitmq_server_cert="./ssl/rabbitmq_server_cert.pem"
+    - set_fact: redis_server_cert="./ssl/redis_server_cert.pem"
+    - set_fact: jupyter_server_cert="./ssl/jupyter_server_cert.pem"
+    - set_fact: jenkins_server_cert="./ssl/jenkins_server_cert.pem"
+    - set_fact: webserver_server_cert="./ssl/webserver_server_cert.pem"
+    - set_fact: restapi_server_cert="./ssl/restapi_server_cert.pem"
+    - set_fact: database_server_cert="./ssl/database_server_cert.pem"
+    - set_fact: pgadmin_server_cert="./ssl/pgadmin_server_cert.pem"
+    - set_fact: phpmyadmin_server_cert="./ssl/phpmyadmin_server_cert.pem"
+    - set_fact: kibana_server_cert="./ssl/kibana_server_cert.pem"
+    - set_fact: nginx_server_cert="./ssl/nginx_server_cert.pem"
+    - set_fact: docker_server_cert="./ssl/docker_server_cert.pem"
+    - set_fact: client_key="./ssl/client_key.pem"
+    - set_fact: client_csr="./ssl/client.csr"
+    - set_fact: client_cert="./ssl/client_cert.pem"
+    - set_fact: ca_private_key="./ssl/ca_private_key.pem"
+    - set_fact: ca_file="./ssl/ca.pem"
+    - set_fact: country="US"
+    - set_fact: state="WA"
+    - set_fact: location="Redmond"
+    - set_fact: org="SecureEverything"
+    - set_fact: org_unit="SecureEverythingOrgUnit"
+    - set_fact: ca_org="Secure Everything"
+    - set_fact: ca_org_unit="Secure Everything Org Unit"
+    - set_fact: ca_common_name="Secure Everything Internet Authority"
+    - set_fact: common_name="SecureEverything"
+    - set_fact: fqdn="*.localdev.com"
+    - set_fact: rabbitmq_fqdn="rabbitmq.localdev.com"
+    - set_fact: redis_fqdn="redis.localdev.com"
+    - set_fact: jupyter_fqdn="jupyter.localdev.com"
+    - set_fact: jenkins_fqdn="jenkins.localdev.com"
+    - set_fact: webserver_fqdn="www.localdev.com"
+    - set_fact: restapi_fqdn="api.localdev.com"
+    - set_fact: database_fqdn="db.localdev.com"
+    - set_fact: pgadmin_fqdn="pgadmin.localdev.com"
+    - set_fact: phpmyadmin_fqdn="phpmyadmin.localdev.com"
+    - set_fact: kibana_fqdn="kibana.localdev.com"
+    - set_fact: nginx_fqdn="lb.localdev.com"
+    - set_fact: docker_fqdn="docker.localdev.com"
+    - set_fact: valid_days="365"
+
+  tasks:
+
+    - name: Set Default Subject
+      set_fact: subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}"
+    - name: Set CA Subject
+      set_fact: ca_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{ca_org}}/OU={{ca_org_unit}}/CN={{ca_common_name}}"
+    - name: Set RabbitMQ Subject={{rabbitmq_fqdn}}
+      set_fact: rabbitmq_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{rabbitmq_fqdn}}"
+    - name: Set Redis Subject={{redis_fqdn}}
+      set_fact: redis_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{redis_fqdn}}"
+    - name: Set Jenkins Subject={{jenkins_fqdn}}
+      set_fact: jenkins_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{jenkins_fqdn}}"
+    - name: Set Jupyter Subject={{jupyter_fqdn}}
+      set_fact: jupyter_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{jupyter_fqdn}}"
+    - name: Set Webserver Subject={{webserver_fqdn}}
+      set_fact: webserver_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{webserver_fqdn}}"
+    - name: Set REST API Subject={{restapi_fqdn}}
+      set_fact: restapi_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{restapi_fqdn}}"
+    - name: Set Database Subject={{database_fqdn}}
+      set_fact: database_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{database_fqdn}}"
+    - name: Set pgAdmin Subject={{pgadmin_fqdn}}
+      set_fact: pgadmin_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{pgadmin_fqdn}}"
+    - name: Set phpMyAdmin Subject={{phpmyadmin_fqdn}}
+      set_fact: phpmyadmin_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{phpmyadmin_fqdn}}"
+    - name: Set Kibana Subject={{kibana_fqdn}}
+      set_fact: kibana_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{kibana_fqdn}}"
+    - name: Set nginx Subject={{nginx_fqdn}}
+      set_fact: nginx_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{nginx_fqdn}}"
+    - name: Set Docker Subject={{docker_fqdn}}
+      set_fact: docker_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{docker_fqdn}}"
+
+    - name: Installing base OpenSSL config and Extfile
+      shell: cp {{src_ext_file}} {{dst_ext_file}}
+
+    - name: Create CA Private Key
+      command: openssl genrsa -out {{ca_private_key}} 4096
+
+    - name: Create CA
+      command: openssl req \
+        -config {{cert_config}} \
+        -nodes -new -x509 \
+        -days {{valid_days}} \
+        -key {{ca_private_key}} \
+        -sha256 \
+        -subj "{{ca_subject}}"
+        -out {{ca_file}}
+
+    - name: Create RabbitMQ Server Key
+      command: openssl genrsa \
+        -out {{rabbitmq_server_key}} 4096
+
+    - name: Create Redis Server Key
+      command: openssl genrsa \
+        -out {{redis_server_key}} 4096
+
+    - name: Create Jupyter Server Key
+      command: openssl genrsa \
+        -out {{jupyter_server_key}} 4096
+
+    - name: Create Jenkins Server Key
+      command: openssl genrsa \
+        -out {{jenkins_server_key}} 4096
+
+    - name: Create Webserver Server Key
+      command: openssl genrsa \
+        -out {{webserver_server_key}} 4096
+
+    - name: Create REST API Server Key
+      command: openssl genrsa \
+        -out {{restapi_server_key}} 4096
+
+    - name: Create Database Server Key
+      command: openssl genrsa \
+        -out {{database_server_key}} 4096
+
+    - name: Create pgAdmin Server Key
+      command: openssl genrsa \
+        -out {{pgadmin_server_key}} 4096
+
+    - name: Create phpMyAdmin Server Key
+      command: openssl genrsa \
+        -out {{phpmyadmin_server_key}} 4096
+
+    - name: Create Kibana Server Key
+      command: openssl genrsa \
+        -out {{kibana_server_key}} 4096
+
+    - name: Create nginx Server Key
+      command: openssl genrsa \
+        -out {{nginx_server_key}} 4096
+
+    - name: Create Docker Server Key
+      command: openssl genrsa \
+        -out {{docker_server_key}} 4096
+
+    - name: Create RabbitMQ Server CSR -subj={{rabbitmq_subject}}
+      command: openssl req \
+        -subj {{rabbitmq_subject}} \
+        -sha256 -new \
+        -key {{rabbitmq_server_key}} \
+        -out {{rabbitmq_server_csr}}
+
+    - name: Create Redis Server CSR -subj={{redis_subject}}
+      command: openssl req \
+        -subj {{redis_subject}} \
+        -sha256 -new \
+        -key {{redis_server_key}} \
+        -out {{redis_server_csr}}
+
+    - name: Create Jupyter Server CSR -subj={{jupyter_subject}}
+      command: openssl req \
+        -subj {{jupyter_subject}} \
+        -sha256 -new \
+        -key {{jupyter_server_key}} \
+        -out {{jupyter_server_csr}}
+
+    - name: Create Jenkins Server CSR -subj={{jenkins_subject}}
+      command: openssl req \
+        -subj {{jenkins_subject}} \
+        -sha256 -new \
+        -key {{jenkins_server_key}} \
+        -out {{jenkins_server_csr}}
+
+    - name: Create Webserver Server CSR -subj={{webserver_subject}}
+      command: openssl req \
+        -subj {{webserver_subject}} \
+        -sha256 -new \
+        -key {{webserver_server_key}} \
+        -out {{webserver_server_csr}}
+
+    - name: Create REST API Server CSR -subj={{restapi_subject}}
+      command: openssl req \
+        -subj {{restapi_subject}} \
+        -sha256 -new \
+        -key {{restapi_server_key}} \
+        -out {{restapi_server_csr}}
+
+    - name: Create Database Server CSR -subj={{database_subject}}
+      command: openssl req \
+        -subj {{database_subject}} \
+        -sha256 -new \
+        -key {{database_server_key}} \
+        -out {{database_server_csr}}
+
+    - name: Create pgAdmin Server CSR -subj={{pgadmin_subject}}
+      command: openssl req \
+        -subj {{pgadmin_subject}} \
+        -sha256 -new \
+        -key {{pgadmin_server_key}} \
+        -out {{pgadmin_server_csr}}
+
+    - name: Create phpMyAdmin Server CSR -subj={{phpmyadmin_subject}}
+      command: openssl req \
+        -subj {{phpmyadmin_subject}} \
+        -sha256 -new \
+        -key {{phpmyadmin_server_key}} \
+        -out {{phpmyadmin_server_csr}}
+
+    - name: Create Kibana Server CSR -subj={{kibana_subject}}
+      command: openssl req \
+        -subj {{kibana_subject}} \
+        -sha256 -new \
+        -key {{kibana_server_key}} \
+        -out {{kibana_server_csr}}
+
+    - name: Create nginx Server CSR -subj={{nginx_subject}}
+      command: openssl req \
+        -subj {{nginx_subject}} \
+        -sha256 -new \
+        -key {{nginx_server_key}} \
+        -out {{nginx_server_csr}}
+
+    - name: Create docker Server CSR -subj={{docker_subject}}
+      command: openssl req \
+        -subj {{docker_subject}} \
+        -sha256 -new \
+        -key {{docker_server_key}} \
+        -out {{docker_server_csr}}
+
+    - name: Generate RabbitMQ Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{rabbitmq_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{rabbitmq_server_cert}} \
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Redis Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{redis_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{redis_server_cert}} \
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Jenkins Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{jenkins_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{jenkins_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Webserver Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{webserver_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{webserver_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate REST API Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{restapi_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{restapi_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Database Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{database_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{database_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate pgAdmin Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{pgadmin_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{pgadmin_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate phpMyAdmin Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{phpmyadmin_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{phpmyadmin_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Kibana Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{kibana_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{kibana_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate nginx Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{nginx_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{nginx_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Docker Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{docker_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{docker_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Jupyter Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{jupyter_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{jupyter_server_cert}} 
+        -extfile {{dst_ext_file}}
+
+    - name: Create Client Key
+      command: openssl genrsa \
+        -out {{client_key}} 4096
+
+    - name: Create Client CSR
+      command: openssl req \
+        -subj '/CN=client' \
+        -new -key {{client_key}} \
+        -out {{client_csr}}
+
+    - name: Install Client Auth to extfile
+      command: echo extendedKeyUsage = clientAuth >> {{dst_ext_file}}
+
+    - name: Sign the Client Cert
+      command: openssl x509 
+        -req \
+        -days {{valid_days}} \
+        -sha256 \
+        -in {{client_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{client_cert}} \
+        -extfile {{cert_config}}
+
+    - name: Testing RabbitMQ Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{rabbitmq_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+    
+    - name: Verifying RabbitMQ Server Cert
+      fail:
+        msg: "Please check the server cert={{rabbitmq_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Redis Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{redis_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+    
+    - name: Verifying Redis Server Cert
+      fail:
+        msg: "Please check the server cert={{redis_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Jupyter Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{jupyter_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Jupyter Server Cert
+      fail:
+        msg: "Please check the server cert={{jupyter_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Jenkins Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{jenkins_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Jenkins Server Cert
+      fail:
+        msg: "Please check the server cert={{jenkins_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Webserver Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{webserver_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Webserver Server Cert
+      fail:
+        msg: "Please check the server cert={{webserver_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing REST API Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{restapi_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying REST API Server Cert
+      fail:
+        msg: "Please check the server cert={{restapi_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Database Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{database_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Database Server Cert
+      fail:
+        msg: "Please check the server cert={{database_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing pgAdmin Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{pgadmin_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying pgAdmin Server Cert
+      fail:
+        msg: "Please check the server cert={{pgadmin_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing phpMyAdmin Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{phpmyadmin_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying phpMyAdmin Server Cert
+      fail:
+        msg: "Please check the server cert={{phpmyadmin_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Kibana Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{kibana_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Kibana Server Cert
+      fail:
+        msg: "Please check the server cert={{kibana_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing nginx Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{nginx_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying nginx Server Cert
+      fail:
+        msg: "Please check the server cert={{nginx_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Docker Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{docker_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying Docker Server Cert
+      fail:
+        msg: "Please check the server cert={{docker_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing Client Cert
+      shell: openssl x509 -in {{client_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_client_cert
+    
+    - name: Verifying Client Cert
+      fail:
+        msg: "Please check the client cert={{client_cert}} was created correctly {{fqdn}} count={{test_client_cert}}"
+      when: test_client_cert.stdout != "0"
+    

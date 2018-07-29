@@ -856,6 +856,24 @@ View Ingress Config
 
     ./splunk/view-ingress-config.sh
 
+Create your own self-signed Keys, Certs and Certificate Authority with Ansible
+------------------------------------------------------------------------------
+
+If you have openssl installed you can use this ansible playbook to create your own certificate authority (CA), keys and certs.
+
+#.  Create the CA, Keys and Certificates
+
+    ::
+
+        cd ansible
+        ansible-playbook -i inventory_dev create-x509s.yml
+
+#.  Check the CA, x509, keys and certificates for the client and server were created
+
+    ::
+
+        ls -l ./ssl
+
 Troubleshooting
 ---------------
 
@@ -895,6 +913,28 @@ Or use the file:
 
     sudo su
     ./tools/cluster-reset.sh
+
+Development
+-----------
+
+Right now, the python virtual environment is only used to bring in ansible for running playbooks, but it will be used in the future with the kubernetes python client as I start using it more and more.
+
+::
+
+    virtualenv -p python3 /opt/venv && source /opt/venv/bin/activate && pip install -e .
+
+Testing
+-------
+
+::
+
+    py.test
+
+or
+
+::
+
+    python setup.py test
 
 License
 -------
