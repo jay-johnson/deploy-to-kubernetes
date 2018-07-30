@@ -9,4 +9,4 @@ ST = WA
 L  = Redmond
 O  = SecureEverything
 OU = SecureEverythingOrgUnit
-CN = LocalDev
+CN = example
