@@ -5,8 +5,8 @@ distinguished_name  = req_distinguished_name # where to get DN for reqs
 
 [ req_distinguished_name ]
 C  = US
-ST = WA
-L  = Redmond
-O  = SecureEverything
-OU = SecureEverythingOrgUnit
+ST = CA
+L  = City
+O  = example
+OU = example
 CN = example

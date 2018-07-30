@@ -7,11 +7,11 @@ x509_extensions        = v3_ca
 
 [req_distinguished_name]
 countryName            = US
-stateOrProvinceName    = WA
-localityName           = Redmond
-organizationName       = SecureEverything
-organizationalUnitName = SecureEverythingOrgUnit
-commonName             = SecureEverything
+stateOrProvinceName    = CA
+localityName           = City
+organizationName       = example
+organizationalUnitName = example
+commonName             = example
 
 [ v3_ca ]
 subjectKeyIdentifier   = hash
