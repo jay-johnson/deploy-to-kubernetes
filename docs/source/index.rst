@@ -945,6 +945,13 @@ If you notice things are not working correctly, you can quickly prevent yourself
 
     ./cert-manager/_uninstall.sh
 
+.. note:: If you get blocked due to rate-limits it will show up in the cert-manager logs like:
+
+   ::
+
+        I0731 07:53:43.313709       1 sync.go:273] Error issuing certificate for default/api.antinex.com-tls: error getting certificate from acme server: acme: urn:ietf:params:acme:error:rateLimited: Error finalizing order :: too many certificates already issued for exact set of domains: api.antinex.com: see https://letsencrypt.org/docs/rate-limits/
+        E0731 07:53:43.313738       1 sync.go:182] [default/api.antinex.com-tls] Error getting certificate 'api.antinex.com-tls': secret "api.antinex.com-tls" not found
+
 Debugging
 =========
 
