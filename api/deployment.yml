@@ -48,9 +48,23 @@ spec:
           source /opt/antinex/api/envs/k8.env &&
           /opt/antinex/api/run-django.sh
         env:
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api.webserver
+              key: secret_key
         - name: POSTGRES_USER
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: username
         - name: POSTGRES_PASSWORD
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: password
         - name: POSTGRES_DB
-          value: webapp
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: dbname

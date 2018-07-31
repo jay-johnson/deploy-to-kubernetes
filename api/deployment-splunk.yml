@@ -48,12 +48,26 @@ spec:
           source /opt/antinex/api/envs/k8-splunk.env &&
           /opt/antinex/api/run-django.sh
         env:
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api.webserver
+              key: secret_key
         - name: POSTGRES_USER
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: username
         - name: POSTGRES_PASSWORD
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: password
         - name: POSTGRES_DB
-          value: webapp
+          valueFrom:
+            secretKeyRef:
+              name: api.db
+              key: dbname
         - name: DEPLOY_CONFIG
           value: splunk
         - name: LOG_NAME
@@ -61,20 +75,47 @@ spec:
         - name: ENV_NAME
           value: k8
         - name: SPLUNK_USER
-          value: trex
+          valueFrom:
+            secretKeyRef:
+              name: splunk.user
+              key: username
         - name: SPLUNK_PASSWORD
-          value: "123321"
-        - name: SPLUNK_INDEX
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: splunk.user
+              key: password
         - name: SPLUNK_ADDRESS
-          value: splunk-svc:8088
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: hec
         - name: SPLUNK_API_ADDRESS
-          value: splunk-svc:8089
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: api
         - name: SPLUNK_TCP_ADDRESS
-          value: splunk-tcp-svc:1514
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: tcp
+        - name: SPLUNK_INDEX
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: index
         - name: SPLUNK_HANDLER_NAME
-          value: splunk
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: handler
         - name: SPLUNK_VERIFY
-          value: "1"
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: verify
         - name: SPLUNK_DEBUG
-          value: "0"
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: debug

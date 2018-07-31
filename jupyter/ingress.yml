@@ -2,15 +2,19 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: jupyter-ingress
+  namespace: default
   annotations:
     nginx.org/websocket-services: "jupyter-svc"
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: "nginx"
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-issuer"
 spec:
   tls:
   - hosts:
-    - jupyter.example.com
-    secretName: jupyter-secret
+    - jupyter.antinex.com
+    secretName: jupyter.antinex.com-tls
   rules:
-  - host: jupyter.example.com
+  - host: jupyter.antinex.com
     http:
       paths:
       - path: /

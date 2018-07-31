@@ -53,8 +53,18 @@ spec:
           tail -f /var/log/antinex/jupyter/jupyter.log
         env:
         - name: ANTINEX_USER
-          value: trex
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.api.user
+              key: username
         - name: ANTINEX_PASSWORD
-          value: "123321"
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.api.user
+              key: password
         - name: JUPYTER_PASS
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.user
+              key: password
+

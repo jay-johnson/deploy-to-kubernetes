@@ -34,6 +34,7 @@ fi
 # ./start.sh splunk -r
 
 should_cleanup_before_startup=0
+cert_env="staging"
 extra_params=""
 for i in "$@"
 do
@@ -45,6 +46,8 @@ do
         fi
     elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
         should_cleanup_before_startup=1
+    elif [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
     fi
 done
 
@@ -60,6 +63,10 @@ if [[ "${should_cleanup_before_startup}" == "1" ]]; then
     ./jupyter/_uninstall.sh
     inf "done"
 fi
+
+anmt "starting cert-manager: ${cert_env}"
+./cert-manager/run.sh ${cert_env}
+inf ""
 
 anmt "starting api: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/run.sh ${extra_params}"
 ./api/run.sh ${extra_params}

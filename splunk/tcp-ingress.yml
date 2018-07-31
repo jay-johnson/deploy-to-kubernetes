@@ -2,9 +2,10 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: splunk-tcp-ingress
+  namespace: default
 spec:
   rules:
-  - host: splunktcp.example.com
+  - host: splunktcp.antinex.com
     http:
       paths:
       - path: /

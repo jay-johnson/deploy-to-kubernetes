@@ -2,19 +2,13 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: splunk-ingress
+  namespace: default
 spec:
   rules:
-  - host: splunkhec.example.com
+  - host: splunkapi.antinex.com
     http:
       paths:
       - path: /
         backend:
-          serviceName: splunk-hec-svc
-          servicePort: 8088
-  - host: splunkapi.example.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: splunk-api-svc
+          serviceName: splunk-svc
           servicePort: 8089

@@ -1,5 +1,5 @@
-Deploy a Distributed Stack to Kubernetes
-----------------------------------------
+Deploying a Distributed AI Stack to Kubernetes on Ubuntu
+--------------------------------------------------------
 
 .. image:: https://i.imgur.com/qiyhAq9.png
 
@@ -7,6 +7,7 @@ Install and manage a Kubernetes cluster with helm on a single Ubuntu host. Once 
 
 This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes cluster:
 
+- `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
 - `Django REST API with JWT and Swagger <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/deployment.yml>`__
@@ -176,6 +177,14 @@ If you want to deploy the splunk-ready application builds, you can add it as an 
 
     ./start.sh splunk
 
+If you want to deploy the splunk-ready application builds with Let's Encrypt, you can add it as an argument:
+
+::
+
+    ./start.sh splunk prod
+
+.. note:: The `Cert Manager <https://github.com/jetstack/cert-manager>`__ is set to staging mode by default
+
 Confirm Pods are Running
 ========================
 
@@ -213,7 +222,7 @@ Append the entries to the existing ``127.0.0.1`` line:
 
 ::
 
-    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com splunkapi.example.com splunktcp.example.com
+    127.0.0.1   <leave-original-values-here> api.antinex.com jupyter.antinex.com pgadmin.antinex.com splunk.antinex.com splunkapi.antinex.com splunktcp.antinex.com
 
 Create a User
 -------------
@@ -237,7 +246,7 @@ Login with:
 - user: ``trex``
 - password: ``123321``
 
-https://api.example.com
+https://api.antinex.com
 
 View Swagger
 ------------
@@ -247,7 +256,7 @@ Login with:
 - user: ``trex``
 - password: ``123321``
 
-https://api.example.com/swagger
+https://api.antinex.com/swagger
 
 View Jupyter
 ------------
@@ -256,7 +265,7 @@ Login with:
 
 - password: ``admin``
 
-https://jupyter.example.com
+https://jupyter.antinex.com
 
 View pgAdmin
 ------------
@@ -266,7 +275,7 @@ Login with:
 - user: ``admin@admin.com``
 - password: ``123321``
 
-https://pgadmin.example.com
+https://pgadmin.antinex.com
 
 View Splunk
 -----------
@@ -276,7 +285,7 @@ Login with:
 - user: ``trex``
 - password: ``123321``
 
-https://splunk.example.com
+https://splunk.antinex.com
 
 Training AI with the Django REST API
 ------------------------------------
@@ -322,7 +331,7 @@ With virtual environment set up, we can use the client to train a deep neural ne
 
 ::
 
-    ai -a https://api.example.com -u trex -p 123321 -s -f ./tests/scaler-full-django-antinex-simple.json
+    ai -a https://api.antinex.com -u trex -p 123321 -s -f ./tests/scaler-full-django-antinex-simple.json
 
 While you wait, here is a video showing the training and get results:
 
@@ -335,14 +344,14 @@ Get the AI Job Record
 
 ::
 
-    ai_get_job.py -a https://api.example.com -u trex -p 123321 -i 1
+    ai_get_job.py -a https://api.antinex.com -u trex -p 123321 -i 1
 
 Get the AI Training Job Results
 -------------------------------
 
 ::
 
-    ai_get_results.py -a https://api.example.com -u trex -p 123321 -i 1 -s
+    ai_get_results.py -a https://api.antinex.com -u trex -p 123321 -i 1 -s
 
 Standalone Deployments
 ----------------------
@@ -657,7 +666,7 @@ Login with:
 
 - password: ``admin``
 
-https://jupyter.example.com
+https://jupyter.antinex.com
 
 Get Logs
 ========
@@ -693,7 +702,7 @@ Login with:
 - user: ``trex``
 - password: ``123321``
 
-https://splunk.example.com
+https://splunk.antinex.com
 
 Searching in Splunk
 -------------------
@@ -874,6 +883,83 @@ If you have openssl installed you can use this ansible playbook to create your o
 
         ls -l ./ssl
 
+Deploy Cert Manager with Let's Encrypt
+--------------------------------------
+
+Use these commands to manage the `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__ within Kubernetes. By default, the cert manager is deployed in staging mode. If you run it in production mode, then it will install real, valid x509 certificates from `Let's Encrypt <https://letsencrypt.org/>`__ into the nginx-ingress automatically.
+
+Start in Staging
+================
+
+If you want to restart all the applications, you can start the cert manager in staging mode with the command:
+
+::
+
+    ./start.sh
+
+Or manually with the command:
+
+::
+
+    ./cert-manager/run.sh
+
+Start with Let's Encrypt x509 SSL Certificates
+----------------------------------------------
+
+::
+
+    ./start.sh prod
+
+If you have splunk you can just add it to the arguments:
+
+::
+
+    ./start.sh splunk prod
+
+Or manually with the command:
+
+::
+
+    ./cert-manager/run.sh prod
+
+View Logs
+=========
+
+When using the production mode, make sure to view the logs to ensure you are not being blocked due to rate limiting:
+
+::
+
+    ./cert-manager/logs.sh
+
+Stop the Cert Manager
+---------------------
+
+If you notice things are not working correctly, you can quickly prevent yourself from getting blocked by stopping the cert manager with the command:
+
+::
+
+    ./cert-manager/_uninstall.sh
+
+Debugging
+=========
+
+To reduce debugging issues, the cert manager ClusterIssuer objects use the same name for staging and production mode. This is nice beacuse you do not have to update all the annotations to deploy on production vs staging:
+
+The cert manager starts and defines the issuer name for both production and staging as: 
+
+::
+
+    --set ingressShim.defaultIssuerName=letsencrypt-issuer
+
+Make sure to set any nginx ingress annotations that need Let's Encrypt SSL encryption to these values:
+
+::
+
+    annotations:
+      kubernetes.io/tls-acme: "true"
+      kubernetes.io/ingress.class: "nginx"
+      certmanager.k8s.io/cluster-issuer: "letsencrypt-issuer"
+
 Troubleshooting
 ---------------
 
@@ -913,6 +999,19 @@ Or use the file:
 
     sudo su
     ./tools/cluster-reset.sh
+
+Or the full reset and deploy once ready:
+
+::
+
+    sudo su
+    ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk/
+    exit
+    # as your user
+    ./user-install-kubeconfig.sh
+    # depending on testing vs prod:
+    # ./start.sh splunk
+    # ./start.sh splunk prod
 
 Development
 -----------

@@ -30,7 +30,7 @@ pw="123321"
 email="bugs@antinex.com"
 firstname="Guest"
 lastname="Guest"
-base_url="https://api.example.com"
+base_url="https://api.antinex.com"
 auth_url="${base_url}/users/"
 token_url="${base_url}/api-token-auth/"
 

@@ -53,11 +53,20 @@ spec:
           tail -f /var/log/antinex/jupyter/jupyter.log
         env:
         - name: ANTINEX_USER
-          value: trex
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.api.user
+              key: username
         - name: ANTINEX_PASSWORD
-          value: "123321"
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.api.user
+              key: password
         - name: JUPYTER_PASS
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: jupyter.user
+              key: password
         - name: DEPLOY_CONFIG
           value: splunk
         - name: LOG_NAME
@@ -65,20 +74,47 @@ spec:
         - name: ENV_NAME
           value: k8
         - name: SPLUNK_USER
-          value: trex
+          valueFrom:
+            secretKeyRef:
+              name: splunk.user
+              key: username
         - name: SPLUNK_PASSWORD
-          value: "123321"
-        - name: SPLUNK_INDEX
-          value: antinex
+          valueFrom:
+            secretKeyRef:
+              name: splunk.user
+              key: password
         - name: SPLUNK_ADDRESS
-          value: splunk-svc:8088
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: hec
         - name: SPLUNK_API_ADDRESS
-          value: splunk-svc:8089
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: api
         - name: SPLUNK_TCP_ADDRESS
-          value: splunk-tcp-svc:1514
+          valueFrom:
+            secretKeyRef:
+              name: splunk.endpoints
+              key: tcp
+        - name: SPLUNK_INDEX
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: index
         - name: SPLUNK_HANDLER_NAME
-          value: splunk
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: handler
         - name: SPLUNK_VERIFY
-          value: "1"
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: verify
         - name: SPLUNK_DEBUG
-          value: "0"
+          valueFrom:
+            secretKeyRef:
+              name: splunk.log
+              key: debug
