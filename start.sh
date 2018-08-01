@@ -34,7 +34,7 @@ fi
 # ./start.sh splunk -r
 
 should_cleanup_before_startup=0
-cert_env="staging"
+cert_env="dev"
 extra_params=""
 for i in "$@"
 do
@@ -42,7 +42,7 @@ do
         if [[ "${extra_params}" == "" ]]; then
             extra_params="splunk"
         else
-            extra_params="${extra_param} splunk"
+            extra_params="${extra_params} splunk"
         fi
     elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
         should_cleanup_before_startup=1
@@ -64,9 +64,17 @@ if [[ "${should_cleanup_before_startup}" == "1" ]]; then
     inf "done"
 fi
 
-anmt "starting cert-manager: ${cert_env}"
-./cert-manager/run.sh ${cert_env}
-inf ""
+if [[ "${extra_params}" == "" ]]; then
+    extra_params="${cert_env}"
+else
+    extra_params="${extra_params} ${cert_env}"
+fi
+
+if [[ "${cert_env}" == "prod" ]]; then
+    anmt "starting cert-manager with Lets Encrypt: ${cert_env}"
+    ./cert-manager/run.sh ${cert_env}
+    inf ""
+fi
 
 anmt "starting api: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/run.sh ${extra_params}"
 ./api/run.sh ${extra_params}

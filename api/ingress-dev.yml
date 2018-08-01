@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: default
+  annotations:
+    nginx.org/redirect-to-https: True
+spec:
+  tls:
+  - hosts:
+    - api.example.com
+    secretName: tls-restapi
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: api-svc
+          servicePort: 8010

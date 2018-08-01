@@ -30,7 +30,7 @@ pw="123321"
 email="bugs@antinex.com"
 firstname="Guest"
 lastname="Guest"
-base_url="https://api.antinex.com"
+base_url="https://api.example.com"
 auth_url="${base_url}/users/"
 token_url="${base_url}/api-token-auth/"
 
@@ -67,6 +67,10 @@ if [[ "${5}" != "" ]]; then
 fi
 if [[ "${API_LASTNAME}" != "" ]]; then
     lastname=${API_LASTNAME}
+fi
+
+if [[ "${API_URL}" != "" ]]; then
+    base_url=${API_URL}
 fi
 
 user_login_dict="{\"username\":\"${user}\",\"password\":\"${pw}\",\"email\":\"${email}\",\"first\":\"${firstname}\",\"last\":\"${lastname}\"}"

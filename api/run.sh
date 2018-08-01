@@ -25,10 +25,17 @@ else
     }
 fi
 
+should_cleanup_before_startup=0
 deploy_suffix=""
-if [[ "${1}" == "splunk" ]]; then
-    deploy_suffix="-splunk"
-fi
+cert_env="dev"
+for i in "$@"
+do
+    if [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    elif [[ "${i}" == "splunk" ]]; then
+        deploy_suffix="-splunk"
+    fi
+done
 
 use_path="."
 if [[ ! -e deployment.yml ]]; then
@@ -36,7 +43,7 @@ if [[ ! -e deployment.yml ]]; then
 fi
 
 anmt "----------------------------------------------------------------------------------"
-anmt "deploying api: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api"
+anmt "deploying api with cert_env=${cert_env}: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api"
 inf ""
 
 inf "applying secrets"
@@ -52,8 +59,8 @@ inf "applying service"
 kubectl apply -f ${use_path}/service.yml
 inf ""
 
-inf "applying ingress"
-kubectl apply -f ${use_path}/ingress.yml
+inf "applying ingress cert_env: ${cert_env}"
+kubectl apply -f ${use_path}/ingress-${cert_env}.yml
 inf ""
 
 good "done deploying: api"

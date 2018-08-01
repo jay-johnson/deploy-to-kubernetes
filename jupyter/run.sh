@@ -25,18 +25,25 @@ else
     }
 fi
 
+should_cleanup_before_startup=0
 deploy_suffix=""
-if [[ "${1}" == "splunk" ]]; then
-    deploy_suffix="-splunk"
-fi
+cert_env="dev"
+for i in "$@"
+do
+    if [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    elif [[ "${i}" == "splunk" ]]; then
+        deploy_suffix="-splunk"
+    fi
+done
 
 use_path="."
 if [[ ! -e deployment.yml ]]; then
     use_path="./jupyter"
 fi
 
-anmt "------------------------------------------------------------------------------------------"
-anmt "deploying jupyter: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/jupyter"
+anmt "----------------------------------------------------------------------------------"
+anmt "deploying jupyter with cert_env=${cert_env}: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/jupyter"
 inf ""
 
 inf "applying secrets"
@@ -52,8 +59,8 @@ inf "applying service"
 kubectl apply -f ${use_path}/service.yml
 inf ""
 
-inf "applying ingress"
-kubectl apply -f ${use_path}/ingress.yml
+inf "applying ingress cert_env: ${cert_env}"
+kubectl apply -f ${use_path}/ingress-${cert_env}.yml
 inf ""
 
 good "done deploying: jupyter"

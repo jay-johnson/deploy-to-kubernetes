@@ -25,14 +25,31 @@ else
     }
 fi
 
+should_cleanup_before_startup=0
+cert_env="dev"
 extra_params=""
-if [[ "${SPLUNK_USER}" != "" ]] && [[ "${SPLUNK_PASSWORD}" != "" ]] && [[ "${SPLUNK_TCP_ADDRESS}" != "" ]]; then
-    extra_params="splunk"
-elif [[ "${1}" == "splunk" ]]; then
-    extra_params="splunk"
-elif [[ "${1}" == "splunk/" ]]; then
-    extra_params="splunk"
-fi
+for i in "$@"
+do
+    if [[ "${i}" == "splunk" ]] || [[ "${i}" == "splunk/" ]]; then
+        if [[ "${extra_params}" == "" ]]; then
+            extra_params="splunk"
+        else
+            extra_params="${extra_params} splunk"
+        fi
+    elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
+        should_cleanup_before_startup=1
+    elif [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    fi
+done
+
+# generate new x509 SSL TLS keys, CA, certs and csr files using this command:
+# cd ansible; ansible-playbook -i inventory_dev create-x509s.yml
+#
+# you can reload all certs any time with command:
+# ./ansible/deploy-secrets.sh -r
+anmt "loading included TLS secrets from: ./ansible/secrets/"
+./ansible/deploy-secrets.sh -r
 
 anmt "starting postgres"
 ./postgres/run.sh
@@ -49,7 +66,7 @@ anmt "starting redis"
 for param in $extra_params; do
     if [[ "${param}"  == "splunk" ]]; then
         anmt "starting splunk"
-        ./splunk/run.sh
+        ./splunk/run.sh ${cert_env}
     fi
 done
 

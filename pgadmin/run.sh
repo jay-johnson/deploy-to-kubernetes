@@ -25,6 +25,15 @@ else
     }
 fi
 
+should_cleanup_before_startup=0
+cert_env="dev"
+for i in "$@"
+do
+    if [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    fi
+done
+
 pg_service_name="pgadmin4-http"
 pg_deployment_dir="$(pwd)/postgres/.pgdeployment"
 pg_repo="https://github.com/CrunchyData/crunchy-containers.git"
@@ -41,8 +50,8 @@ if [[ "${CCP_NAMESPACE}" == "" ]]; then
 fi
 export CCPROOT=${pg_deployment_dir}
 
-anmt "--------------------------------------------------"
-anmt "deploying pgAdmin4: ${pg_repo}"
+anmt "----------------------------------------------------------------------------------"
+anmt "deploying pgAdmin4 with cert_env=${cert_env}: ${pg_repo}"
 inf ""
     
 inf "applying secrets: ./pgadmin/secrets.yml" 
@@ -84,8 +93,8 @@ else
     inf "Detected running Crunchy pgAdmin: svc/${pg_service_name}"
 fi
 
-inf "applying ingress: ./pgadmin/ingress.yml" 
-kubectl apply -f ./pgadmin/ingress.yml
+inf "applying ingress cert_env: ${cert_env} with ./pgadmin/ingress-${cert_env}.yml" 
+kubectl apply -f ./pgadmin/ingress-${cert_env}.yml
 inf ""
 
 inf ""

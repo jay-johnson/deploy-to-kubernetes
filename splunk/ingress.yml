@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   rules:
-  - host: splunkapi.antinex.com
+  - host: splunkapi.example.com
     http:
       paths:
       - path: /

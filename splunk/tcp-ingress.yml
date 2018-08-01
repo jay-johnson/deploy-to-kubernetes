@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   rules:
-  - host: splunktcp.antinex.com
+  - host: splunktcp.example.com
     http:
       paths:
       - path: /
