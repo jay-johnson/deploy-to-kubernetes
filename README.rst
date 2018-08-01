@@ -898,7 +898,7 @@ If you have openssl installed you can use this ansible playbook to create your o
 Deploying Your Own x509 TLS Encryption files as Kubernetes Secrets
 ------------------------------------------------------------------
 
-This is a work in progress, but in ``dev`` mode the cert-manager is not use. Instead the cluster utilizes pre-generated x509s TLS SSL files created with the `included ansible playbook create-x509s.yml <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/ansible/create-x509s.yml>`__. Once created, you can deploy them as Kubernetes secrets using the `deploy-secrets.sh <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/ansible/deploy-secrets.sh>`__ script and reload them at any time in the future.
+This is a work in progress, but in ``dev`` mode the cert-manager is not in use. Instead the cluster utilizes pre-generated x509s TLS SSL files created with the `included ansible playbook create-x509s.yml <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/ansible/create-x509s.yml>`__. Once created, you can deploy them as Kubernetes secrets using the `deploy-secrets.sh <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/ansible/deploy-secrets.sh>`__ script and reload them at any time in the future.
 
 Deploy Secrets
 ==============
