@@ -54,8 +54,8 @@ anmt "loading included TLS secrets from: ./ansible/secrets/"
 anmt "starting postgres"
 ./postgres/run.sh
 
-anmt "starting pgadmin"
-./pgadmin/run.sh 
+anmt "starting pgadmin with cert_env: ${cert_env}"
+./pgadmin/run.sh ${cert_env}
 
 anmt "starting ingress"
 ./ingress/run.sh 
@@ -65,7 +65,7 @@ anmt "starting redis"
 
 for param in $extra_params; do
     if [[ "${param}"  == "splunk" ]]; then
-        anmt "starting splunk"
+        anmt "starting splunk with cert_env: ${cert_env}"
         ./splunk/run.sh ${cert_env}
     fi
 done
