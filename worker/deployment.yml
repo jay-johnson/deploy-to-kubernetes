@@ -44,6 +44,11 @@ spec:
           /opt/antinex/api/run-worker.sh &&
           tail -f /var/log/antinex/api/worker.log
         env:
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api.webserver
+              key: secret_key
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
