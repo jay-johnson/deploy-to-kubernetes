@@ -71,6 +71,8 @@ fi
 
 if [[ "${API_URL}" != "" ]]; then
     base_url=${API_URL}
+    auth_url="${base_url}/users/"
+    token_url="${base_url}/api-token-auth/"
 fi
 
 user_login_dict="{\"username\":\"${user}\",\"password\":\"${pw}\",\"email\":\"${email}\",\"first\":\"${firstname}\",\"last\":\"${lastname}\"}"
