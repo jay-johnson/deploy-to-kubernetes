@@ -32,6 +32,10 @@ for i in "$@"
 do
     if [[ "${i}" == "prod" ]]; then
         cert_env="prod"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
     fi
 done
 

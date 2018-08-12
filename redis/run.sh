@@ -25,8 +25,26 @@ else
     }
 fi
 
-anmt "-------------------------------------"
-anmt "deploying redis: https://github.com/helm/charts/tree/master/stable/redis"
+should_cleanup_before_startup=0
+cert_env="dev"
+storage_type="ceph"
+for i in "$@"
+do
+    if [[ "${i}" == "ceph" ]]; then
+        storage_type="ceph"
+    elif [[ "${i}" == "nfs" ]]; then
+        storage_type="nfs"
+    elif [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
+    fi
+done
+
+anmt "-------------------------------------------------------------"
+anmt "deploying redis with persistent volumes using ${storage_type}: https://github.com/helm/charts/tree/master/stable/redis"
 inf ""
 
 is_running=$(helm ls redis | grep redis | wc -l)
@@ -35,14 +53,32 @@ if [[ "${is_running}" != "0" ]]; then
     exit 0
 fi
 
-inf "deploying persistent volume for redis" 
-kubectl apply -f ./redis/pv.yml
+if [[ "${storage_type}" != "ceph" ]]; then
+    inf "deploying persistent volume with ${storage_type} for redis"
+    kubectl apply -f ./redis/pv-${storage_type}.yml
+    inf ""
+else
+    inf "deploying persistent volume claim for ${storage_type} to host a redis cluster"
+    kubectl apply -f ./redis/pvc-${storage_type}.yml
+    inf ""
+fi
 
-good "deploying Bitnami redis stable with helm" 
-helm install \
-    --name redis stable/redis \
-    --set rbac.create=true \
-    --values ./redis/redis.yml
+if [[ "${storage_type}" != "ceph" ]]; then
+    good "deploying Bitnami redis stable with helm"
+    helm install \
+        --name redis stable/redis \
+        --set rbac.create=true \
+        --values ./redis/redis.yml
+else
+    good "deploying Bitnami redis stable with helm and persistent volumes using rook with ceph"
+    helm install \
+        --name redis stable/redis \
+        --set rbac.create=true \
+        --set persistence.existingClaim=redis-ceph-data \
+        --set persistence.storageClass=rook-ceph-block \
+        --set persistence.size=8gi \
+        --values ./redis/redis.yml
+fi
 
 last_exit=$?
 if [[ "${last_exit}" != "0" ]]; then

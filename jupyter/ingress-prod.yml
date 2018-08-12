@@ -11,10 +11,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - jupyter.antinex.com
-    secretName: jupyter.antinex.com-tls
+    - jupyter.redten.io
+    secretName: jupyter.redten.io-tls
   rules:
-  - host: jupyter.antinex.com
+  - host: jupyter.redten.io
     http:
       paths:
       - path: /

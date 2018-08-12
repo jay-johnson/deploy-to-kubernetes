@@ -44,11 +44,6 @@ spec:
           /opt/antinex/api/run-worker.sh &&
           tail -f /var/log/antinex/api/worker.log
         env:
-        - name: DJANGO_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: api.webserver
-              key: secret_key
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
@@ -64,6 +59,20 @@ spec:
             secretKeyRef:
               name: worker.db
               key: dbname
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-s3-access
+              key: access_key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-s3-access
+              key: secret_key
+        - name: S3_ADDRESS
+          value: minio-service:9000
+        - name: S3_REGION_NAME
+          value: us-east-1
         - name: DEPLOY_CONFIG
           value: splunk
         - name: LOG_NAME

@@ -35,6 +35,10 @@ do
         letsencrypt_suffix="staging"
     elif [[ "${i}" == "prod" ]]; then
         letsencrypt_suffix="prod"
+    elif [[ "${i}" == "redten" ]]; then
+        letsencrypt_suffix="redten"
+    elif [[ "${i}" == "qs" ]]; then
+        letsencrypt_suffix="qs"
     elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
         should_cleanup_before_startup=1
     fi

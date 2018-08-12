@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rook-minio
+---
+apiVersion: minio.rook.io/v1alpha1
+kind: ObjectStore
+metadata:
+  name: s3-storage
+  namespace: rook-minio
+spec:
+  scope:
+    nodeCount: 4
+  placement:
+    tolerations:
+    nodeAffinity:
+    podAffinity:
+    podAnyAffinity:
+  port: 9000
+  credentials:
+    name: rook.s3.user
+    namespace: default
+  storageAmount: "10G"

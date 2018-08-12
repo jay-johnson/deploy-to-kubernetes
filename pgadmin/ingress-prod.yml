@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - pgadmin.antinex.com
-    secretName: pgadmin.antinex.com-tls
+    - pgadmin.redten.io
+    secretName: pgadmin.redten.io-tls
   rules:
-  - host: pgadmin.antinex.com
+  - host: pgadmin.redten.io
     http:
       paths:
       - path: /

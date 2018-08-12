@@ -57,7 +57,7 @@ if [[ "${file_count}" == "0" ]]; then
         inf " - checking yaml_file=${yml_file} for secret: ${secret_name}"
         if [[ -e ${yml_file} ]]; then
             if [[ "${should_cleanup_before_startup}" == "1" ]]; then
-                test_exists=$(kubectl get secrets | grep ${secret_name} | wc -l)
+                test_exists=$(kubectl get secrets --ignore-not-found | grep ${secret_name} | wc -l)
                 if [[ "${test_exists}" != "0" ]]; then
                     inf " - deleting previous secret: ${secret_name}"
                     kubectl delete secret ${secret_name}
@@ -87,20 +87,36 @@ else
         base_secret_name=$(echo ${i} | sed -e 's/_key.pem//g' | sed -e 's/_server//g')
         secret_name="${secret_prefix}${base_secret_name}"
         yml_file=${use_path}/secrets/${secret_name}.yml
+        namespace="default"
         if [[ -e ${key_file} ]] && [[ -e ${cert_file} ]]; then
             inf " - found key=${key_file} cert=${cert_file}"
             if [[ "${should_cleanup_before_startup}" == "1" ]]; then
-                test_exists=$(kubectl get secrets | grep ${secret_name} | wc -l)
+                test_exists=$(kubectl get secrets --ignore-not-found | grep ${secret_name} | wc -l)
                 if [[ "${test_exists}" != "0" ]]; then
                     inf " - deleting previous secret: ${secret_name}"
                     kubectl delete secret ${secret_name}
                 fi
             fi
-            inf " - kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file}"
-            kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file}
+            if [[ "${secret_name}" == "tls-s3" ]];then
+                namespace="rook-ceph"
+                if [[ "${should_cleanup_before_startup}" == "1" ]]; then
+                    test_exists=$(kubectl get secrets -n ${namespace} --ignore-not-found | grep ${secret_name} | wc -l)
+                    if [[ "${test_exists}" != "0" ]]; then
+                        inf " - deleting previous secret -n ${namespace}: ${secret_name}"
+                        kubectl delete secret -n ${namespace} ${secret_name}
+                    fi
+                fi
+                inf " - kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file} --namespace=${namespace}"
+                kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file} --namespace=${namespace}
+                namespace="default"
+            else
+                namespace="default"
+            fi
+            inf " - kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file} --namespace=${namespace}"
+            kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file} --namespace=${namespace}
             if [[ $? -ne 0 ]]; then
                 inf ""
-                err "Failed - kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file}"
+                err "Failed - kubectl create secret tls ${secret_name} --cert=${cert_file} --key=${key_file} --namespace=${namesapce}"
                 inf ""
                 inf "If you want to reload all the keys use:"
                 inf "./ansible/deploy-secrets.sh -r"
@@ -120,7 +136,7 @@ else
             inf " - checking yaml_file=${yml_file} for secret: ${secret_name}"
             if [[ -e ${yml_file} ]]; then
                 if [[ "${should_cleanup_before_startup}" == "1" ]]; then
-                    test_exists=$(kubectl get secrets | grep ${secret_name} | wc -l)
+                    test_exists=$(kubectl get secrets --ignore-not-found | grep ${secret_name} | wc -l)
                     if [[ "${test_exists}" != "0" ]]; then
                         inf " - deleting previous secret: ${secret_name}"
                         kubectl delete secret ${secret_name}

@@ -13,6 +13,8 @@ Install and manage a Kubernetes cluster with helm on a single Ubuntu host. Once 
 This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes cluster:
 
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
+- `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
+- `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
 - `Django REST API with JWT and Swagger <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/api/deployment.yml>`__
@@ -32,13 +34,13 @@ Getting Started
 Overview
 ========
 
-This guide installs the following systems and NFS volumes to prepare the host for running containers and automatically running them on host startup:
+This guide installs the following systems and a storage solution `Rook with Ceph cluster (default) <https://github.com/rook/rook/tree/master/cluster/examples/kubernetes/ceph>`__ or NFS volumes to prepare the host for running containers and automatically running them on host startup:
 
 - Kubernetes
 - Helm and Tiller
+- `Minio S3 Storage <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
+- `Persistent Storage Volumes using Rook with Ceph cluster <https://github.com/rook/rook/tree/master/cluster/examples/kubernetes/ceph>`__ or optional NFS Volumes mounted at: ``/data/k8/redis``, ``/data/k8/postgres``, ``/data/k8/pgadmin``
 - Flannel CNI
-- NFS Client and Server
-- NFS Volumes mounted at: ``/data/k8/redis``, ``/data/k8/postgres``, ``/data/k8/pgadmin``
 
 Install
 =======
@@ -104,30 +106,45 @@ Validate
         kube-scheduler-dev              1/1       Running   0          3m
         tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
 
-    Or you can use the script:
+Using the Minio S3 Object Store
+-------------------------------
 
-    ::
+By default, the Kubernetes cluster has a `Minio S3 object store running on a Ceph Persistent Volume <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__. S3 is a great solution for distributing files, datasets, configurations, static assets, build artifacts and many more across components, regions, and datacenters using an S3 distributed backend. Minio can also replicate some of the `AWS Lambda event-based workflows <https://aws.amazon.com/lambda/>`__ with `Minio bucket event listeners <https://docs.minio.io/docs/python-client-api-reference>`__.
 
-        ./tools/pods-system.sh
-        kubectl get pods -n kube-system
-        NAME                            READY     STATUS    RESTARTS   AGE
-        coredns-78fcdf6894-k8srv        1/1       Running   0          4m
-        coredns-78fcdf6894-xx8bt        1/1       Running   0          4m
-        etcd-dev                        1/1       Running   0          3m
-        kube-apiserver-dev              1/1       Running   0          3m
-        kube-controller-manager-dev     1/1       Running   0          3m
-        kube-flannel-ds-m8k9w           1/1       Running   0          4m
-        kube-proxy-p4blg                1/1       Running   0          4m
-        kube-scheduler-dev              1/1       Running   0          3m
-        tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
+For reference, Minio was deployed using this script:
 
-#.  Check Helm Verison
+::
 
-    ::
+    ./minio/run.sh
 
-        helm version
-        Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
-        Server: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
+Test Minio S3 with Bucket Creation and File Upload and Download
+===============================================================
+
+.. note:: This tool requires ``boto3``
+
+::
+
+    source ./minio/envs/ext.env
+    ./minio/run_s3_test.py
+
+Confirm the Verification Tests worked with the Minio Dashboard
+==============================================================
+
+Login with:
+
+- access key: ``trexaccesskey``
+- secret key: ``trex123321``
+
+https://minio.example.com/minio/s3-verification-tests/
+
+Using the Rook Ceph Cluster
+---------------------------
+
+By default, the Kubernetes cluster is running a `Rook Ceph cluster for storage <https://rook.io/docs/rook/master/ceph-quickstart.html>`__ which provides HA persistent volumes and claims.
+
+You can review the persistent volumes and claims using the Ceph Dashboard:
+
+https://ceph.example.com
 
 Deploy Redis and Postgres and the Nginx Ingress
 -----------------------------------------------
@@ -233,7 +250,7 @@ Append the entries to the existing ``127.0.0.1`` line:
 
 ::
 
-    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com splunkapi.example.com splunktcp.example.com
+    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com splunkapi.example.com splunktcp.example.com s3.example.com ceph.example.com minio.example.com
 
 Create a User
 -------------
@@ -287,6 +304,21 @@ Login with:
 - password: ``123321``
 
 https://pgadmin.example.com
+
+View Minio S3 Object Storage
+----------------------------
+
+Login with:
+
+- access key: ``trexaccesskey``
+- secret key: ``trex123321``
+
+https://minio.example.com
+
+View Ceph
+---------
+
+https://ceph.example.com
 
 View Splunk
 -----------
@@ -413,16 +445,16 @@ Debug Redis Cluster
     ::
 
         kubectl get pvc
-        NAME                        STATUS    VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-        redis-data-redis-master-0   Bound     redis-pv   10G        RWO                           17s
+        NAME                      STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+        redis-ceph-data           Bound     pvc-1a88e3a6-9df8-11e8-8047-0800270864a8   8Gi        RWO            rook-ceph-block   46m
 
 #.  Examine Persistent Volume
 
     ::
 
         kubectl get pv
-        NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                               STORAGECLASS   REASON    AGE
-        redis-pv   10G        RWO            Retain           Bound     default/redis-data-redis-master-0                            19s
+        NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                             STORAGECLASS      REASON    AGE
+        pvc-1a88e3a6-9df8-11e8-8047-0800270864a8   8Gi        RWO            Delete           Bound     default/redis-ceph-data           rook-ceph-block             46m
 
 Possible Errors
 ===============
@@ -435,7 +467,7 @@ Possible Errors
 
     ::
 
-        ./tools/create-pvs.sh
+        ./pvs/create-pvs.sh
 
 Delete Redis
 ============
@@ -508,18 +540,19 @@ Debug Postgres
     ::
 
         kubectl get pvc
-        NAME                        STATUS    VOLUME           CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-        primary-pgdata              Bound     primary-pgdata   400M       RWX                           4m
-        redis-data-redis-master-0   Bound     redis-pv         10G        RWO                           32m
+        NAME                      STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+        pgadmin4-http-data        Bound     pvc-19031825-9df8-11e8-8047-0800270864a8   400M       RWX            rook-ceph-block   46m
+        primary-pgdata            Bound     pvc-17652595-9df8-11e8-8047-0800270864a8   400M       RWX            rook-ceph-block   46m
+
 
 #.  Examine Persistent Volume
 
     ::
 
         kubectl get pv
-        NAME             CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                               STORAGECLASS   REASON    AGE
-        primary-pgdata   400M       RWX            Retain           Bound     default/primary-pgdata                                       3m
-        redis-pv         10G        RWO            Retain           Bound     default/redis-data-redis-master-0                            32m
+        NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                             STORAGECLASS      REASON    AGE
+        pvc-17652595-9df8-11e8-8047-0800270864a8   400M       RWX            Delete           Bound     default/primary-pgdata            rook-ceph-block             47m
+        pvc-19031825-9df8-11e8-8047-0800270864a8   400M       RWX            Delete           Bound     default/pgadmin4-http-data        rook-ceph-block             47m
 
 #.  Check the NFS Server IP
 
@@ -920,22 +953,25 @@ List Secrets
 ::
 
     kubectl get secrets | grep tls
-    tls-client              kubernetes.io/tls                     2         15s
-    tls-database            kubernetes.io/tls                     2         15s
-    tls-docker              kubernetes.io/tls                     2         15s
-    tls-jenkins             kubernetes.io/tls                     2         14s
-    tls-jupyter             kubernetes.io/tls                     2         14s
-    tls-k8                  kubernetes.io/tls                     2         13s
-    tls-kafka               kubernetes.io/tls                     2         13s
-    tls-kibana              kubernetes.io/tls                     2         13s
-    tls-nginx               kubernetes.io/tls                     2         12s
-    tls-pgadmin             kubernetes.io/tls                     2         12s
-    tls-phpmyadmin          kubernetes.io/tls                     2         12s
-    tls-rabbitmq            kubernetes.io/tls                     2         11s
-    tls-redis               kubernetes.io/tls                     2         11s
-    tls-restapi             kubernetes.io/tls                     2         11s
-    tls-splunk              kubernetes.io/tls                     2         10s
-    tls-webserver           kubernetes.io/tls                     2         10s
+    tls-ceph                kubernetes.io/tls                     2         36m
+    tls-client              kubernetes.io/tls                     2         36m
+    tls-database            kubernetes.io/tls                     2         36m
+    tls-docker              kubernetes.io/tls                     2         36m
+    tls-jenkins             kubernetes.io/tls                     2         36m
+    tls-jupyter             kubernetes.io/tls                     2         36m
+    tls-k8                  kubernetes.io/tls                     2         36m
+    tls-kafka               kubernetes.io/tls                     2         36m
+    tls-kibana              kubernetes.io/tls                     2         36m
+    tls-minio               kubernetes.io/tls                     2         36m
+    tls-nginx               kubernetes.io/tls                     2         36m
+    tls-pgadmin             kubernetes.io/tls                     2         36m
+    tls-phpmyadmin          kubernetes.io/tls                     2         36m
+    tls-rabbitmq            kubernetes.io/tls                     2         36m
+    tls-redis               kubernetes.io/tls                     2         36m
+    tls-restapi             kubernetes.io/tls                     2         36m
+    tls-s3                  kubernetes.io/tls                     2         36m
+    tls-splunk              kubernetes.io/tls                     2         36m
+    tls-webserver           kubernetes.io/tls                     2         36m
 
 Reload Secrets
 ==============
@@ -1020,6 +1056,344 @@ Make sure to set any nginx ingress annotations that need Let's Encrypt SSL encry
 Troubleshooting
 ---------------
 
+Customize Minio and How to Troubleshoot
+---------------------------------------
+
+Change the Minio Access and Secret Keys
+=======================================
+
+#.  Change the secrets file: ``minio/secrets/default_access_keys.yml``
+
+    Change the ``access_key`` and ``secret_key`` values after generating the new base64 string values for the secrets file:
+
+    ::
+
+        echo -n "NewAccessKey" | base64
+        TmV3QWNjZXNzS2V5
+        # now you can replace the access_key's value in the secrets file with the string: TmV3QWNjZXNzS2V5
+
+    ::
+
+        echo -n "NewSecretKey" | base64
+        TmV3U2VjcmV0S2V5
+        # now you can replace the secret_key's value in the secrets file with the string: TmV3QWNjZXNzS2V5
+
+#.  Deploy the secrets file
+
+    ::
+
+        kubectl apply -f ./minio/secrets/default_access_keys.yml
+
+#.  Restart the Minio Pod
+
+    ::
+
+        kubectl delete pod -l app=minio
+
+If you have changed the default access and secret keys, then you will need to export the following environment variables as needed to make sure the ``./minio/run_s3_test.py`` test script works:
+
+::
+
+    export S3_ACCESS_KEY=<minio access key: trexaccesskey - default>
+    export S3_SECRET_KEY=<minio secret key: trex123321 - default>
+    export S3_REGION_NAME=<minio region name: us-east-1 - default>
+    export S3_ADDRESS=<minio service endpoint: external address found with the script ./minio/get-s3-endpoint.sh and the internal cluster uses the service: minio-service:9000>
+    # examples of setting up a minio env files are in: ./minio/envs
+
+View the Minio Dashboard
+========================
+
+Login with:
+
+- access key: ``trexaccesskey``
+- secret key: ``trex123321``
+
+https://minio.example.com
+
+Get S3 Internal Endpoint
+========================
+
+If you want to use the Minio S3 service within the cluster please use the endpoint:
+
+::
+
+    minio-service:9000
+
+or source the internal environment file:
+
+::
+
+    source ./minio/envs/int.env
+
+Get S3 External Endpoint
+========================
+
+If you want to use the Minio S3 service from outside the cluser please use the endpoint provided by the script:
+
+::
+
+    ./minio/get-s3-endpoint.sh
+    # which for this documentation was the minio service's Endpoints:
+    # 10.244.0.103:9000
+
+or source the external environment file:
+
+::
+
+    source ./minio/envs/ext.env
+
+Debugging Steps
+===============
+
+#.  Load the Minio S3 external environment variables:
+
+    ::
+
+        source ./minio/envs/ext.env
+
+#.  Run the S3 Verification test script
+
+    ::
+
+        ./minio/run_s3_test.py
+        
+#.  Confirm Verification Keys are showing up in this Minio S3 bucket
+
+    https://minio.example.com/minio/s3-verification-tests/
+
+    If not please use the describe tools in ``./minio/describe-*.sh`` to grab the logs and `please file a GitHub issue <https://github.com/jay-johnson/deploy-to-kubernetes/issues>`__
+
+Describe Pod
+============
+
+::
+
+    ./minio/describe-service.sh
+
+Describe Service
+================
+
+::
+
+    ./minio/describe-service.sh
+
+Describe Ingress
+================
+
+::
+
+    ./minio/describe-ingress.sh
+
+Uninstall Minio
+===============
+
+::
+
+    ./minio/_uninstall.sh
+
+Ceph Troubeshooting
+-------------------
+
+Please refer to the `Rook Common Issues <https://github.com/rook/rook/blob/master/Documentation/common-issues.md#common-issues>`__ for the latest updates on how to use your Rook Ceph cluster.
+
+.. note:: By default Ceph is not hosting the S3 solution unless ``cephs3`` is passed in as an argument to ``deploy-resource.sh``.
+
+There are included troubleshooting tools in the ``./rook`` directory with an overview of each below:
+
+Validate Ceph System Pods are Running
+=====================================
+
+::
+
+    ./rook/view-system-pods.sh 
+    
+    ----------------------------------------- 
+    Getting the Rook Ceph System Pods: 
+    kubectl -n rook-ceph-system get pod 
+    NAME                                  READY     STATUS    RESTARTS   AGE
+    rook-ceph-agent-g9vzm                 1/1       Running   0          7m
+    rook-ceph-operator-78d498c68c-tbsdf   1/1       Running   0          7m
+    rook-discover-h9wj9                   1/1       Running   0          7m
+
+Validate Ceph Pods are Running
+==============================
+
+::
+
+    ./rook/view-ceph-pods.sh 
+    
+    ----------------------------------------- 
+    Getting the Rook Ceph Pods: 
+    kubectl -n rook-ceph get pod 
+    NAME                                  READY     STATUS      RESTARTS   AGE
+    rook-ceph-mgr-a-9c44495df-7jksz       1/1       Running     0          6m
+    rook-ceph-mon0-rxxsl                  1/1       Running     0          6m
+    rook-ceph-mon1-gqblg                  1/1       Running     0          6m
+    rook-ceph-mon2-7xfsq                  1/1       Running     0          6m
+    rook-ceph-osd-id-0-7d4d4c8794-kgr2d   1/1       Running     0          6m
+    rook-ceph-osd-prepare-dev-kmsn9       0/1       Completed   0          6m
+    rook-ceph-tools                       1/1       Running     0          6m
+
+Validate Persistent Volumes are Bound
+=====================================
+
+::
+
+    kubectl get pv
+    NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                             STORAGECLASS      REASON    AGE
+    pvc-03e6e4ef-9df8-11e8-8047-0800270864a8   1Gi        RWO            Delete           Bound     default/certs-pv-claim            rook-ceph-block             46m
+    pvc-0415de24-9df8-11e8-8047-0800270864a8   1Gi        RWO            Delete           Bound     default/configs-pv-claim          rook-ceph-block             46m
+    pvc-0441307f-9df8-11e8-8047-0800270864a8   1Gi        RWO            Delete           Bound     default/datascience-pv-claim      rook-ceph-block             46m
+    pvc-0468ef73-9df8-11e8-8047-0800270864a8   1Gi        RWO            Delete           Bound     default/frontendshared-pv-claim   rook-ceph-block             46m
+    pvc-04888222-9df8-11e8-8047-0800270864a8   1Gi        RWO            Delete           Bound     default/staticfiles-pv-claim      rook-ceph-block             46m
+    pvc-1c3e359d-9df8-11e8-8047-0800270864a8   10Gi       RWO            Delete           Bound     default/minio-pv-claim            rook-ceph-block             46m
+
+Validate Persistent Volume Claims are Bound
+===========================================
+
+::
+
+    kubectl get pvc
+    NAME                      STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+    certs-pv-claim            Bound     pvc-03e6e4ef-9df8-11e8-8047-0800270864a8   1Gi        RWO            rook-ceph-block   47m
+    configs-pv-claim          Bound     pvc-0415de24-9df8-11e8-8047-0800270864a8   1Gi        RWO            rook-ceph-block   47m
+    datascience-pv-claim      Bound     pvc-0441307f-9df8-11e8-8047-0800270864a8   1Gi        RWO            rook-ceph-block   47m
+    frontendshared-pv-claim   Bound     pvc-0468ef73-9df8-11e8-8047-0800270864a8   1Gi        RWO            rook-ceph-block   47m
+    minio-pv-claim            Bound     pvc-1c3e359d-9df8-11e8-8047-0800270864a8   10Gi       RWO            rook-ceph-block   46m
+
+Create a Persistent Volume Claim
+================================
+
+Going forward, Ceph will automatically create a persistent volume if one is not available for binding to an available Persistent Volume Claim. To create a new persistent volume, just create a claim and verify the Rook Ceph cluster created the persistent volume and both are bound to each other.
+
+::
+
+    kubectl apply -f pvs/pv-staticfiles-ceph.yml
+
+Verify the Persistent Volume is Bound
+=====================================
+
+::
+
+    kubectl get pv
+    NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                          STORAGECLASS      REASON    AGE
+    pvc-77afbc7a-9ade-11e8-b293-0800270864a8   20Gi       RWO            Delete           Bound     default/staticfiles-pv-claim   rook-ceph-block             2s
+
+Verify the Persistent Volume Claim is Bound
+===========================================
+
+::
+
+    kubectl get pvc
+    NAME                   STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+    staticfiles-pv-claim   Bound     pvc-77afbc7a-9ade-11e8-b293-0800270864a8   20Gi       RWO            rook-ceph-block   11s
+
+
+Describe Persistent Volumes
+===========================
+
+::
+
+    kubectl describe pv pvc-c88fc37b-9adf-11e8-9fae-0800270864a8
+    Name:            pvc-c88fc37b-9adf-11e8-9fae-0800270864a8
+    Labels:          <none>
+    Annotations:     pv.kubernetes.io/provisioned-by=ceph.rook.io/block
+    Finalizers:      [kubernetes.io/pv-protection]
+    StorageClass:    rook-ceph-block
+    Status:          Bound
+    Claim:           default/certs-pv-claim
+    Reclaim Policy:  Delete
+    Access Modes:    RWO
+    Capacity:        20Gi
+    Node Affinity:   <none>
+    Message:         
+    Source:
+        Type:       FlexVolume (a generic volume resource that is provisioned/attached using an exec based plugin)
+        Driver:     ceph.rook.io/rook-ceph-system
+        FSType:     xfs
+        SecretRef:  <nil>
+        ReadOnly:   false
+        Options:    map[clusterNamespace:rook-ceph image:pvc-c88fc37b-9adf-11e8-9fae-0800270864a8 pool:replicapool storageClass:rook-ceph-block]
+    Events:         <none>
+
+
+Show Ceph Cluster Status
+========================
+
+::
+
+    ./rook/show-ceph-status.sh 
+    
+    ---------------------------------------------- 
+    Getting the Rook Ceph Status with Toolbox: 
+    kubectl -n rook-ceph exec -it rook-ceph-tools ceph status 
+    cluster:
+        id:     7de1988c-03ea-41f3-9930-0bde39540552
+        health: HEALTH_OK
+    
+    services:
+        mon: 3 daemons, quorum rook-ceph-mon2,rook-ceph-mon0,rook-ceph-mon1
+        mgr: a(active)
+        osd: 1 osds: 1 up, 1 in
+    
+    data:
+        pools:   1 pools, 100 pgs
+        objects: 12 objects, 99 bytes
+        usage:   35443 MB used, 54756 MB / 90199 MB avail
+        pgs:     100 active+clean
+
+Show Ceph OSD Status
+====================
+
+::
+
+    ./rook/show-ceph-osd-status.sh 
+    
+    ---------------------------------------------- 
+    Getting the Rook Ceph OSD Status with Toolbox: 
+    kubectl -n rook-ceph exec -it rook-ceph-tools ceph osd status 
+    +----+-------------------------------------+-------+-------+--------+---------+--------+---------+-----------+
+    | id |                 host                |  used | avail | wr ops | wr data | rd ops | rd data |   state   |
+    +----+-------------------------------------+-------+-------+--------+---------+--------+---------+-----------+
+    | 0  | rook-ceph-osd-id-0-7d4d4c8794-kgr2d | 34.6G | 53.4G |    0   |     0   |    0   |     0   | exists,up |
+    +----+-------------------------------------+-------+-------+--------+---------+--------+---------+-----------+
+ 
+Show Ceph Free Space
+====================
+
+::
+
+    ./rook/show-ceph-df.sh 
+
+    ---------------------------------------------- 
+    Getting the Rook Ceph df with Toolbox: 
+    kubectl -n rook-ceph exec -it rook-ceph-tools ceph df 
+    GLOBAL:
+        SIZE       AVAIL      RAW USED     %RAW USED 
+        90199M     54756M       35443M         39.29 
+    POOLS:
+        NAME            ID     USED     %USED     MAX AVAIL     OBJECTS 
+        replicapool     1        99         0        50246M          12 
+
+
+Show Ceph RDOS Free Space
+=========================
+
+::
+
+    ./rook/show-ceph-rados-df.sh 
+    
+    ---------------------------------------------- 
+    Getting the Rook Ceph rados df with Toolbox: 
+    kubectl -n rook-ceph exec -it rook-ceph-tools rados df 
+    POOL_NAME   USED OBJECTS CLONES COPIES MISSING_ON_PRIMARY UNFOUND DEGRADED RD_OPS RD   WR_OPS WR   
+    replicapool   99      12      0     12                  0       0        0    484 381k     17 7168 
+
+    total_objects    12
+    total_used       35443M
+    total_avail      54756M
+    total_space      90199M
+
 Out of IP Addresses
 ===================
 
@@ -1028,76 +1402,6 @@ Flannel can exhaust all available ip addresses in the CIDR network range. When t
 ::
 
     ./tools/reset-flannel-cni-networks.sh
-
-Reset Cluster
--------------
-
-Here is a video showing how to reset the local Kubernetes cluster.
-
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193472?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193472.png"/></a>
-
-Please be careful as these commands will shutdown all containers and reset the Kubernetes cluster.
-
-.. note:: All created data should be persisted in the NFS ``/data/k8`` directories
-
-Run as root:
-
-::
-
-    sudo su
-    kubeadm reset -f
-    ./prepare.sh
-
-Or use the file:
-
-::
-
-    sudo su
-    ./tools/cluster-reset.sh
-
-Or the full reset and deploy once ready:
-
-::
-
-    sudo su
-    cert_env=dev; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk ${cert_env}
-    exit
-    # as your user
-    ./user-install-kubeconfig.sh
-    # depending on testing vs prod:
-    # ./start.sh splunk
-    # ./start.sh splunk prod
-
-Development
------------
-
-Right now, the python virtual environment is only used to bring in ansible for running playbooks, but it will be used in the future with the kubernetes python client as I start using it more and more.
-
-::
-
-    virtualenv -p python3 /opt/venv && source /opt/venv/bin/activate && pip install -e .
-
-Testing
--------
-
-::
-
-    py.test
-
-or
-
-::
-
-    python setup.py test
-
-License
--------
-
-Apache 2.0 - Please refer to the LICENSE_ for more details
-
-.. _License: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/LICENSE
 
 AntiNex Stack Status
 --------------------
@@ -1151,3 +1455,74 @@ Here are the AntiNex repositories, documentation and build reports:
      - .. image:: https://readthedocs.org/projects/antinex-client/badge/?version=latest
            :alt: Read the Docs AntiNex Client Tests
            :target: https://readthedocs.org/projects/antinex-client/badge/?version=latest
+
+Reset Cluster
+-------------
+
+Here is a video showing how to reset the local Kubernetes cluster.
+
+.. raw:: html
+
+    <a href="https://asciinema.org/a/193472?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193472.png"/></a>
+
+Please be careful as these commands will shutdown all containers and reset the Kubernetes cluster.
+
+.. note:: All created data should be persisted in the NFS ``/data/k8`` directories
+
+Run as root:
+
+::
+
+    sudo su
+    kubeadm reset -f
+    ./prepare.sh
+
+Or use the file:
+
+::
+
+    sudo su
+    ./tools/cluster-reset.sh
+
+Or the full reset and deploy once ready:
+
+::
+
+    sudo su
+    cert_env=dev; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk ${cert_env}
+    cert_env=dev; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk ${cert_env} onlyceph
+    exit
+    # as your user
+    ./user-install-kubeconfig.sh
+    # depending on testing vs prod:
+    # ./start.sh splunk
+    # ./start.sh splunk prod
+
+Development
+-----------
+
+Right now, the python virtual environment is only used to bring in ansible for running playbooks, but it will be used in the future with the kubernetes python client as I start using it more and more.
+
+::
+
+    virtualenv -p python3 /opt/venv && source /opt/venv/bin/activate && pip install -e .
+
+Testing
+-------
+
+::
+
+    py.test
+
+or
+
+::
+
+    python setup.py test
+
+License
+-------
+
+Apache 2.0 - Please refer to the LICENSE_ for more details
+
+.. _License: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/LICENSE

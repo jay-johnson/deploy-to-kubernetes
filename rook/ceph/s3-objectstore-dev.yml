@@ -1,0 +1,44 @@
+apiVersion: ceph.rook.io/v1beta1
+kind: ObjectStore
+metadata:
+  name: s3-storage
+  namespace: rook-ceph
+  label:
+    name: rook-ceph-s3-storage
+    app: rook-ceph-rgw-s3-storage
+spec:
+  metadataPool:
+    replicated:
+      size: 3
+  dataPool:
+    erasureCoded:
+      dataChunks: 2
+      codingChunks: 1
+  gateway:
+    type: s3
+    sslCertificateRef:
+    port: 80
+    securePort:
+    instances: 1
+    allNodes: false
+    placement:
+    #  nodeAffinity:
+    #    requiredDuringSchedulingIgnoredDuringExecution:
+    #      nodeSelectorTerms:
+    #      - matchExpressions:
+    #        - key: role
+    #          operator: In
+    #          values:
+    #          - rgw-node
+    #  tolerations:
+    #  - key: rgw-node
+    #    operator: Exists
+    #  podAffinity:
+    #  podAntiAffinity:
+    resources:
+    #  limits:
+    #    cpu: "500m"
+    #    memory: "1024Mi"
+    #  requests:
+    #    cpu: "500m"
+    #    memory: "1024Mi"

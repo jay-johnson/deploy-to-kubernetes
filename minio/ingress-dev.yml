@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: default
+  annotations:
+    nginx.org/redirect-to-https: True
+spec:
+  tls:
+  - hosts:
+    - minio.example.com
+    secretName: tls-minio
+  rules:
+  - host: minio.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: minio
+          servicePort: 9000

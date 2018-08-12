@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# usage:
+#
+# sudo su
+#
+# for dev:
+# ./prepare splunk
+#
+# for prod:
+# ./prepare prod splunk
+
 # use the bash_colors.sh file
 found_colors="./tools/bash_colors.sh"
 if [[ "${DISABLE_COLORS}" == "" ]] && [[ "${found_colors}" != "" ]] && [[ -e ${found_colors} ]]; then
@@ -31,6 +41,24 @@ if [[ "${user_test}" != "root" ]]; then
     exit 1
 fi
 
+should_cleanup_before_startup=1
+deploy_suffix=""
+cert_env="dev"
+storage_type="ceph"
+pv_deployment_type="all-pvs"
+for i in "$@"
+do
+    if [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    elif [[ "${i}" == "ceph" ]]; then
+        storage_type="ceph"
+    elif [[ "${i}" == "nfs" ]]; then
+        storage_type="nfs"
+    elif [[ "${i}" == "splunk" ]]; then
+        deploy_suffix="-splunk"
+    fi
+done
+
 inf ""
 anmt "---------------------------------------------"
 good "Preparing host for running kubernetes"
@@ -48,7 +76,7 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 inf ""
 
 inf "installing google kubernetes repository"
-test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep apt.kubernetes.io | wc -l)
+test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep kubernetes-xenial | wc -l)
 if [[ "${test_if_found}" == "0" ]]; then
     echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
     apt-get update
@@ -89,15 +117,23 @@ good "installing kubernets CNI addon"
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
 inf ""
 
-if [[ -e ./tools/create-pvs.sh ]]; then
-    good "creating persistent volumes"
-    ./tools/create-pvs.sh
-    inf ""
-fi
+# generate new x509 SSL TLS keys, CA, certs and csr files using this command:
+# cd ansible; ansible-playbook -i inventory_dev create-x509s.yml
+#
+# you can reload all certs any time with command:
+# ./ansible/deploy-secrets.sh -r
+anmt "loading included TLS secrets from: ./ansible/secrets/"
+./ansible/deploy-secrets.sh -r
 
 if [[ -e ./helm/run.sh ]]; then
     good "installing helm"
     ./helm/run.sh
+    inf ""
+fi
+
+if [[ -e ./pvs/create-pvs.sh ]]; then
+    good "creating persistent volumes"
+    ./pvs/create-pvs.sh ${cert_env} ${storage_type} ${pv_deployment_type}
     inf ""
 fi
 
@@ -115,7 +151,7 @@ anmt "Install the kuberenets config with the following commands or use the ./use
 inf ""
 good "mkdir -p $HOME/.kube"
 good "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"
-good "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+good "sudo chown \$(id -u):\$(id -g) $HOME/.kube/config"
 inf ""
 
 good "done preparing kubernetes"

@@ -119,9 +119,22 @@ postgres/.pgdeployment
 # Sphinx documentation
 docs/build
 
+# Custom Domain Deployments
+*-qs.yml
+*-redten.yml
+*-qs
+*-redten
+qs_*.sh
+redten_*.sh
+
 # Ansible x509s for SSL
 ansible/ssl/*.pem
 ansible/ssl/*.csr
 ansible/ssl/*.srl
 ansible/ssl/extfile.cnf
 ansible/.srl
+rook/ceph/tls-s3.yml
+
+# Minio S3 test files
+download-run-s3-test.txt
+run-s3-test.txt

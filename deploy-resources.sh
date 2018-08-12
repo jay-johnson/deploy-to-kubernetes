@@ -26,8 +26,15 @@ else
 fi
 
 should_cleanup_before_startup=0
-cert_env="dev"
 extra_params=""
+cert_env="dev"
+storage_type="ceph"
+redeploy_secrets="0"
+db_type="postgres"
+db_admin="pgadmin"
+ingress="nginx"
+pubsub="redis"
+s3_storage="minio"
 for i in "$@"
 do
     if [[ "${i}" == "splunk" ]] || [[ "${i}" == "splunk/" ]]; then
@@ -38,35 +45,64 @@ do
         fi
     elif [[ "${i}" == "-r" ]] || [[ "${i}" == "r" ]] || [[ "${i}" == "reload" ]]; then
         should_cleanup_before_startup=1
+    elif [[ "${i}" == "ceph" ]]; then
+        storage_type="ceph"
+    elif [[ "${i}" == "nfs" ]]; then
+        storage_type="nfs"
+    elif [[ "${i}" == "onlyceph" ]]; then
+        db_type=""
+        db_admin=""
+        pubsub=""
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
     fi
 done
 
-# generate new x509 SSL TLS keys, CA, certs and csr files using this command:
-# cd ansible; ansible-playbook -i inventory_dev create-x509s.yml
-#
-# you can reload all certs any time with command:
-# ./ansible/deploy-secrets.sh -r
-anmt "loading included TLS secrets from: ./ansible/secrets/"
-./ansible/deploy-secrets.sh -r
+if [[ "${redeploy_secrets}" == "1" ]]; then
+    # generate new x509 SSL TLS keys, CA, certs and csr files using this command:
+    # cd ansible; ansible-playbook -i inventory_dev create-x509s.yml
+    #
+    # you can reload all certs any time with command:
+    # ./ansible/deploy-secrets.sh -r
+    anmt "loading included TLS secrets from: ./ansible/secrets/"
+    ./ansible/deploy-secrets.sh -r
+fi
 
-anmt "starting postgres"
-./postgres/run.sh
+if [[ "${db_type}" == "postgres" ]]; then
+    anmt "starting postgres: ${cert_env} ${storage_type}"
+    ./postgres/run.sh ${cert_env} ${storage_type}
+    if [[ "${db_admin}" == "pgadmin" ]]; then
+        anmt "starting pgadmin: ${cert_env} ${storage_type}"
+        ./pgadmin/run.sh ${cert_env} ${storage_type}
+    fi
+fi
 
-anmt "starting pgadmin with cert_env: ${cert_env}"
-./pgadmin/run.sh ${cert_env}
+if [[ "${ingress}" == "nginx" ]]; then
+    anmt "starting ingress: ${cert_env} ${storage_type}"
+    ./ingress/run.sh ${cert_env} ${storage_type}
+fi
 
-anmt "starting ingress"
-./ingress/run.sh 
+if [[ "${pubsub}" == "redis" ]]; then
+    anmt "starting redis: ${cert_env} ${storage_type}"
+    ./redis/run.sh ${cert_env} ${storage_type}
+fi
 
-anmt "starting redis"
-./redis/run.sh 
+if [[ "${s3_storage}" == "minio" ]]; then
+    anmt "starting minio: ${cert_env} ${storage_type}"
+    ./minio/run.sh ${cert_env} ${storage_type}
+elif [[ "${s3_storage}" == "cephs3" ]]; then
+    anmt "starting ceph s3: ${cert_env} ${storage_type}"
+    ./rook/run.sh ${cert_env} ${storage_type} ${s3_storage}
+fi
 
 for param in $extra_params; do
-    if [[ "${param}"  == "splunk" ]]; then
-        anmt "starting splunk with cert_env: ${cert_env}"
-        ./splunk/run.sh ${cert_env}
+    if [[ "${param}" == "splunk" ]]; then
+        anmt "starting splunk with cert_env: ${cert_env} ${storage_type}"
+        ./splunk/run.sh ${cert_env} ${storage_type}
     fi
 done
 

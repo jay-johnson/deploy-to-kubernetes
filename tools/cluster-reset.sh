@@ -45,5 +45,5 @@ fi
 inf "running: kubeadm reset -f"
 kubeadm reset -f
 
-inf "running: ./prepare.sh"
-./prepare.sh
+inf "running: ./prepare.sh splunk ceph"
+./prepare.sh splunk ceph

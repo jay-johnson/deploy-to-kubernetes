@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - api.antinex.com
-    secretName: api.antinex.com-tls
+    - api.redten.io
+    secretName: api.redten.io-tls
   rules:
-  - host: api.antinex.com
+  - host: api.redten.io
     http:
       paths:
       - path: /

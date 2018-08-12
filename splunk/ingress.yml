@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   rules:
-  - host: splunkapi.example.com
+  - host: splunkapi.redten.io
     http:
       paths:
       - path: /

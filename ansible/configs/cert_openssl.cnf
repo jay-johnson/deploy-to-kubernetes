@@ -9,14 +9,14 @@ x509_extensions        = v3_ca
 countryName            = US
 stateOrProvinceName    = CA
 localityName           = City
-organizationName       = example
-organizationalUnitName = example
-commonName             = example
+organizationName       = ExampleOrg
+organizationalUnitName = ExampleOrgUnit
+commonName             = example.com
 
 [ v3_ca ]
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always,issuer:always
 basicConstraints       = CA:TRUE
 keyUsage               = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign
-subjectAltName         = DNS:*.example.com, DNS:redis.example.com, DNS:rabbitmq.example.com, DNS:jupyter.example.com, DNS:jenkins.example.com, DNS:www.example.com, DNS:api.example.com, DNS:db.example.com, DNS:pgadmin.example.com, DNS:phpmyadmin.example.com, DNS:kibana.example.com, DNS:lb.example.com, DNS:docker.example.com, DNS:k8.example.com, DNS:splunk.example.com, DNS:kafka.example.com, email:admin@example.com
+subjectAltName         = DNS:*.example.com, DNS:redis.example.com, DNS:rabbitmq.example.com, DNS:jupyter.example.com, DNS:jenkins.example.com, DNS:www.example.com, DNS:api.example.com, DNS:db.example.com, DNS:pgadmin.example.com, DNS:phpmyadmin.example.com, DNS:kibana.example.com, DNS:lb.example.com, DNS:docker.example.com, DNS:k8.example.com, DNS:splunk.example.com, DNS:kafka.example.com, DNS:s3.example.com, email:admin@example.com
 issuerAltName          = issuer:copy

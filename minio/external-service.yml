@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-external
+  namespace: default
+  labels:
+    app: minio
+    release: minio
+spec:
+  type: NodePort
+  ports:
+  - name: minio-service-external
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: minio
+    release: minio
+  sessionAffinity: None
+status:
+  loadBalancer: {}

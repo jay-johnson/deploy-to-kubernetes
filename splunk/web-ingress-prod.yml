@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - splunk.antinex.com
-    secretName: splunk.antinex.com-tls
+    - splunk.redten.io
+    secretName: splunk.redten.io-tls
   rules:
-  - host: splunk.antinex.com
+  - host: splunk.redten.io
     http:
       paths:
       - path: /
