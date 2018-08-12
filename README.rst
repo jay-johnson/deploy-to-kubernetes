@@ -1289,7 +1289,6 @@ Describe Persistent Volumes
         Options:    map[clusterNamespace:rook-ceph image:pvc-c88fc37b-9adf-11e8-9fae-0800270864a8 pool:replicapool storageClass:rook-ceph-block]
     Events:         <none>
 
-
 Show Ceph Cluster Status
 ========================
 
@@ -1347,7 +1346,6 @@ Show Ceph Free Space
     POOLS:
         NAME            ID     USED     %USED     MAX AVAIL     OBJECTS 
         replicapool     1        99         0        50246M          12 
-
 
 Show Ceph RDOS Free Space
 =========================
@@ -1461,7 +1459,6 @@ Or the full reset and deploy once ready:
 
     sudo su
     cert_env=dev; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk ${cert_env}
-    cert_env=dev; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh ; sleep 30; ./deploy-resources.sh splunk ${cert_env} onlyceph
     exit
     # as your user
     ./user-install-kubeconfig.sh
