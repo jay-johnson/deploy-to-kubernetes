@@ -155,7 +155,7 @@ Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and the pg
 
     <a href="https://asciinema.org/a/193476?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193476.png"/></a>
 
-.. note:: Postgres, pgAdmin4 and Redis use Rook Ceph persist data
+.. note:: Postgres, pgAdmin4 and Redis use Rook Ceph to persist data
 
 Here are the commands to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 in the cluster:
 
