@@ -150,7 +150,7 @@ Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and the pg
 
     <a href="https://asciinema.org/a/193476?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193476.png"/></a>
 
-.. note:: Postgres, pgAdmin4 and Redis use persistent volumes to store data outside the Kubernetes cluster using NFS-mounted volumes
+.. note:: Postgres, pgAdmin4 and Redis use Rook Ceph persist data
 
 Here are the commands to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 in the cluster:
 
@@ -548,28 +548,6 @@ Debug Postgres
         NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                             STORAGECLASS      REASON    AGE
         pvc-17652595-9df8-11e8-8047-0800270864a8   400M       RWX            Delete           Bound     default/primary-pgdata            rook-ceph-block             47m
         pvc-19031825-9df8-11e8-8047-0800270864a8   400M       RWX            Delete           Bound     default/pgadmin4-http-data        rook-ceph-block             47m
-
-#.  Check the NFS Server IP
-
-    If you see something about ``mount -t nfs <IP>:/data/k8/postgres``` when running ``describe pod primary`` like:
-
-    ::
-
-        Mounting arguments: --description=Kubernetes transient mount for /var/lib/kubelet/pods/6c1bfb39-8be2-11e8-8381-0800270864a8/volumes/kubernetes.io~nfs/primary-pgdata --scope -- mount -t nfs 192.168.0.35:/data/k8/postgres /var/lib/kubelet/pods/6c1bfb39-8be2-11e8-8381-0800270864a8/volumes/kubernetes.io~nfs/primary-pgdata
-
-    Then please delete the pv, pvc and primary postgres deployment before recreating the pv with the correct host ip address.
-
-    ::
-
-        kubectl delete service primary
-        kubectl delete pod primary
-        kubectl delete pvc primary-pgdata
-        kubectl delete pv primary-pgdata
-
-    ::
-
-        export CCP_NFS_IP=<NFS Server's IP Address>
-        ./postgres/run.sh
 
 Deploy pgAdmin
 --------------
@@ -1461,8 +1439,6 @@ Here is a video showing how to reset the local Kubernetes cluster.
     <a href="https://asciinema.org/a/193472?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193472.png"/></a>
 
 Please be careful as these commands will shutdown all containers and reset the Kubernetes cluster.
-
-.. note:: All created data should be persisted in the NFS ``/data/k8`` directories
 
 Run as root:
 
