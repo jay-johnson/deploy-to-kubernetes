@@ -132,6 +132,7 @@ ansible/ssl/*.pem
 ansible/ssl/*.csr
 ansible/ssl/*.srl
 ansible/ssl/extfile.cnf
+ansible/secrets/tls-*.yml
 ansible/.srl
 rook/ceph/tls-s3.yml
 
