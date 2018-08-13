@@ -51,6 +51,12 @@ do
         pv_deployment_type="all-pvs"
     elif [[ "${i}" == "splunk" ]]; then
         deploy_suffix="-splunk"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="antinex"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 

@@ -56,6 +56,14 @@ do
         storage_type="nfs"
     elif [[ "${i}" == "splunk" ]]; then
         deploy_suffix="-splunk"
+    elif [[ "${i}" == "prod" ]]; then
+        cert_env="prod"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="antinex"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 

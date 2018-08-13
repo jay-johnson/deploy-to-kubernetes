@@ -250,7 +250,7 @@ Append the entries to the existing ``127.0.0.1`` line:
 
 ::
 
-    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com splunkapi.example.com splunktcp.example.com s3.example.com ceph.example.com minio.example.com
+    127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com s3.example.com ceph.example.com minio.example.com
 
 Create a User
 -------------

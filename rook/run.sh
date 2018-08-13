@@ -36,6 +36,7 @@ object_store=""
 username="trex"
 display_name="trex"
 debug="0"
+dashboard_enabled="1"
 for i in "$@"
 do
     if [[ "${i}" == "prod" ]]; then
@@ -54,6 +55,14 @@ do
         should_cleanup_before_startup="1"
     elif [[ "${i}" == "splunk" ]]; then
         deploy_suffix="-splunk"
+    elif [[ "${i}" == "-nodashboard" ]]; then
+        dashboard_enabled="0"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="an"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 
@@ -405,7 +414,8 @@ while [[ "${not_ready}" == "0" ]]; do
     fi
 done
 
-if [[ "${storage_type}" == "ceph" ]]; then
+# ingress needed for dashboard
+if [[ "${dashboard_enabled}" == "1" ]]; then
     ingress_file=${use_storage_path}/ingress-${cert_env}.yml
     inf "deploying ceph dashboard using service file: ${ingress_file}"
     kubectl apply -f ${ingress_file}

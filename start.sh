@@ -48,10 +48,12 @@ do
         should_cleanup_before_startup=1
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
-    elif [[ "${i}" == "redten" ]]; then
-        cert_env="redten"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="antinex"
     elif [[ "${i}" == "qs" ]]; then
         cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 
@@ -75,15 +77,6 @@ else
 fi
 
 if [[ "${cert_env}" != "dev" ]]; then
-    # if [[ -e ./.aws_secret ]]; then
-    #     rm -f ./.aws_secret
-    # fi
-    # echo -n "${AWS_SECRET_KEY}" | base64 > ./.aws_secret
-    # kubectl delete secret aws-route53-creds -n=kube-system
-    # kubectl create secret generic aws-route53-creds -n=kube-system --from-file=./.aws_secret
-    # if [[ -e ./.aws_secret ]]; then
-    #     rm -f ./.aws_secret
-    # fi
     anmt "starting cert-manager with Lets Encrypt: ${cert_env}"
     ./cert-manager/run.sh ${cert_env}
     inf ""

@@ -60,6 +60,12 @@ do
         should_cleanup_before_startup="1"
     elif [[ "${i}" == "splunk" ]]; then
         deploy_suffix="-splunk"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="an"
+    elif [[ "${i}" == "qs" ]]; then
+        cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 

@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - api.redten.io
-    secretName: api.redten.io-tls
+    - api.example.com
+    secretName: api.example.com-tls
   rules:
-  - host: api.redten.io
+  - host: api.example.com
     http:
       paths:
       - path: /

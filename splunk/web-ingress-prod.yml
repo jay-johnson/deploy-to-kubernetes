@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - splunk.redten.io
-    secretName: splunk.redten.io-tls
+    - splunk.example.com
+    secretName: splunk.example.com-tls
   rules:
-  - host: splunk.redten.io
+  - host: splunk.example.com
     http:
       paths:
       - path: /

@@ -11,10 +11,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - jupyter.redten.io
-    secretName: jupyter.redten.io-tls
+    - jupyter.example.com
+    secretName: jupyter.example.com-tls
   rules:
-  - host: jupyter.redten.io
+  - host: jupyter.example.com
     http:
       paths:
       - path: /

@@ -36,10 +36,12 @@ do
         storage_type="nfs"
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
-    elif [[ "${i}" == "redten" ]]; then
-        cert_env="redten"
+    elif [[ "${i}" == "antinex" ]]; then
+        cert_env="an"
     elif [[ "${i}" == "qs" ]]; then
         cert_env="qs"
+    elif [[ "${i}" == "redten" ]]; then
+        cert_env="redten"
     fi
 done
 

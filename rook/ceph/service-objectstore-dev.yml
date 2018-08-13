@@ -11,11 +11,8 @@ spec:
   ports:
   - name: rgw
     port: 80
-    protocol: TCP
-    targetPort: 80
   selector:
     app: rook-ceph-rgw
     rook_cluster: rook-ceph
     rook_object_store: s3-storage
   sessionAffinity: None
-  type: NodePort

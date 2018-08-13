@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - pgadmin.redten.io
-    secretName: pgadmin.redten.io-tls
+    - pgadmin.example.com
+    secretName: pgadmin.example.com-tls
   rules:
-  - host: pgadmin.redten.io
+  - host: pgadmin.example.com
     http:
       paths:
       - path: /

@@ -120,10 +120,13 @@ postgres/.pgdeployment
 docs/build
 
 # Custom Domain Deployments
+*-an.yml
 *-qs.yml
 *-redten.yml
+*-an
 *-qs
 *-redten
+an_*.sh
 qs_*.sh
 redten_*.sh
 
