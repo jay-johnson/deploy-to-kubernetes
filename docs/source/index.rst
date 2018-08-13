@@ -106,15 +106,6 @@ Validate
         kube-scheduler-dev              1/1       Running   0          3m
         tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
 
-Using the Rook Ceph Cluster
----------------------------
-
-By default, the Kubernetes cluster is running a `Rook Ceph cluster for storage <https://rook.io/docs/rook/master/ceph-quickstart.html>`__ which provides HA persistent volumes and claims.
-
-You can review the persistent volumes and claims using the Ceph Dashboard:
-
-https://ceph.example.com
-
 Deploy Redis and Postgres and the Nginx Ingress
 -----------------------------------------------
 
@@ -276,6 +267,15 @@ Test Minio S3 with Bucket Creation and File Upload and Download
 #.  Verify the files were uploaded to Minio
 
     https://minio.example.com/minio/s3-verification-tests/
+
+Using the Rook Ceph Cluster
+---------------------------
+
+By default, the Kubernetes cluster is running a `Rook Ceph cluster for storage <https://rook.io/docs/rook/master/ceph-quickstart.html>`__ which provides HA persistent volumes and claims.
+
+You can review the persistent volumes and claims using the Ceph Dashboard:
+
+https://ceph.example.com
 
 Create a User
 -------------
