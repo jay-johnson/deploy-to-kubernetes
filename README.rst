@@ -101,37 +101,6 @@ Validate
         kube-scheduler-dev              1/1       Running   0          3m
         tiller-deploy-759cb9df9-wxvp8   1/1       Running   0          4m
 
-Using the Minio S3 Object Store
--------------------------------
-
-By default, the Kubernetes cluster has a `Minio S3 object store running on a Ceph Persistent Volume <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__. S3 is a great solution for distributing files, datasets, configurations, static assets, build artifacts and many more across components, regions, and datacenters using an S3 distributed backend. Minio can also replicate some of the `AWS Lambda event-based workflows <https://aws.amazon.com/lambda/>`__ with `Minio bucket event listeners <https://docs.minio.io/docs/python-client-api-reference>`__.
-
-For reference, Minio was deployed using this script:
-
-::
-
-    ./minio/run.sh
-
-Test Minio S3 with Bucket Creation and File Upload and Download
-===============================================================
-
-.. note:: This tool requires ``boto3``
-
-::
-
-    source ./minio/envs/ext.env
-    ./minio/run_s3_test.py
-
-Confirm the Verification Tests worked with the Minio Dashboard
-==============================================================
-
-Login with:
-
-- access key: ``trexaccesskey``
-- secret key: ``trex123321``
-
-https://minio.example.com/minio/s3-verification-tests/
-
 Using the Rook Ceph Cluster
 ---------------------------
 
@@ -246,6 +215,62 @@ Append the entries to the existing ``127.0.0.1`` line:
 ::
 
     127.0.0.1   <leave-original-values-here> api.example.com jupyter.example.com pgadmin.example.com splunk.example.com s3.example.com ceph.example.com minio.example.com
+
+Using the Minio S3 Object Store
+-------------------------------
+
+By default, the Kubernetes cluster has a `Minio S3 object store running on a Ceph Persistent Volume <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__. S3 is a great solution for distributing files, datasets, configurations, static assets, build artifacts and many more across components, regions, and datacenters using an S3 distributed backend. Minio can also replicate some of the `AWS Lambda event-based workflows <https://aws.amazon.com/lambda/>`__ with `Minio bucket event listeners <https://docs.minio.io/docs/python-client-api-reference>`__.
+
+For reference, Minio was deployed using this script:
+
+::
+
+    ./minio/run.sh
+
+View the Verification Tests on the Minio Dashboard
+==================================================
+
+Login with:
+
+- access key: ``trexaccesskey``
+- secret key: ``trex123321``
+
+https://minio.example.com/minio/s3-verification-tests/
+
+Test Minio S3 with Bucket Creation and File Upload and Download
+===============================================================
+
+#.  Run from inside the API container
+
+    ::
+
+        ./api/ssh.sh
+        source /opt/venv/bin/activate && run_s3_test.py
+
+    Example logs:
+
+    ::
+
+        creating test file: run-s3-test.txt
+        connecting: http://minio-service:9000
+        checking bucket=s3-verification-tests exists
+        upload_file(run-s3-test.txt, s3-verification-tests, s3-worked-on-2018-08-12-15-21-02)
+        upload_file(s3-verification-tests, s3-worked-on-2018-08-12-15-21-02, download-run-s3-test.txt)
+        download_filename=download-run-s3-test.txt contents: tested on: 2018-08-12 15:21:02
+        exit
+
+#.  Run from outside the Kubernetes cluster
+
+    .. note:: This tool requires the python ``boto3`` pip is installed
+
+    ::
+
+        source ./minio/envs/ext.env
+        ./minio/run_s3_test.py
+
+#.  Verify the files were uploaded to Minio
+
+    https://minio.example.com/minio/s3-verification-tests/
 
 Create a User
 -------------
@@ -1009,7 +1034,7 @@ If you notice things are not working correctly, you can quickly prevent yourself
 Debugging
 =========
 
-To reduce debugging issues, the cert manager ClusterIssuer objects use the same name for staging and production mode. This is nice beacuse you do not have to update all the annotations to deploy on production vs staging:
+To reduce debugging issues, the cert manager ClusterIssuer objects use the same name for staging and production mode. This is nice because you do not have to update all the annotations to deploy on production vs staging:
 
 The cert manager starts and defines the issuer name for both production and staging as: 
 
