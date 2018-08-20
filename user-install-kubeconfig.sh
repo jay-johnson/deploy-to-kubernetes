@@ -30,6 +30,10 @@ if [[ -e $HOME/.kube/config ]]; then
     rm -f $HOME/.kube/config >> /dev/null 2>&1
 fi
 
+if [[ -e /etc/kubernetes/admin.conf ]]; then
+    sudo chmod 666 /etc/kubernetes/admin.conf
+fi
+
 good "installing admin kubernetes config credentials using sudo"
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
