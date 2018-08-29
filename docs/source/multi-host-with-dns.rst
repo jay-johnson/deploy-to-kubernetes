@@ -250,7 +250,7 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
     - `m2 with static ip: 192.168.0.102 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m2/01-network-manager-all.yaml>`__
     - `m3 with static ip: 192.168.0.103 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m3/01-network-manager-all.yaml>`__
 
-    .. warning:: If you do not know each vm's IP address, and you are ok with having a **network sniffing tool** installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use this command to find each vm's IP address from the vm's bridged network adapter's MAC address:
+    .. warning:: If you do not know each vm's IP address, and you are ok with having a **network sniffing tool** installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use this command to find each vm's IP address from the vm's bridge network adapter's MAC address:
 
         ::
 
