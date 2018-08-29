@@ -12,7 +12,7 @@ Install and manage a Kubernetes cluster with helm on a single Ubuntu 18.04 vm or
 
 This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes single host or multi-host cluster:
 
-- `Managing a Multi-Host Kubernetes Cluster with Your Own External DNS <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-your-own-external-dns>`__
+- `Managing a Multi-Host Kubernetes Cluster with an External DNS Server <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-your-own-external-dns>`__
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
 - `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
 - `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
