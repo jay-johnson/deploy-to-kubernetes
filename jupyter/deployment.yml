@@ -19,6 +19,7 @@ spec:
   selector:
     matchLabels:
       app: jupyter
+      datascience: enabled
   template:
     metadata:
       labels:
@@ -30,7 +31,17 @@ spec:
         messaging: redis
         cache: redis
         pubsub: publisher
+        datascience: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: datascience
+                operator: In
+                values:
+                - enabled
       hostname: jupyter
       restartPolicy: Always
       containers:

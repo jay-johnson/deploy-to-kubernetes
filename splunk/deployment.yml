@@ -9,6 +9,9 @@ metadata:
     purpose: logs
     layer: logs
 spec:
+  selector:
+    matchLabels:
+      splunk: enabled
   replicas: 1
   selector:
     matchLabels:
@@ -20,6 +23,15 @@ spec:
         purpose: logs
         layer: logs
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: splunk
+                operator: In
+                values:
+                - enabled
       hostname: splunkenterprise
       restartPolicy: Always
       containers:

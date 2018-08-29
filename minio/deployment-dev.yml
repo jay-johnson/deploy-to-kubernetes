@@ -22,6 +22,9 @@ metadata:
   # This name uniquely identifies the Deployment
   name: minio-deployment
 spec:
+  selector:
+    matchLabels:
+      minio: enabled
   strategy:
     type: Recreate
   template:
@@ -30,7 +33,17 @@ spec:
         # Label is used as selector in the service.
         app: minio
         storage: s3
+        minio: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: minio
+                operator: In
+                values:
+                - enabled
       # Refer to the PVC created earlier
       volumes:
       - name: storage

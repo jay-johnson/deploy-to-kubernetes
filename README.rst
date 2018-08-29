@@ -3,10 +3,11 @@ Deploying a Distributed AI Stack to Kubernetes on Ubuntu
 
 .. image:: https://i.imgur.com/qiyhAq9.png
 
-Install and manage a Kubernetes cluster with helm on a single Ubuntu host. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
+Install and manage a Kubernetes cluster with helm on a single Ubuntu 18.04 vm or in multi-host mode that runs the cluster on 3 Ubuntu 18.04 vms. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
 
-This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes cluster:
+This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes single host or multi-host cluster:
 
+- `Managing a Multi-Host Kubernetes Cluster with Your Own External DNS <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-your-own-external-dns>`__
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
 - `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
 - `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__

@@ -1,0 +1,38 @@
+;
+; BIND forward zone data file for example.com
+;
+$TTL	604800
+@	IN	SOA	example.com. root.example.com. (
+			     20		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+;@	IN	NS	localhost.
+;@	IN	A	127.0.0.1
+;@	IN	AAAA	::1
+
+;Name Server Information
+         IN      NS      ns1.example.com.
+;IP address of Name Server
+ns1      IN      A       192.168.0.101
+
+;Mail Exchanger
+example.com.   IN     MX   10   mail.example.com.
+
+;A - Record HostName To Ip Address
+@        IN       A      192.168.0.101
+api      IN       A      192.168.0.101
+ceph     IN       A      192.168.0.101
+master1  IN       A      192.168.0.101
+mail     IN       A      192.168.0.101
+minio    IN       A      192.168.0.101
+pgadmin  IN       A      192.168.0.101
+www      IN       A      192.168.0.101
+api      IN       A      192.168.0.102
+jenkins  IN       A      192.168.0.102
+jupyter  IN       A      192.168.0.102
+master2  IN       A      192.168.0.102
+master3  IN       A      192.168.0.103
+splunk   IN       A      192.168.0.103

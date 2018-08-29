@@ -17,6 +17,7 @@ spec:
   selector:
     matchLabels:
       app: worker
+      backend: enabled
   template:
     metadata:
       labels:
@@ -26,7 +27,17 @@ spec:
         messaging: redis
         cache: redis
         pubsub: consumer
+        backend: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: backend
+                operator: In
+                values:
+                - enabled
       hostname: worker
       restartPolicy: Always
       containers:

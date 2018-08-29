@@ -17,6 +17,7 @@ spec:
   selector:
     matchLabels:
       app: core
+      backend: enabled
   template:
     metadata:
       labels:
@@ -26,7 +27,17 @@ spec:
         ai.framework: keras
         ai.backend: tensorflow
         layer: backend
+        backend: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: backend
+                operator: In
+                values:
+                - enabled
       hostname: core
       restartPolicy: Always
       containers:

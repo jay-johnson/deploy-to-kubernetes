@@ -46,8 +46,10 @@ deploy_suffix=""
 cert_env="dev"
 storage_type="ceph"
 pv_deployment_type="all-pvs"
+multihost_labeler="./multihost/run.sh"
 for i in "$@"
 do
+    contains_equal=$(echo ${i} | grep "=")
     if [[ "${i}" == "prod" ]]; then
         cert_env="prod"
     elif [[ "${i}" == "ceph" ]]; then
@@ -56,6 +58,14 @@ do
         storage_type="nfs"
     elif [[ "${i}" == "splunk" ]]; then
         deploy_suffix="-splunk"
+    elif [[ "${contains_equal}" != "" ]]; then
+        first_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
+        second_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
+        if [[ "${first_arg}" == "labeler" ]]; then
+            multihost_labeler=${second_arg}
+        fi
+    elif [[ "${i}" == "nolabeler" ]]; then
+        multihost_labeler=""
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
     elif [[ "${i}" == "antinex" ]]; then
@@ -137,6 +147,14 @@ if [[ -e ./helm/run.sh ]]; then
     good "installing helm"
     ./helm/run.sh
     inf ""
+fi
+
+# Multi-host mode assumes at least 3 master nodes
+# and the deployment uses nodeAffinity labels to
+# deploy specific applications to the correct
+# hosting cluster node
+if [[ "${multihost_labeler}" != "" ]] && [[ -e ${multihost_labeler} ]]; then
+    ${multihost_labeler} ${cert_env} ${storage_type} ${extra_params}
 fi
 
 if [[ -e ./pvs/create-pvs.sh ]]; then

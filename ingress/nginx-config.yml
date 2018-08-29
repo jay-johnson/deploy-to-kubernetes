@@ -8,10 +8,16 @@ metadata:
 data:
   # Adding new entries here will make them appear as files in the deployment.
   #
-  # Some optimizations guides I found helpful:
+  # Using ConfigMaps:
+  # https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/customization#using-configmaps
+  #
+  # Some nginx optimizations guides I found helpful (not specific to kubernetes):
   #
   # https://github.com/agile6v/awesome-nginx
   # http://articles.slicehost.com/2009/2/20/centos-nginx-configuration
   # https://bjornjohansen.no/optimizing-https-nginx
   # https://github.com/easypath/nginx-secure-configs
   #
+  proxy-connect-timeout: "10s"
+  proxy-read-timeout: "10s"
+  client-max-body-size: "500m"

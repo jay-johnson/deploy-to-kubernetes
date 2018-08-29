@@ -27,6 +27,7 @@ fi
 
 should_cleanup_before_startup=0
 extra_params=""
+multihost_labeler="./multihost/run.sh"
 cert_env="dev"
 storage_type="ceph"
 redeploy_secrets="0"
@@ -37,6 +38,7 @@ pubsub="redis"
 s3_storage="minio"
 for i in "$@"
 do
+    contains_equal=$(echo ${i} | grep "=")
     if [[ "${i}" == "splunk" ]] || [[ "${i}" == "splunk/" ]]; then
         if [[ "${extra_params}" == "" ]]; then
             extra_params="splunk"
@@ -53,6 +55,14 @@ do
         db_type=""
         db_admin=""
         pubsub=""
+    elif [[ "${contains_equal}" != "" ]]; then
+        first_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
+        second_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
+        if [[ "${first_arg}" == "labeler" ]]; then
+            multihost_labeler=${second_arg}
+        fi
+    elif [[ "${i}" == "nolabeler" ]]; then
+        multihost_labeler=""
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
     elif [[ "${i}" == "antinex" ]]; then
@@ -63,6 +73,14 @@ do
         cert_env="redten"
     fi
 done
+
+# Multi-host mode assumes at least 3 master nodes
+# and the deployment uses nodeAffinity labels to
+# deploy specific applications to the correct
+# hosting cluster node
+if [[ "${multihost_labeler}" != "" ]] && [[ -e ${multihost_labeler} ]]; then
+    ${multihost_labeler} ${cert_env} ${storage_type} ${extra_params}
+fi
 
 if [[ "${redeploy_secrets}" == "1" ]]; then
     # generate new x509 SSL TLS keys, CA, certs and csr files using this command:

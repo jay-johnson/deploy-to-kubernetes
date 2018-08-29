@@ -280,12 +280,25 @@ metadata:
     operator: rook
     storage-backend: ceph
 spec:
+  selector:
+    matchLabels:
+      ceph: enabled
   replicas: 1
   template:
     metadata:
       labels:
         app: rook-ceph-operator
+        ceph: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: ceph
+                operator: In
+                values:
+                - enabled
       serviceAccountName: rook-ceph-system
       containers:
       - name: rook-ceph-operator

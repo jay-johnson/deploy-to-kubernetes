@@ -4,6 +4,9 @@ metadata:
   name: minio-ingress
   namespace: default
   annotations:
+    nginx.org/proxy-connect-timeout: "60s"
+    nginx.org/proxy-read-timeout: "60s"
+    nginx.org/client-max-body-size: "5000m"
     nginx.org/redirect-to-https: True
 spec:
   tls:

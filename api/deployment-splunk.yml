@@ -19,6 +19,7 @@ spec:
   selector:
     matchLabels:
       app: api
+      frontend: enabled
   template:
     metadata:
       labels:
@@ -30,7 +31,17 @@ spec:
         messaging: redis
         cache: redis
         pubsub: publisher
+        frontend: enabled
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: frontend
+                operator: In
+                values:
+                - enabled
       hostname: api
       restartPolicy: Always
       containers:

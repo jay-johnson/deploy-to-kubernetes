@@ -1,0 +1,34 @@
+;
+; BIND reverse zone data file for example.com
+;
+$TTL	604800
+@	IN	SOA	example.com. root.example.com. (
+			     20		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+;@	IN	NS	localhost.
+;1.0.0	IN	PTR	localhost.
+
+;Name Server Information
+        IN      NS     ns1.example.com.
+;Reverse lookup for Name Server
+101     IN      PTR    ns1.example.com.
+;PTR Record IP address to HostName
+100     IN      PTR    home1.example.com
+101     IN      PTR    api.example.com.
+101     IN      PTR    example.com
+101     IN      PTR    ceph.example.com.
+101     IN      PTR    mail.example.com.
+101     IN      PTR    master1.example.com.
+101     IN      PTR    minio.example.com.
+101     IN      PTR    pgadmin.example.com.
+101     IN      PTR    www.example.com.
+102     IN      PTR    api.example.com.
+102     IN      PTR    jupyter.example.com.
+102     IN      PTR    jenkins.example.com.
+102     IN      PTR    master2.example.com.
+103     IN      PTR    master3.example.com.
+103     IN      PTR    splunk.example.com.
