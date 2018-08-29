@@ -20,6 +20,176 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
 
     Here's the `Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
 
+#.  Install Kubernetes on each vm
+
+    Install Kubernetes on each vm using your own tool(s) of choice or the `deploy to kubernetes tool I wrote <https://github.com/jay-johnson/deploy-to-kubernetes#install>`__. This repository builds each vm in the cluster as a master node, and will use kubeadm join to add **master2.example.com** and **master3.example.com** to the initial, primary node **master1.example.com**.
+
+#.  Start Kubernetes on Master 1 VM
+
+    Once Kubernetes is running on your initial, primary master vm (mine is on **master1.example.com**), you can prepare the cluster with the commands:
+
+    ::
+
+        # ssh into your initial, primary vm
+        ssh 192.168.0.101
+
+    If you're using this repository to deploy the cluster then following commands to get started:
+
+    ::
+
+        # make sure this repository is cloned on all cluster nodes to: /opt/deploy-to-kubernetes
+        # git clone https://github.com/jay-johnson/deploy-to-kubernetes.git /opt/deploy-to-kubernetes
+        sudo su
+        # for preparing to run the example.com cluster use:
+        cert_env=dev; cd /opt/deploy-to-kubernetes; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh
+
+#.  Confirm Only One Node is Ready
+
+    ::
+
+        kubectl get nodes -o wide --show-labels
+
+#.  Print the Cluster Join Command on Master 1
+
+    ::
+
+        kubeadm token create --print-join-command
+
+#.  Join Master 2 to Master 1
+
+    ::
+
+        ssh 192.168.0.102
+        sudo su
+        kubeadm join 192.168.0.101:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+        exit
+
+#.  Join Master 3 to Master 1
+
+    ::
+
+        ssh 192.168.0.103
+        sudo su
+        kubeadm join 192.168.0.101:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+        exit
+
+#.  Deploy Cluster Resources
+
+    ssh into the master 1 host:
+
+    ::
+
+        ssh 192.168.0.101
+
+    The Postgres and pgAdmin containers require running as root with Go installed on the master 1 host:
+
+    ::
+
+        sudo su
+        apt install golang-go
+        export GOPATH=$HOME/go
+        export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+        go get github.com/blang/expenv
+
+
+    Deploy the stack's resources:
+
+    ::
+
+        cert_env=dev
+        cd /opt/deploy-to-kubernetes; ./deploy-resources.sh splunk ceph ${cert_env}
+        exit
+
+#.  Copy the Kubernetes Config from Master 1 to your host
+
+    ::
+
+        mkdir -p 775 ~/.kube/config >> /dev/null
+        scp 192.168.0.101:/root/.kube/config ~/.kube/config
+
+#.  Verify the 3 Nodes are in the Cluster
+
+    ::
+
+        kubectl get nodes -o wide --show-labels
+        NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION      CONTAINER-RUNTIME     LABELS
+        master1   Ready     master    16m       v1.11.2   192.168.0.101   <none>        Ubuntu 18.04 LTS   4.15.0-32-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master1,minio=enabled,node-role.kubernetes.io/master=,splunk=enabled
+        master2   Ready     <none>    12m       v1.11.2   192.168.0.102   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2
+        master3   Ready     <none>    12m       v1.11.2   192.168.0.103   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,kubernetes.io/hostname=master3,splunk=enabled
+
+#.  Start the Stack
+
+    .. note:: This may take a few minutes to download all images and sync files across the cluster.
+
+    ::
+
+        cert_env=dev
+        ./start.sh splunk ceph ${cert_env}
+
+#.  Verify the Stack is Running
+
+    ::
+
+        NAME                                READY     STATUS    RESTARTS   AGE
+        api-774765b455-nlx8z                1/1       Running   0          4m
+        api-774765b455-rfrcw                1/1       Running   0          4m
+        core-66994c9f4d-nq4sh               1/1       Running   0          4m
+        jupyter-577696f945-cx5gr            1/1       Running   0          4m
+        minio-deployment-7fdcfd6775-pmdww   1/1       Running   0          5m
+        nginx-5pp8n                         1/1       Running   0          5m
+        nginx-dltv8                         1/1       Running   0          5m
+        nginx-kxn7l                         1/1       Running   0          5m
+        pgadmin4-http                       1/1       Running   0          5m
+        primary                             1/1       Running   0          5m
+        redis-master-0                      1/1       Running   0          5m
+        redis-metrics-79cfcb86b7-k9584      1/1       Running   0          5m
+        redis-slave-7cd9cdc695-jgcsk        1/1       Running   2          5m
+        redis-slave-7cd9cdc695-qd5pl        1/1       Running   2          5m
+        redis-slave-7cd9cdc695-wxnqh        1/1       Running   2          5m
+        splunk-5f487cbdbf-dtv8f             1/1       Running   4          4m
+        worker-59bbcd44c6-sd6t5             1/1       Running   0          4m
+
+#.  Verify Minio is Deployed
+
+    ::
+
+        kubectl describe po minio | grep "Node:"
+        Node:               master1/192.168.0.101
+
+#.  Verify Ceph is Deployed
+
+    ::
+
+        kubectl describe -n rook-ceph-system po rook-ceph-agent | grep "Node:"
+        Node:               master3/192.168.0.103
+        Node:               master1/192.168.0.101
+        Node:               master2/192.168.0.102
+
+#.  Verify the API is Deployed
+
+    ::
+
+        kubectl describe po api | grep "Node:"
+        Node:               master2/192.168.0.102
+        Node:               master1/192.168.0.101
+
+#.  Verify Jupyter is Deployed
+
+    ::
+
+        kubectl describe po jupyter | grep "Node:"
+        Node:               master2/192.168.0.102
+
+#.  Verify Splunk is Deployed
+
+    ::
+
+        kubectl describe po splunk | grep "Node:"
+        Node:               master3/192.168.0.103
+
+Set up an External DNS Server for a multi-host Kubernetes Cluster
+-----------------------------------------------------------------
+
 #.  Determine the Networking IP Addresses for Your VMs
 
     .. note:: If you are ok with having a network sniffing tool installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use the following command to find each vm's IP address from the vm's bridged network adapter's MAC address:
@@ -275,169 +445,8 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         dig master3.example.com | grep IN | tail -1
         master3.example.com.	604800	IN	A	192.168.0.103
 
-#.  Install Kubernetes on each vm
-
-    Install Kubernetes on each vm using your own tool(s) of choice or the `deploy to kubernetes tool I wrote <https://github.com/jay-johnson/deploy-to-kubernetes#install>`__. This repository builds each vm in the cluster as a master node, and will use kubeadm join to add **master2.example.com** and **master3.example.com** to the initial, primary node **master1.example.com**.
-
-#.  Start Kubernetes on Master 1 VM
-
-    Once Kubernetes is running on your initial, primary master vm (mine is on **master1.example.com**), you can prepare the cluster with the commands:
-
-    ::
-
-        # ssh into your initial, primary vm
-        ssh 192.168.0.101
-
-    ::
-
-        git clone https://github.com/jay-johnson/deploy-to-kubernetes.git /opt/deploy-to-kubernetes
-        sudo su
-        # for preparing to run the example.com cluster use:
-        cert_env=dev; cd /opt/deploy-to-kubernetes; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh
-
-#.  Confirm Only One Node is Ready
-
-    ::
-
-        kubectl get nodes -o wide --show-labels
-
-#.  Print the Cluster Join Command on Master 1
-
-    ::
-
-        kubeadm token create --print-join-command
-
-#.  Join Master 2 to Master 1
-
-    ::
-
-        ssh 192.168.0.102
-        sudo su
-        kubeadm join 192.168.0.101:6443 --token <token> --discovery-token-ca-cert-hash <hash>
-        exit
-
-#.  Join Master 3 to Master 1
-
-    ::
-
-        ssh 192.168.0.103
-        sudo su
-        kubeadm join 192.168.0.101:6443 --token <token> --discovery-token-ca-cert-hash <hash>
-        exit
-
-#.  Deploy Cluster Resources
-
-    ssh into the master 1 host:
-
-    ::
-
-        ssh 192.168.0.101
-
-    The Postgres and pgAdmin containers require running as root with Go installed on the master 1 host:
-
-    ::
-
-        sudo su
-        apt install golang-go
-        export GOPATH=$HOME/go
-        export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-        go get github.com/blang/expenv
-
-
-    Deploy the stack's resources:
-
-    ::
-
-        cert_env=dev
-        cd /opt/deploy-to-kubernetes; ./deploy-resources.sh splunk ceph ${cert_env}
-        exit
-
-#.  Copy the Kubernetes Config from Master 1 to your host
-
-    ::
-
-        mkdir -p 775 ~/.kube/config >> /dev/null
-        scp 192.168.0.101:/root/.kube/config ~/.kube/config
-
-#.  Verify the 3 Nodes are in the Cluster
-
-    ::
-
-        kubectl get nodes -o wide --show-labels
-        NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION      CONTAINER-RUNTIME     LABELS
-        master1   Ready     master    16m       v1.11.2   192.168.0.101   <none>        Ubuntu 18.04 LTS   4.15.0-32-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master1,minio=enabled,node-role.kubernetes.io/master=,splunk=enabled
-        master2   Ready     <none>    12m       v1.11.2   192.168.0.102   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2
-        master3   Ready     <none>    12m       v1.11.2   192.168.0.103   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,kubernetes.io/hostname=master3,splunk=enabled
-
-#.  Start the Stack
-
-    .. note:: This may take a few minutes to download all images and sync files across the cluster.
-
-    ::
-
-        cert_env=dev
-        ./start.sh splunk ceph ${cert_env}
-
-#.  Verify the Stack is Running
-
-    ::
-
-        NAME                                READY     STATUS    RESTARTS   AGE
-        api-774765b455-nlx8z                1/1       Running   0          4m
-        api-774765b455-rfrcw                1/1       Running   0          4m
-        core-66994c9f4d-nq4sh               1/1       Running   0          4m
-        jupyter-577696f945-cx5gr            1/1       Running   0          4m
-        minio-deployment-7fdcfd6775-pmdww   1/1       Running   0          5m
-        nginx-5pp8n                         1/1       Running   0          5m
-        nginx-dltv8                         1/1       Running   0          5m
-        nginx-kxn7l                         1/1       Running   0          5m
-        pgadmin4-http                       1/1       Running   0          5m
-        primary                             1/1       Running   0          5m
-        redis-master-0                      1/1       Running   0          5m
-        redis-metrics-79cfcb86b7-k9584      1/1       Running   0          5m
-        redis-slave-7cd9cdc695-jgcsk        1/1       Running   2          5m
-        redis-slave-7cd9cdc695-qd5pl        1/1       Running   2          5m
-        redis-slave-7cd9cdc695-wxnqh        1/1       Running   2          5m
-        splunk-5f487cbdbf-dtv8f             1/1       Running   4          4m
-        worker-59bbcd44c6-sd6t5             1/1       Running   0          4m
-
-#.  Verify Minio is Deployed
-
-    ::
-
-        kubectl describe po minio | grep "Node:"
-        Node:               master1/192.168.0.101
-
-#.  Verify Ceph is Deployed
-
-    ::
-
-        kubectl describe -n rook-ceph-system po rook-ceph-agent | grep "Node:"
-        Node:               master3/192.168.0.103
-        Node:               master1/192.168.0.101
-        Node:               master2/192.168.0.102
-
-#.  Verify the API is Deployed
-
-    ::
-
-        kubectl describe po api | grep "Node:"
-        Node:               master2/192.168.0.102
-        Node:               master1/192.168.0.101
-
-#.  Verify Jupyter is Deployed
-
-    ::
-
-        kubectl describe po jupyter | grep "Node:"
-        Node:               master2/192.168.0.102
-
-#.  Verify Splunk is Deployed
-
-    ::
-
-        kubectl describe po splunk | grep "Node:"
-        Node:               master3/192.168.0.103
+Start using the Stack
+---------------------
 
 Run a Database Migration
 ------------------------
