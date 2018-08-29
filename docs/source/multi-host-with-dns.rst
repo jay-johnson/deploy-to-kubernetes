@@ -1,9 +1,7 @@
 Managing a Multi-Host Kubernetes Cluster with Your Own External DNS
 -------------------------------------------------------------------
 
-This guide is for managing a Kubernetes cluster deployed on 3 Ubuntu 18.04 vms. Once the cluster is running you can start using the applications with the included external DNS nameserver.
-
-For reference, I used `this guide for setting up the master 1 vm to run a DNS nameserver on Ubuntu 18.04 <https://www.itzgeek.com/how-tos/linux/ubuntu-how-tos/how-to-configure-dns-server-on-ubuntu-18-04.html>`__, and then customized each vm's networking using the new `netplan nameservers yaml file <https://netplan.io/examples>`__ across the cluster nodes, dev vms and external hosts that need access to the Kubernetes cluster. I run this cluster on a baremetal Ubuntu 18.04 desktop and host these vms using `VirtualBox <https://www.virtualbox.org/>`__.
+This guide is for managing a multi-host Kubernetes cluster deployed across 3 Ubuntu 18.04 vms. Once running, you can access the sample applications from outside the cluster with the included DNS nameserver (bind9).
 
 Overview
 ========
@@ -15,7 +13,7 @@ Background
 
 Why did you make this?
 
-Before using DNS, I was stuck managing and supporting many DHCP IP addresses in ``/etc/hosts`` like below. This ended up being way more time consuming than necessary... so I made this guide for adding a DNS server over a multi-host Kubernetes cluster.
+Before using DNS, I was stuck managing and supporting many DHCP IP addresses in ``/etc/hosts`` like below. This ended up being way more time consuming than necessary. So I made this guide for adding a DNS server over a multi-host Kubernetes cluster.
 
 ::
 
@@ -32,22 +30,21 @@ Before using DNS, I was stuck managing and supporting many DHCP IP addresses in 
     # MAC address:  08:00:27:21:80:29
     192.168.0.103   m3 master3 master3.example.com splunk.example.com
 
-
 Allocate VM Resources
 =====================
 
-#.  Each vm should have at least 70 GB hard drive space.
+#.  Each vm should have at least 70 GB hard drive space
 
-#.  Each vm should have at least 2 CPU cores and 4 GB memory.
+#.  Each vm should have at least 2 CPU cores and 4 GB memory
 
 #.  Each vm should have a bridge network adapter that is routeable
 
-#.  Take note of each vm's bridge network adapter's MAC address (this will help finding the vm's IP address in a router's web app or using network detection tools).
+#.  Take note of each vm's bridge network adapter's MAC address (this will help finding the vm's IP address in a router's web app or using network detection tools)
 
 Install Ubuntu 18.04
 ====================
 
-Install Ubuntu 18.04 on each vm and here is the `Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
+Install Ubuntu 18.04 on each vm and `here is the Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
 
 Install Kubernetes
 ==================
@@ -76,7 +73,7 @@ Start All Kubernetes Cluster VMs
         # for preparing to run the example.com cluster use:
         cert_env=dev; cd /opt/deploy-to-kubernetes; ./tools/reset-flannel-cni-networks.sh; ./tools/cluster-reset.sh ; ./user-install-kubeconfig.sh
 
-#.  Confirm Only One Node is Ready
+#.  Confirm only 1 Cluster Node is in the Ready State
 
     ::
 
@@ -253,11 +250,11 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
     - `m2 with static ip: 192.168.0.102 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m2/01-network-manager-all.yaml>`__
     - `m3 with static ip: 192.168.0.103 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m3/01-network-manager-all.yaml>`__
 
-    .. warn:: If you do not know each vm's IP address, and you are ok with having a **network sniffing tool** installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use this command to find each vm's IP address from the vm's bridged network adapter's MAC address:
+    .. warning:: If you do not know each vm's IP address, and you are ok with having a **network sniffing tool** installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use this command to find each vm's IP address from the vm's bridged network adapter's MAC address:
 
-    ::
+        ::
 
-        arp-scan -q -l --interface <NIC name like enp0s3> | sort | uniq | grep -i "<MAC address>" | awk '{print $1}'
+            arp-scan -q -l --interface <NIC name like enp0s3> | sort | uniq | grep -i "<MAC address>" | awk '{print $1}'
 
 #.  Install DNS
 
@@ -280,8 +277,6 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         /etc/bind/fwd.example.com.db
 
     Based off the original ``/etc/hosts`` file from above, my forward zone file looks like:
-
-    .. note:: The API has two A records for placement on two of the vms ``192.168.0.103`` and ``192.168.0.102``
 
     ::
 
@@ -324,6 +319,8 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         master3  IN       A      192.168.0.103
         splunk   IN       A      192.168.0.103
 
+    .. note:: The API has two A records for placement on two of the vms ``192.168.0.103`` and ``192.168.0.102``
+
 #.  Verify the Forward Zone File
 
     ::
@@ -343,8 +340,6 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         /etc/bind/rev.example.com.db
 
     Based off the original ``/etc/hosts`` file from above, my reverse zone file looks like:
-
-    .. note:: The API has two A records for placement on two of the vms ``101`` and ``102``
 
     ::
 
@@ -382,6 +377,8 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         103     IN      PTR    master3.example.com.
         103     IN      PTR    splunk.example.com.
 
+    .. note:: The API has two A records for placement on two of the vms ``101`` and ``102``
+
 #.  Verify the Reverse Zone File
 
     ::
@@ -405,7 +402,7 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
 
 #.  From another host set up the Netplan yaml file
 
-    Ubuntu 18.04 uses netplan for setting up a persistent DNS nameserver like ``192.168.0.101``. Here is the netplan yaml file I am using for ensuring the cluster's BIND server resolves the local network FQDNs to a vm's bridge network adapter IP address.
+    Ubuntu 18.04 uses netplan for setting up a persistent DNS nameserver like ``192.168.0.101``. Here is the netplan yaml file I am using for ensuring the cluster's BIND server resolves the local network DNS records that match the Kubernetes pod deployments across the 3 cluster nodes (which are just vms with an ip hosted on the bridge network adapter).
 
     Please edit this file as root and according to your vm's networking IP address and static vs dhcp requirements. During this example, I had a static IP in the ``HOST_VM_IP`` with a value of ``192.168.0.49``.
 
@@ -598,3 +595,8 @@ Next Steps
 
 - `Add Heptio's Ark for disaster recovery <https://github.com/heptio/ark>`__
 - `Add Jenkins into the stack using Helm <https://github.com/helm/charts/tree/master/stable/jenkins#jenkins-helm-chart>`__
+
+More Information
+================
+
+I used `this guide for setting up the master 1 vm to run a DNS nameserver on Ubuntu 18.04 <https://www.itzgeek.com/how-tos/linux/ubuntu-how-tos/how-to-configure-dns-server-on-ubuntu-18-04.html>`__, and then customized each vm's networking using the new `netplan nameservers yaml file <https://netplan.io/examples>`__ across the cluster nodes, dev vms and external hosts that need access to the Kubernetes cluster. I run this cluster on a baremetal Ubuntu 18.04 desktop and host these vms using `VirtualBox <https://www.virtualbox.org/>`__.
