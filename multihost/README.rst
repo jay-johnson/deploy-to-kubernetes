@@ -54,7 +54,7 @@ Install Kubernetes on each vm using your own tool(s) of choice or the `deploy to
 Start All Kubernetes Cluster VMs
 --------------------------------
 
-#.  Start Kubernetes on Master 1 VM
+#.  Start Kubernetes on the Master 1 VM
 
     Once Kubernetes is running on your initial, primary master vm (mine is on **master1.example.com**), you can prepare the cluster with the commands:
 
