@@ -5,24 +5,57 @@ This guide is for managing a Kubernetes cluster deployed on 3 Ubuntu 18.04 vms. 
 
 For reference, I used `this guide for setting up the master 1 vm to run a DNS nameserver on Ubuntu 18.04 <https://www.itzgeek.com/how-tos/linux/ubuntu-how-tos/how-to-configure-dns-server-on-ubuntu-18-04.html>`__, and then customized each vm's networking using the new `netplan nameservers yaml file <https://netplan.io/examples>`__ across the cluster nodes, dev vms and external hosts that need access to the Kubernetes cluster. I run this cluster on a baremetal Ubuntu 18.04 desktop and host these vms using `VirtualBox <https://www.virtualbox.org/>`__.
 
-#.  Overview
+Overview
+========
     
-    Set up 3 Ubuntu 18.04 vms and run an external dns (using bind9) for a distributed, multi-host Kubernetes cluster that is accessible on the domain: ``example.com``
+Set up 3 Ubuntu 18.04 vms and run an external DNS (using bind9) for a distributed, multi-host Kubernetes cluster that is accessible on the domain: ``example.com``
 
-#.  Allocate VM Resources
+Background
+==========
 
-    - Each vm should have at least 70 GB hard drive space.
-    - Each vm should have at least 2 CPU cores and 4 GB memory.
-    - Each vm should have a bridge network adapter that is routeable
-    - Take note of each vm's bridge network adapter's MAC address (this will help finding the vm's IP address in a router's web app or using network detection tools).
+Why did you make this?
 
-#.  Install Ubuntu 18.04 on each vm
+Before using DNS, I was stuck managing and supporting many DHCP IP addresses in ``/etc/hosts`` like below. This ended up being way more time consuming than necessary... so I made this guide for adding a DNS server over a multi-host Kubernetes cluster.
 
-    Here's the `Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
+::
 
-#.  Install Kubernetes on each vm
+    ##############################################################
+    #
+    # find the MAC using: ifconfig | grep -A 3 enp | grep ether | awk '{print $2}'
+    #
+    # MAC address:  08:00:27:37:80:e1
+    192.168.0.101   m1 master1 master1.example.com api.example.com ceph.example.com mail.example.com minio.example.com pgadmin.example.com s3.example.com www.example.com
+    #
+    # MAC address:  08:00:27:21:80:19
+    192.168.0.102   m2 master2 master2.example.com jupyter.example.com
+    #
+    # MAC address:  08:00:27:21:80:29
+    192.168.0.103   m3 master3 master3.example.com splunk.example.com
 
-    Install Kubernetes on each vm using your own tool(s) of choice or the `deploy to kubernetes tool I wrote <https://github.com/jay-johnson/deploy-to-kubernetes#install>`__. This repository builds each vm in the cluster as a master node, and will use kubeadm join to add **master2.example.com** and **master3.example.com** to the initial, primary node **master1.example.com**.
+
+Allocate VM Resources
+=====================
+
+#.  Each vm should have at least 70 GB hard drive space.
+
+#.  Each vm should have at least 2 CPU cores and 4 GB memory.
+
+#.  Each vm should have a bridge network adapter that is routeable
+
+#.  Take note of each vm's bridge network adapter's MAC address (this will help finding the vm's IP address in a router's web app or using network detection tools).
+
+Install Ubuntu 18.04
+====================
+
+Install Ubuntu 18.04 on each vm and here is the `Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
+
+Install Kubernetes
+==================
+
+Install Kubernetes on each vm using your own tool(s) of choice or the `deploy to kubernetes tool I wrote <https://github.com/jay-johnson/deploy-to-kubernetes#install>`__. This repository builds each vm in the cluster as a master node, and will use kubeadm join to add **master2.example.com** and **master3.example.com** to the initial, primary node **master1.example.com**.
+
+Start All Kubernetes Cluster VMs
+--------------------------------
 
 #.  Start Kubernetes on Master 1 VM
 
@@ -33,7 +66,7 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         # ssh into your initial, primary vm
         ssh 192.168.0.101
 
-    If you're using this repository to deploy the cluster then following commands to get started:
+    If you're using the `deploy-to-kubernetes repository <https://github.com/jay-johnson/deploy-to-kubernetes>`__ to run an AI stack on Kubernetes, then the following commands will start the master 1 vm for preparing the cluster to run the stack:
 
     ::
 
@@ -73,13 +106,47 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         kubeadm join 192.168.0.101:6443 --token <token> --discovery-token-ca-cert-hash <hash>
         exit
 
-#.  Deploy Cluster Resources
+Verify the Cluster has 3 Ready Nodes
+====================================
 
-    ssh into the master 1 host:
+#.  Set up your host for using kubectl
+
+    ::
+
+        sudo apt-get install -y kubectl
+
+#.  Copy the Kubernetes Config from Master 1 to your host
+
+    ::
+
+        mkdir -p 775 ~/.kube/config >> /dev/null
+        scp 192.168.0.101:/root/.kube/config ~/.kube/config
+
+#.  Verify the 3 nodes (vms) are in a Status of Ready in the Kubernetes cluster
+
+    ::
+
+        kubectl get nodes -o wide --show-labels
+        NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION      CONTAINER-RUNTIME     LABELS
+        master1   Ready     master    16m       v1.11.2   192.168.0.101   <none>        Ubuntu 18.04 LTS   4.15.0-32-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master1,minio=enabled,node-role.kubernetes.io/master=,splunk=enabled
+        master2   Ready     <none>    12m       v1.11.2   192.168.0.102   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2
+        master3   Ready     <none>    12m       v1.11.2   192.168.0.103   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,kubernetes.io/hostname=master3,splunk=enabled
+
+Deploy a Distributed AI Stack to a Multi-Host Kubernetes Cluster
+----------------------------------------------------------------
+
+This will deploy the `AntiNex AI stack <https://github.com/jay-johnson/deploy-to-kubernetes#deploying-a-distributed-ai-stack-to-kubernetes-on-ubuntu>`__ to the new multi-host Kubernetes cluster.
+
+Deploy Cluster Resources
+========================
+
+#.  ssh into the master 1 host:
 
     ::
 
         ssh 192.168.0.101
+
+#.  Install Go
 
     The Postgres and pgAdmin containers require running as root with Go installed on the master 1 host:
 
@@ -92,7 +159,7 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         go get github.com/blang/expenv
 
 
-    Deploy the stack's resources:
+#.  Deploy the stack's resources:
 
     ::
 
@@ -100,26 +167,10 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         cd /opt/deploy-to-kubernetes; ./deploy-resources.sh splunk ceph ${cert_env}
         exit
 
-#.  Copy the Kubernetes Config from Master 1 to your host
+Start the AI Stack
+==================
 
-    ::
-
-        mkdir -p 775 ~/.kube/config >> /dev/null
-        scp 192.168.0.101:/root/.kube/config ~/.kube/config
-
-#.  Verify the 3 Nodes are in the Cluster
-
-    ::
-
-        kubectl get nodes -o wide --show-labels
-        NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION      CONTAINER-RUNTIME     LABELS
-        master1   Ready     master    16m       v1.11.2   192.168.0.101   <none>        Ubuntu 18.04 LTS   4.15.0-32-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master1,minio=enabled,node-role.kubernetes.io/master=,splunk=enabled
-        master2   Ready     <none>    12m       v1.11.2   192.168.0.102   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2
-        master3   Ready     <none>    12m       v1.11.2   192.168.0.103   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,kubernetes.io/hostname=master3,splunk=enabled
-
-#.  Start the Stack
-
-    .. note:: This may take a few minutes to download all images and sync files across the cluster.
+#.  Run the Start command
 
     ::
 
@@ -127,6 +178,8 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         ./start.sh splunk ceph ${cert_env}
 
 #.  Verify the Stack is Running
+
+    .. note:: This may take a few minutes to download all images and sync files across the cluster.
 
     ::
 
@@ -187,39 +240,30 @@ For reference, I used `this guide for setting up the master 1 vm to run a DNS na
         kubectl describe po splunk | grep "Node:"
         Node:               master3/192.168.0.103
 
-Set up an External DNS Server for a multi-host Kubernetes Cluster
+Set up an External DNS Server for a Multi-Host Kubernetes Cluster
 -----------------------------------------------------------------
+
+Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS server for making the public-facing frontend nginx ingresses accessible to browsers or other clients on an internal network (like a home lab).
 
 #.  Determine the Networking IP Addresses for Your VMs
 
-    .. note:: If you are ok with having a network sniffing tool installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use the following command to find each vm's IP address from the vm's bridged network adapter's MAC address:
+    For this guide the 3 vms use the included netplan yaml files for statically setting their IPs:
 
-        ::
+    - `m1 with static ip: 192.168.0.101 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m1/01-network-manager-all.yaml>`__
+    - `m2 with static ip: 192.168.0.102 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m2/01-network-manager-all.yaml>`__
+    - `m3 with static ip: 192.168.0.103 <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m3/01-network-manager-all.yaml>`__
 
-            arp-scan -q -l --interface <NIC name like enp0s3> | sort | uniq | grep -i "<MAC address>" | awk '{print $1}'
-
-    Before using dns, I was stuck managing and supporting many DHCP IP addresses in ``/etc/hosts`` like:
+    .. warn:: If you do not know each vm's IP address, and you are ok with having a **network sniffing tool** installed on your host like `arp-scan <https://linux.die.net/man/1/arp-scan>`__, then you can use this command to find each vm's IP address from the vm's bridged network adapter's MAC address:
 
     ::
 
-        ##############################################################
-        # 
-        # find the MAC using: ifconfig | grep -A 3 enp | grep ether | awk '{print $2}'
-        #
-        # MAC address:  08:00:27:37:80:e1
-        192.168.0.101   m1 master1 master1.example.com api.example.com ceph.example.com mail.example.com minio.example.com pgadmin.example.com s3.example.com www.example.com
-        #
-        # MAC address:  08:00:27:21:80:19
-        192.168.0.102   m2 master2 master2.example.com jupyter.example.com
-        #
-        # MAC address:  08:00:27:21:80:29
-        192.168.0.103   m3 master3 master3.example.com splunk.example.com
+        arp-scan -q -l --interface <NIC name like enp0s3> | sort | uniq | grep -i "<MAC address>" | awk '{print $1}'
 
 #.  Install DNS
 
-    Pick a vm to be the primary dns server. For this guide, I am using ``master1.example.com`` with IP: ``192.168.0.101``.
+    Pick a vm to be the primary DNS server. For this guide, I am using ``master1.example.com`` with IP: ``192.168.0.101``.
 
-    For dns this guide uses the `ISC BIND server <https://www.isc.org/downloads/bind/>`__. Here is how to install BIND on Ubuntu 18.04:
+    For DNS this guide uses the `ISC BIND server <https://www.isc.org/downloads/bind/>`__. Here is how to install BIND on Ubuntu 18.04:
 
     ::
 
@@ -361,7 +405,7 @@ Set up an External DNS Server for a multi-host Kubernetes Cluster
 
 #.  From another host set up the Netplan yaml file
 
-    Ubuntu 18.04 uses netplan for setting up a persistent dns nameserver like ``192.168.0.101``. Here is the netplan yaml file I am using for ensuring the cluster's BIND server resolves the local network FQDNs to a vm's bridge network adapter IP address.
+    Ubuntu 18.04 uses netplan for setting up a persistent DNS nameserver like ``192.168.0.101``. Here is the netplan yaml file I am using for ensuring the cluster's BIND server resolves the local network FQDNs to a vm's bridge network adapter IP address.
 
     Please edit this file as root and according to your vm's networking IP address and static vs dhcp requirements. During this example, I had a static IP in the ``HOST_VM_IP`` with a value of ``192.168.0.49``.
 
@@ -448,8 +492,10 @@ Set up an External DNS Server for a multi-host Kubernetes Cluster
 Start using the Stack
 ---------------------
 
+With the DNS server ready, you can now migrate the database and create the first user ``trex`` to start using the stack.
+
 Run a Database Migration
-------------------------
+========================
 
 Here is a video showing how to apply database schema migrations in the cluster:
 
@@ -461,10 +507,11 @@ To apply new Django database migrations, run the following command:
 
 ::
 
+    # from /opt/deploy-to-kubernetes
     ./api/migrate-db.sh
 
 Create a User
--------------
+=============
 
 Create the user ``trex`` with password ``123321`` on the REST API.
 
@@ -475,7 +522,7 @@ Create the user ``trex`` with password ``123321`` on the REST API.
 Deployed Web Applications
 -------------------------
 
-Here are the hosted web application urls. These urls are made accessible by the included `nginx-ingress <https://github.com/nginxinc/kubernetes-ingress>`__.
+Once the stack is deployed, here are the hosted web application urls. These urls are made accessible by the included `nginx-ingress <https://github.com/nginxinc/kubernetes-ingress>`__.
 
 View Django REST Framework
 --------------------------
