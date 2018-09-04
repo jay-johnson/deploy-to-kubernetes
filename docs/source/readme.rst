@@ -56,8 +56,7 @@ Preparing the host to run Kubernetes requires run this as root
 
 .. note:: This has only been tested on CentOS 7 and Ubuntu 18.04 and requires commenting out all swap entries in ``/etc/fstab`` to work
 
-.. warning:: This guide used to install the cluster on Ubuntu 18.04, but after seeing high CPU utilization issues related to volumes not being found this guide was moved over to CentOS vms.
-
+.. warning:: This guide used to install the cluster on Ubuntu 18.04, but after seeing high CPU utilization after a few days of operation this guide was moved to CentOS 7. The specific issues on Ubuntu were logged in ``journalctl -xe`` and appeared to be related to "volumes not being found" and "networking disconnects".
 Validate
 --------
 
