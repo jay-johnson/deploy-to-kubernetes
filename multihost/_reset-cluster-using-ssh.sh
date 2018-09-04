@@ -47,9 +47,8 @@ deploy_suffix=""
 deploy_splunk="splunk"
 deploy_resources="1"
 deploy_stack="1"
-use_go_dir="~/go"
-use_go_path_value="PATH=\$PATH:${use_go_dir}/bin"
-use_go_exports="export GOPATH=${use_go_dir} && export ${use_go_path_value}"
+use_go_exports="export GOPATH=\$HOME/go/bin && export PATH=\$PATH:\$GOPATH:\$GOPATH/bin"
+install_go="1"
 storage_type="ceph"
 object_store=""
 namespace="default"
@@ -82,6 +81,8 @@ do
         deploy_resources="0"
     elif [[ "${i}" == "nostack" ]]; then
         deploy_stack="0"
+    elif [[ "${i}" == "noinstallgo" ]]; then
+        install_go="0"
     elif [[ "${contains_equal}" != "" ]]; then
         first_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         second_arg=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
@@ -94,9 +95,7 @@ do
         elif [[ "${first_arg}" == "rookdir" ]]; then
             rook_dir=${second_arg}
         elif [[ "${first_arg}" == "gopath" ]]; then
-            use_go_dir=${second_arg}
-            use_go_path_value="PATH=\$PATH:${use_go_dir}"
-            use_go_exports="export GOPATH=${use_go_dir} && export ${use_go_path_value}"
+            use_go_exports=${second_arg}
         fi
     elif [[ "${i}" == "antinex" ]]; then
         cert_env="an"
@@ -111,6 +110,28 @@ done
 anmt "---------------------------------------------------------"
 anmt "resetting kubernetes multihost cluster on nodes: ${nodes}"
 inf ""
+
+for i in $nodes; do
+    anmt "ensuring https://github.com/jay-johnson/deploy-to-kubernetes.git in /opt/deploy-to-kubernetes is updated on ${i}"
+    test_exists=$(ssh ${login_user}@${i} "ls / | grep /opt | wc -l")
+    if [[ "${test_exists}" == "0" ]]; then
+        ssh ${login_user}@${i} "if [[ -e /opt ]]; then chmod 777 /opt; else mkdir -p -m 777 /opt ; fi"
+    fi
+    test_exists=$(ssh ${login_user}@${i} "ls /opt/ | grep deploy-to-kubernetes | wc -l")
+    if [[ "${test_exists}" == "0" ]]; then
+        ssh ${login_user}@${i} "ssh-agent sh -c 'ssh-add ~/.ssh/id_rsa; git clone https://github.com/jay-johnson/deploy-to-kubernetes.git /opt/deploy-to-kubernetes'"
+    else
+        ssh ${login_user}@${i} "ssh-agent sh -c 'ssh-add ~/.ssh/id_rsa; cd /opt/deploy-to-kubernetes; pwd; git pull'"
+    fi
+done
+
+if [[ "${install_go}" == "1" ]]; then
+    for i in $nodes; do
+        anmt "installing go on ${i}: ssh ${login_user}@${i} '/opt/deploy-to-kubernetes/tools/install-go.sh'"
+        ssh ${login_user}@${i} "/opt/deploy-to-kubernetes/tools/install-go.sh"
+    done
+    inf ""
+fi
 
 for i in $nodes; do
     anmt "resetting kubernetes on ${i}: ssh ${login_user}@${i} 'kubeadm reset -f'"

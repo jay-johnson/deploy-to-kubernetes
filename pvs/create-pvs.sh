@@ -39,6 +39,7 @@ deploy_suffix=""
 cert_env="dev"
 storage_type="ceph"
 pv_deployment_type="all-pvs"
+is_ubuntu=$(uname -a | grep -i ubuntu | wc -l)
 for i in "$@"
 do
     if [[ "${i}" == "prod" ]]; then
@@ -210,7 +211,11 @@ if [[ "${storage_type}" == "ceph" ]]; then
 elif [[ "${storage_type}" == "cephs3" ]]; then
     install_rook_with_ceph ${storage_type} ${cert_env} ${should_cleanup_before_startup}
 else
-    install_nfs
+    if [[ "${is_ubuntu}" == "1" ]]; then
+        install_nfs
+    else
+        warn "nfs install not supported"
+    fi
 fi
 
 good "done creating persistent volumes for storage_type: ${storage_type}"

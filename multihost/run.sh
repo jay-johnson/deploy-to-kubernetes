@@ -73,17 +73,20 @@ if [[ "${num_nodes}" != "1" ]]; then
     inf ""
 
     inf "getting lables for all cluster nodes"
-    test_exists_m1=$(kubectl get nodes --show-labels -o wide | grep master1)
-    test_exists_m2=$(kubectl get nodes --show-labels -o wide | grep master2)
-    test_exists_m3=$(kubectl get nodes --show-labels -o wide | grep master3)
+    node_name_m1=$(kubectl get nodes | grep master1 | awk '{print $1}')
+    node_name_m2=$(kubectl get nodes | grep master2 | awk '{print $1}')
+    node_name_m3=$(kubectl get nodes | grep master3 | awk '{print $1}')
+    test_exists_m1=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m1})
+    test_exists_m2=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m2})
+    test_exists_m3=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m3})
     inf ""
 
     for i in $labels_for_m1; do
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m1} | grep '${i}' | wc -l)
-        inf "Setting master1 label: ${i} with: kubectl label nodes master1 $i --overwrite"
-        kubectl label nodes master1 ${i} --overwrite
+        inf "Setting master1 label: ${i} with: kubectl label nodes ${node_name_m1} $i --overwrite"
+        kubectl label nodes ${node_name_m1} ${i} --overwrite
     done
     inf ""
 
@@ -91,8 +94,8 @@ if [[ "${num_nodes}" != "1" ]]; then
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m2} | grep '${i}' | wc -l)
-        inf "Setting master2 label: ${i} with: kubectl label nodes master2 $i --overwrite"
-        kubectl label nodes master2 ${i} --overwrite
+        inf "Setting master2 label: ${i} with: kubectl label nodes ${node_name_m2} $i --overwrite"
+        kubectl label nodes ${node_name_m2} ${i} --overwrite
     done
     inf ""
 
@@ -100,8 +103,8 @@ if [[ "${num_nodes}" != "1" ]]; then
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m3} | grep '${i}' | wc -l)
-        inf "Setting master3 label: ${i} with: kubectl label nodes master3 $i --overwrite"
-        kubectl label nodes master3 ${i} --overwrite
+        inf "Setting master3 label: ${i} with: kubectl label nodes ${node_name_m3} $i --overwrite"
+        kubectl label nodes ${node_name_m3} ${i} --overwrite
     done
     inf ""
 else

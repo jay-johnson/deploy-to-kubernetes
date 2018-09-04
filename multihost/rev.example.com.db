@@ -17,7 +17,6 @@ $TTL	604800
 ;Reverse lookup for Name Server
 101     IN      PTR    ns1.example.com.
 ;PTR Record IP address to HostName
-100     IN      PTR    home1.example.com
 101     IN      PTR    api.example.com.
 101     IN      PTR    example.com
 101     IN      PTR    ceph.example.com.

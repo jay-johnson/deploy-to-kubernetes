@@ -1,13 +1,13 @@
-Deploying a Distributed AI Stack to Kubernetes on Ubuntu
+Deploying a Distributed AI Stack to Kubernetes on CentOS
 --------------------------------------------------------
 
 .. image:: https://i.imgur.com/qiyhAq9.png
 
-Install and manage a Kubernetes cluster with helm on a single Ubuntu 18.04 vm or in multi-host mode that runs the cluster on 3 Ubuntu 18.04 vms. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
+Install and manage a Kubernetes cluster with helm on a single CentOS 7 vm or in multi-host mode that runs the cluster on 3 CentOS 7 vms. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
 
 This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes single host or multi-host cluster:
 
-- `Managing a Multi-Host Kubernetes Cluster with an External DNS Server <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-your-own-external-dns>`__
+- `Managing a Multi-Host Kubernetes Cluster with an External DNS Server <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-an-external-dns-server>`__
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
 - `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
 - `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
@@ -23,7 +23,7 @@ This guide was built for deploying the `AntiNex stack of docker containers <http
 Getting Started
 ---------------
 
-.. note:: Please ensure the Ubuntu host has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot from a recent AI training test with only 3 cores:
+.. note:: Please ensure for single-vm hosting that the CentOS machine has at least 4 CPU cores and more than 8 GB ram. Here is a screenshot of the CPU utilization during AI training with only 3 cores:
 
     .. image:: https://i.imgur.com/KQ7MBdM.png
 
@@ -54,7 +54,9 @@ Preparing the host to run Kubernetes requires run this as root
     sudo su
     ./prepare.sh
 
-.. note:: This has only been tested on Ubuntu 18.04 and requires commenting out all swap entries in ``/etc/fstab`` to work
+.. note:: This has only been tested on CentOS 7 and Ubuntu 18.04 and requires commenting out all swap entries in ``/etc/fstab`` to work
+
+.. warning:: This guide used to required the cluster to run on Ubuntu 18.04, but after seeing high CPU utilization issues related to volumes not being found this guide was moved over to CentOS vms.
 
 Validate
 --------
@@ -117,14 +119,25 @@ Here are the commands to deploy Postgres, Redis, Nginx Ingress, and pgAdmin4 in 
 
 .. note:: Please ensure helm is installed and the tiller pod in the ``kube-system`` namespace is the ``Running`` state or Redis will encounter deployment issues
 
+Install Go using the `./tools/install-go.sh script <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/tools/install-go.sh>`__ or with the commands:
+
 ::
 
-    # note this has only been tested on Ubuntu 18.04:
+    # note go install has only been tested on CentOS 7 and Ubuntu 18.04:
     sudo su
-    apt install golang-go
-    export GOPATH=$HOME/go
-    export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-    go get github.com/blang/expenv
+    GO_VERSION="1.11"
+    GO_OS="linux"
+    GO_ARCH="amd64"
+    go_file="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
+    curl https://dl.google.com/go/${go_file} --output /tmp/${go_file}
+    export GOPATH=$HOME/go/bin
+    export PATH=$PATH:$GOPATH:$GOPATH/bin
+    tar -C $HOME -xzf /tmp/${go_file}
+    $GOPATH/go get github.com/blang/expenv
+    # make sure to add GOPATH and PATH to ~/.bashrc
+
+::
+
     ./user-install-kubeconfig.sh
     ./deploy-resources.sh
 
@@ -520,15 +533,22 @@ Deploy Postgres
 Install Go
 ==========
 
-Using Crunchy Data's postgres containers requires having go installed:
+Using Crunchy Data's postgres containers requires having go installed. Go can be installed using the `./tools/install-go.sh script <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/tools/install-go.sh>`__ or with the commands:
 
 ::
 
-    # note this has only been tested on Ubuntu 18.04:
-    sudo apt install golang-go
-    export GOPATH=$HOME/go
-    export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-    go get github.com/blang/expenv
+    # note go install has only been tested on CentOS 7 and Ubuntu 18.04:
+    sudo su
+    GO_VERSION="1.11"
+    GO_OS="linux"
+    GO_ARCH="amd64"
+    go_file="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
+    curl https://dl.google.com/go/${go_file} --output /tmp/${go_file}
+    export GOPATH=$HOME/go/bin
+    export PATH=$PATH:$GOPATH:$GOPATH/bin
+    tar -C $HOME -xzf /tmp/${go_file}
+    $GOPATH/go get github.com/blang/expenv
+    # make sure to add GOPATH and PATH to ~/.bashrc
 
 Start
 =====
@@ -1520,4 +1540,3 @@ License
 Apache 2.0 - Please refer to the LICENSE_ for more details
 
 .. _License: https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/LICENSE
-

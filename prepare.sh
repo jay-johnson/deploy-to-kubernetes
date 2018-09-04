@@ -47,6 +47,9 @@ cert_env="dev"
 storage_type="ceph"
 pv_deployment_type="all-pvs"
 multihost_labeler="./multihost/run.sh"
+is_ubuntu=$(uname -a | grep -i ubuntu | wc -l)
+install_on_centos="1"
+
 for i in "$@"
 do
     contains_equal=$(echo ${i} | grep "=")
@@ -66,6 +69,8 @@ do
         fi
     elif [[ "${i}" == "nolabeler" ]]; then
         multihost_labeler=""
+    elif [[ "${i}" == "--no-install" ]]; then
+        install_on_centos="0"
     elif [[ "${i}" == "prod" ]]; then
         cert_env="prod"
     elif [[ "${i}" == "antinex" ]]; then
@@ -79,37 +84,80 @@ done
 
 inf ""
 anmt "---------------------------------------------"
-good "Preparing host for running kubernetes"
 
-inf "updating host repositories"
-apt-get update
-inf ""
+# automating install steps from:
+# https://kubernetes.io/docs/setup/independent/install-kubeadm/
 
-inf "installing apt-transport-https"
-apt-get install -y apt-transport-https
-inf ""
+if [[ "${is_ubuntu}" == "1" ]]; then
+    good "Preparing host for running kubernetes on Ubuntu"
 
-inf "installing google apt key"
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-inf ""
-
-inf "installing google kubernetes repository"
-test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep kubernetes-xenial | wc -l)
-if [[ "${test_if_found}" == "0" ]]; then
-    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+    inf "updating host repositories"
     apt-get update
+
+    inf "installing apt-transport-https"
+    apt-get install -y apt-transport-https
+    inf ""
+
+    inf "installing google apt key"
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    inf ""
+
+    inf "installing google kubernetes repository"
+    test_if_found=$(cat /etc/apt/sources.list.d/kubernetes.list | grep kubernetes-xenial | wc -l)
+    if [[ "${test_if_found}" == "0" ]]; then
+        echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        apt-get update
+    fi
+    inf ""
+
+    good "installing kubelet kubeadm kubernetes-cni from the google repository"
+    apt-get install -y \
+        kubelet \
+        kubeadm \
+        kubernetes-cni
+    inf ""
+
+    inf "setting up CNI bridge in /etc/sysctl.conf"
+    sysctl net.bridge.bridge-nf-call-iptables=1
+    sysctl -p /etc/sysctl.conf
+    inf ""
+
+    inf "enabling kubelet on restart"
+    systemctl enable kubelet
+    inf ""
+else
+    good "Preparing host for running kubernetes on CentOS"
+
+    if [[ ! -e /etc/yum.repos.d/kubernetes.repo ]]; then
+        inf "installing kubernetes repo"
+        cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kube*
+EOF
+    fi
+
+    setenforce 0
+    inf "installing kubernetes"
+    yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+    inf "installing kubernetes"
+    systemctl enable kubelet && systemctl start kubelet
+
+    cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+    sysctl --system
 fi
 inf ""
 
-good "installing kubelet kubeadm kubernetes-cni from the google repository"
-apt-get install -y \
-    kubelet \
-    kubeadm \
-    kubernetes-cni
-inf ""
-
-warn "turning off swap - please ensure it is disabled in all entries in /etc/fstab"
 # need to still disable swap in: /etc/fstab
+warn "turning off swap - please ensure it is disabled in all entries in /etc/fstab"
 swapoff -a
 inf ""
 
@@ -163,17 +211,8 @@ if [[ -e ./pvs/create-pvs.sh ]]; then
     inf ""
 fi
 
-inf "setting up CNI bridge in /etc/sysctl.conf"
-sysctl net.bridge.bridge-nf-call-iptables=1
-sysctl -p /etc/sysctl.conf
-inf ""
-
-inf "enabling kubelet on restart"
-systemctl enable kubelet
-inf ""
-
 anmt "---------------------------------------------"
-anmt "Install the kuberenets config with the following commands or use the ./user-install-kubeconfig.sh:"
+anmt "Install the kubernetes config with the following commands or use the ./user-install-kubeconfig.sh:"
 inf ""
 good "mkdir -p $HOME/.kube"
 good "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"

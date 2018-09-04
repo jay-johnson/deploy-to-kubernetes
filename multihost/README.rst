@@ -1,12 +1,12 @@
-Managing a Multi-Host Kubernetes Cluster with Your Own External DNS
--------------------------------------------------------------------
+Managing a Multi-Host Kubernetes Cluster with an External DNS Server
+--------------------------------------------------------------------
 
-This guide is for managing a multi-host Kubernetes cluster deployed across 3 Ubuntu 18.04 vms. Once running, you can access the sample applications from outside the cluster with the included DNS nameserver (bind9).
+This guide is for managing a multi-host Kubernetes cluster deployed across 3 CentOS 7 vms. Once running, you can access the sample applications from outside the cluster with the included DNS nameserver (bind9).
 
 Overview
 ========
     
-Set up 3 Ubuntu 18.04 vms and run an external DNS (using bind9) for a distributed, multi-host Kubernetes cluster that is accessible on the domain: ``example.com``
+Set up 3 CentOS 7 vms and run an external DNS (using bind9) for a distributed, multi-host Kubernetes cluster that is accessible on the domain: ``example.com``
 
 Background
 ==========
@@ -41,10 +41,49 @@ Allocate VM Resources
 
 #.  Take note of each vm's bridge network adapter's MAC address (this will help finding the vm's IP address in a router's web app or using network detection tools)
 
-Install Ubuntu 18.04
-====================
+Install CentOS 7
+================
 
-Install Ubuntu 18.04 on each vm and `here is the Ubuntu download page <https://www.ubuntu.com/download/desktop>`__
+Install CentOS 7 on each vm and `here is the CentOS 7 DVD download page <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`__
+
+#.  Additional notes
+
+    - I use the `multihost/_reset-cluster-using-ssh.sh script <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/_reset-cluster-using-ssh.sh>`__ to reset the cluster using ssh.
+
+    - I recently moved from running on Virtualbox with Ubuntu 18.04 to KVM with CentOS 7, and am tracking the changes in the ``multihost`` directory. This includes how each vm's bridge network adapter uses a ``ifcg-eth0`` interface and starter scripts to make this process repeatable. Please note, it will continue to be a work in progress.
+
+        - `create a vm with kvm <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/kvm/create-centos-vm.sh>`__
+        - `start m1 vm <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/kvm/start-m1.sh>`__
+        - `start m2 vm <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/kvm/start-m2.sh>`__
+        - `start m3 vm <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/kvm/start-m3.sh>`__
+        - `m1 directory <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m1>`__
+        - `m2 directory <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m2>`__
+        - `m3 directory <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost/m3>`__
+
+Prepare VMs
+===========
+
+#.  This command needs to run as root and will prepare the CentOS vm for running Kubernetes.
+
+    Use this `script to prepare a CentOS 7 vm <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/centos/prepare.sh>`__ for running in this cluster.
+
+    ::
+
+        ./centos/prepare.sh
+
+#.  Confirm Kube Proxy Kernel Modules are Loaded
+
+    The vanilla CentOS 7 installer does not install the required kernel modules. By running the ``centos/prepare-vm.sh`` script, each vm's kernel should support the required kube proxy kernel odules:
+
+    ::
+
+        lsmod | grep ip_vs
+        ip_vs_sh               12688  0
+        ip_vs_wrr              12697  0
+        ip_vs_rr               12600  0
+        ip_vs                 141473  6 ip_vs_rr,ip_vs_sh,ip_vs_wrr
+        nf_conntrack          133053  9 ip_vs,nf_nat,nf_nat_ipv4,nf_nat_ipv6,xt_conntrack,nf_nat_masquerade_ipv4,nf_conntrack_netlink,nf_conntrack_ipv4,nf_conntrack_ipv6
+        libcrc32c              12644  5 xfs,ip_vs,libceph,nf_nat,nf_conntrack
 
 Install Kubernetes
 ==================
@@ -124,15 +163,15 @@ Verify the Cluster has 3 Ready Nodes
     ::
 
         kubectl get nodes -o wide --show-labels
-        NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION      CONTAINER-RUNTIME     LABELS
-        master1   Ready     master    16m       v1.11.2   192.168.0.101   <none>        Ubuntu 18.04 LTS   4.15.0-32-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master1,minio=enabled,node-role.kubernetes.io/master=,splunk=enabled
-        master2   Ready     <none>    12m       v1.11.2   192.168.0.102   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2
-        master3   Ready     <none>    12m       v1.11.2   192.168.0.103   <none>        Ubuntu 18.04 LTS   4.15.0-30-generic   docker://17.12.1-ce   backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,kubernetes.io/hostname=master3,splunk=enabled
+        NAME                  STATUS    ROLES     AGE       VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE                KERNEL-VERSION               CONTAINER-RUNTIME   LABELS
+        master1.example.com   Ready     master    7h        v1.11.2   192.168.0.101   <none>        CentOS Linux 7 (Core)   3.10.0-862.11.6.el7.x86_64   docker://18.6.1     backend=disabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=disabled,frontend=enabled,kubernetes.io/hostname=master1.example.com,minio=enabled,node-role.kubernetes.io/master=,splunk=disabled
+        master2.example.com   Ready     <none>    7h        v1.11.2   192.168.0.102   <none>        CentOS Linux 7 (Core)   3.10.0-862.11.6.el7.x86_64   docker://18.6.1     backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=enabled,frontend=enabled,kubernetes.io/hostname=master2.example.com,minio=disabled,splunk=disabled
+        master3.example.com   Ready     <none>    7h        v1.11.2   192.168.0.103   <none>        CentOS Linux 7 (Core)   3.10.0-862.11.6.el7.x86_64   docker://18.6.1     backend=enabled,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ceph=enabled,datascience=disabled,frontend=disabled,kubernetes.io/hostname=master3.example.com,minio=disabled,splunk=enabled
 
 Deploy a Distributed AI Stack to a Multi-Host Kubernetes Cluster
 ----------------------------------------------------------------
 
-This will deploy the `AntiNex AI stack <https://github.com/jay-johnson/deploy-to-kubernetes#deploying-a-distributed-ai-stack-to-kubernetes-on-ubuntu>`__ to the new multi-host Kubernetes cluster.
+This will deploy the `AntiNex AI stack <https://github.com/jay-johnson/deploy-to-kubernetes#deploying-a-distributed-ai-stack-to-kubernetes-on-centos>`__ to the new multi-host Kubernetes cluster.
 
 Deploy Cluster Resources
 ========================
@@ -149,12 +188,18 @@ Deploy Cluster Resources
 
     ::
 
+        # note this has only been tested on CentOS 7:
         sudo su
-        apt install golang-go
-        export GOPATH=$HOME/go
-        export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-        go get github.com/blang/expenv
-
+        GO_VERSION="1.11"
+        GO_OS="linux"
+        GO_ARCH="amd64"
+        go_file="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
+        curl https://dl.google.com/go/${go_file} --output /tmp/${go_file}
+        export GOPATH=$HOME/go/bin
+        export PATH=$PATH:$GOPATH:$GOPATH/bin
+        tar -C $HOME -xzf /tmp/${go_file}
+        $GOPATH/go get github.com/blang/expenv
+        # make sure to add GOPATH and PATH to ~/.bashrc
 
 #.  Deploy the stack's resources:
 
@@ -242,7 +287,7 @@ Set up an External DNS Server for a Multi-Host Kubernetes Cluster
 
 Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS server for making the public-facing frontend nginx ingresses accessible to browsers or other clients on an internal network (like a home lab).
 
-#.  Determine the Networking IP Addresses for Your VMs
+#.  Determine the Networking IP Addresses for VMs
 
     For this guide the 3 vms use the included netplan yaml files for statically setting their IPs:
 
@@ -260,7 +305,7 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
 
     Pick a vm to be the primary DNS server. For this guide, I am using ``master1.example.com`` with IP: ``192.168.0.101``.
 
-    For DNS this guide uses the `ISC BIND server <https://www.isc.org/downloads/bind/>`__. Here is how to install BIND on Ubuntu 18.04:
+    For DNS this guide uses the `ISC BIND server <https://www.isc.org/downloads/bind/>`__. Here is how to install BIND on CentOS 7:
 
     ::
 
@@ -402,30 +447,33 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
 
 #.  From another host set up the Netplan yaml file
 
-    Ubuntu 18.04 uses netplan for setting up a persistent DNS nameserver like ``192.168.0.101``. Here is the netplan yaml file I am using for ensuring the cluster's BIND server resolves the local network DNS records that match the Kubernetes pod deployments across the 3 cluster nodes (which are just vms with an ip hosted on the bridge network adapter).
-
-    Please edit this file as root and according to your vm's networking IP address and static vs dhcp requirements. During this example, I had a static IP in the ``HOST_VM_IP`` with a value of ``192.168.0.49``.
+    Here is the ``192.168.0.101`` vm's ``/etc/sysconfig/network-scripts/ifcfg-eth0`` network interface file that uses the external BIND server for DNS. Please edit this file as root and according to your vm's networking IP address and static vs dhcp requirements.
 
     ::
 
-        /etc/netplan/01-network-manager-all.yaml 
-        # Let NetworkManager manage all devices on this system
-        network:
-          version: 2
-          renderer: NetworkManager
-          ethernets:
-            enp0s3:
-              dhcp4: no
-              addresses: [HOST_VM_IP/24]
-              gateway4: 192.168.0.1
-              nameservers:
-                addresses: [192.168.0.101,8.8.8.8,8.8.4.4]
-
-#.  Apply the Netplan Changes
-
-    ::
-    
-        sudo netplan apply --debug
+        /etc/sysconfig/network-scripts/ifcfg-eth0
+        TYPE="Ethernet"
+        PROXY_METHOD="none"
+        BROWSER_ONLY="no"
+        BOOTPROTO="none"
+        DEFROUTE="yes"
+        IPV4_FAILURE_FATAL="no"
+        IPV6INIT="yes"
+        IPV6_AUTOCONF="yes"
+        IPV6_DEFROUTE="yes"
+        IPV6_FAILURE_FATAL="no"
+        IPV6_ADDR_GEN_MODE="stable-privacy"
+        NAME="eth0"
+        UUID="747d880d-0c18-5a9f-c0a5-e9e80cd6be46"
+        DEVICE="eth0"
+        ONBOOT="yes"
+        IPADDR="192.168.0.101"
+        PREFIX="24"
+        GATEWAY="192.168.0.1"
+        DNS1="192.168.0.100"
+        DNS2="8.8.8.8"
+        DNS3="8.8.4.4"
+        IPV6_PRIVACY="no" 
 
 #.  Verify the Cluster DNS Alias Records
 
@@ -599,4 +647,4 @@ Next Steps
 More Information
 ================
 
-I used `this guide for setting up the master 1 vm to run a DNS nameserver on Ubuntu 18.04 <https://www.itzgeek.com/how-tos/linux/ubuntu-how-tos/how-to-configure-dns-server-on-ubuntu-18-04.html>`__, and then customized each vm's networking using the new `netplan nameservers yaml file <https://netplan.io/examples>`__ across the cluster nodes, dev vms and external hosts that need access to the Kubernetes cluster. I run this cluster on a baremetal Ubuntu 18.04 desktop and host these vms using `VirtualBox <https://www.virtualbox.org/>`__.
+After seeing high CPU utilization across the cluster, this guide was moved from Ubuntu 18.04 vms to CentOS 7. 

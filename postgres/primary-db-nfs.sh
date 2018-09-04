@@ -1,11 +1,15 @@
 # https://crunchydata.github.io/crunchy-containers/getting-started/kubernetes-and-openshift/#_single_primary
-# sudo apt install golang-go
-# go get github.com/blang/expenv
-# mkdir -p -m 777 /opt/antinex
 # git clone https://github.com/CrunchyData/crunchy-containers.git /opt/antinex/crunchy
-# on ubuntu 18.04:
-# export GOPATH=$HOME/go
-# export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+# sudo su
+# GO_VERSION="1.11"
+# GO_OS="linux"
+# GO_ARCH="amd64"
+# go_file="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
+# curl https://dl.google.com/go/${go_file} --output /tmp/${go_file}
+# export GOPATH=$HOME/go/bin
+# export PATH=$PATH:$GOPATH:$GOPATH/bin
+# tar -C $HOME -xzf /tmp/${go_file}
+# ${GOPATH}/go get github.com/blang/expenv
 
 export PROJECT="default"
 if [[ "${CCP_NFS_IP}" == "" ]]; then
