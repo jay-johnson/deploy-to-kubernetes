@@ -180,7 +180,11 @@ good "installing kubernets CNI addon"
 # kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
 # flannel
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+# updated from GitHub Issue:
+# https://github.com/kubernetes/kubernetes/issues/48798
+# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+# to
+kubectl -n kube-system apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 inf ""
 
 # generate new x509 SSL TLS keys, CA, certs and csr files using this command:
