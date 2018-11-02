@@ -43,9 +43,9 @@ Install
 
 Here is a video showing how to prepare the host to run a local Kubernetes cluster:
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193463?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193463.png"/></a>
+.. image:: https://asciinema.org/a/193463.png
+    :target: https://asciinema.org/a/193463?autoplay=1
+    :alt: Install Kubernetes
 
 Preparing the host to run Kubernetes requires run this as root
 
@@ -109,9 +109,9 @@ Deploy Redis and Postgres and the Nginx Ingress
 
 Here is a video showing how to deploy Postgres, Redis, Nginx Ingress, and the pgAdmin4 as pods in the cluster:
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193476?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193476.png"/></a>
+.. image:: https://asciinema.org/a/193476.png
+    :target: https://asciinema.org/a/193476?autoplay=1
+    :alt: Deploy Redis and Postgres and the Nginx Ingress
 
 .. note:: Postgres, pgAdmin4 and Redis use Rook Ceph to persist data
 
@@ -158,9 +158,9 @@ Start Applications
 
 Here is a video showing how to start the Django REST Framework, Celery Workers, Jupyter, and the AntiNex Core as pods in the cluster:
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193485?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193485.png"/></a>
+.. image:: https://asciinema.org/a/193485.png
+    :target: https://asciinema.org/a/193485?autoplay=1
+    :alt: Start Applications
 
 Start all applications as your user with the command:
 
@@ -196,9 +196,9 @@ Run a Database Migration
 
 Here is a video showing how to apply database schema migrations in the cluster:
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193491?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193491.png"/></a>
+.. image:: https://asciinema.org/a/193491.png
+    :target: https://asciinema.org/a/193491?autoplay=1
+    :alt: Run a Database Migration
 
 To apply new Django database migrations, run the following command:
 
@@ -412,9 +412,9 @@ With virtual environment set up, we can use the client to train a deep neural ne
 
 While you wait, here is a video showing the training and get results:
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193494?autoplay=1" target="_blank"><img src="https://i.imgur.com/0hcMfti.png"/></a>
+.. image:: https://i.imgur.com/0hcMfti.png
+    :target: https://asciinema.org/a/193494?autoplay=1
+    :alt: Train a Deep Neural Network on Kubernetes
 
 Get the AI Job Record
 ---------------------
@@ -1478,9 +1478,9 @@ Reset Cluster
 
 Here is a video showing how to reset the local Kubernetes cluster.
 
-.. raw:: html
-
-    <a href="https://asciinema.org/a/193472?autoplay=1" target="_blank"><img src="https://asciinema.org/a/193472.png"/></a>
+.. image:: https://asciinema.org/a/193472.png
+    :target: https://asciinema.org/a/193472?autoplay=1
+    :alt: Reset Cluster
 
 Please be careful as these commands will shutdown all containers and reset the Kubernetes cluster.
 

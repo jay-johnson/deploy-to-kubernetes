@@ -23,7 +23,15 @@ class PyTest(TestCommand):
         import pytest
         errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
+# end of PyTest
 
+"""
+https://packaging.python.org/guides/making-a-pypi-friendly-readme/
+check the README.rst works on pypi as the
+long_description with:
+twine check dist/*
+"""
+long_description = open('README.rst').read()
 
 cur_path, cur_script = os.path.split(sys.argv[0])
 os.chdir(os.path.abspath(cur_path))
@@ -66,11 +74,9 @@ setup(
     cmdclass={'test': PyTest},
     version='1.0.0',
     description=(
-        'Deployment tooling for running a '
-        'a distributed AI stack to Kubernetes'),
-    long_description=(
-        'Deployment tooling for running a '
-        'a distributed AI stack to Kubernetes'),
+        'Deployment tooling for managing a '
+        'a distributed AI stack on Kubernetes'),
+    long_description=long_description,
     author='Jay Johnson',
     author_email='jay.p.h.johnson@gmail.com',
     url='https://github.com/jay-johnson/deploy-to-kubernetes',

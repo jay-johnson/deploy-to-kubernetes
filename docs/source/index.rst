@@ -28,7 +28,7 @@ This guide was built for deploying the `AntiNex stack of docker containers <http
 .. toctree::
    :maxdepth: 2
 
-   readme
+   README
    multi-host-with-dns
 
 AntiNex Stack Status
