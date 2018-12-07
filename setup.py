@@ -25,6 +25,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 # end of PyTest
 
+
 """
 https://packaging.python.org/guides/making-a-pypi-friendly-readme/
 check the README.rst works on pypi as the
