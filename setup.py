@@ -72,10 +72,14 @@ sys.path.insert(
 setup(
     name='deploy-to-kubernetes',
     cmdclass={'test': PyTest},
-    version='1.0.0',
+    version='1.0.1',
     description=(
-        'Deployment tooling for managing a '
-        'a distributed AI stack on Kubernetes'),
+        'Deployment tooling for managing '
+        'a distributed AI stack on Kubernetes: '
+        'runs AntiNex (https://antinex.readthedocs.io/en/latest/) '
+        'and the Stock Analysis Engine ('
+        'https://stock-analysis-engine.readthedocs.io/en/latest/) '
+        'and works on Kubernetes 1.13'),
     long_description=long_description,
     author='Jay Johnson',
     author_email='jay.p.h.johnson@gmail.com',
