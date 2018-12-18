@@ -9,5 +9,5 @@ spec:
   accessModes:
   - ReadWriteOnce
   capacity:
-    storage: 10G
+    storage: 30G
   persistentVolumeReclaimPolicy: Retain

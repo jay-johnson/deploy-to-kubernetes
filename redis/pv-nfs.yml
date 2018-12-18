@@ -9,7 +9,7 @@ spec:
   accessModes:
   - ReadWriteOnce
   capacity:
-    storage: 10G
+    storage: 30G
   nfs:
     path: /data/k8/redis
     server: localhost

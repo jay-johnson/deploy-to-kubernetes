@@ -72,11 +72,12 @@ if [[ "${storage_type}" != "ceph" ]]; then
 else
     good "deploying Bitnami redis stable with helm and persistent volumes using rook with ceph"
     helm install \
-        --name redis stable/redis \
+        stable/redis \
+        --name redis \
         --set rbac.create=true \
         --set persistence.existingClaim=redis-ceph-data \
         --set persistence.storageClass=rook-ceph-block \
-        --set persistence.size=8gi \
+        --set persistence.size=30Gi \
         --values ./redis/redis.yml
 fi
 
