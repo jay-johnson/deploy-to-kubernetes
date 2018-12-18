@@ -33,6 +33,7 @@ www      IN       A      192.168.0.101
 api      IN       A      192.168.0.102
 jenkins  IN       A      192.168.0.102
 jupyter  IN       A      192.168.0.102
+aejupyter  IN       A      192.168.0.102
 master2  IN       A      192.168.0.102
 master3  IN       A      192.168.0.103
 splunk   IN       A      192.168.0.103

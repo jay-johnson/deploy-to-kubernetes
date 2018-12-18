@@ -27,6 +27,7 @@ $TTL	604800
 101     IN      PTR    www.example.com.
 102     IN      PTR    api.example.com.
 102     IN      PTR    jupyter.example.com.
+102     IN      PTR    aejupyter.example.com.
 102     IN      PTR    jenkins.example.com.
 102     IN      PTR    master2.example.com.
 103     IN      PTR    master3.example.com.

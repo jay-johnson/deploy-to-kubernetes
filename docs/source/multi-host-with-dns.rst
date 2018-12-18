@@ -360,6 +360,7 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         api      IN       A      192.168.0.102
         jenkins  IN       A      192.168.0.102
         jupyter  IN       A      192.168.0.102
+        aejupyter  IN       A      192.168.0.102
         master2  IN       A      192.168.0.102
         master3  IN       A      192.168.0.103
         splunk   IN       A      192.168.0.103
@@ -417,6 +418,7 @@ Now that you have a local, 3 node Kubernetes cluster, you can set up a bind9 DNS
         101     IN      PTR    www.example.com.
         102     IN      PTR    api.example.com.
         102     IN      PTR    jupyter.example.com.
+        102     IN      PTR    aejupyter.example.com.
         102     IN      PTR    jenkins.example.com.
         102     IN      PTR    master2.example.com.
         103     IN      PTR    master3.example.com.
