@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GO_VERSION="1.11"
+GO_VERSION="1.11.4"
 GO_OS="linux"
 GO_ARCH="amd64"
 go_file="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"

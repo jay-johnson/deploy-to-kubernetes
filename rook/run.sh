@@ -107,11 +107,23 @@ while [[ "${not_ready}" == "0" ]]; do
         elif [[ "${modulus_sleep}" == "0" ]]; then
             inf "${cur_date} - still waiting on system pods"
             num_sleeps=0
-        elif [[ $num_sleeps -gt 1200 ]]; then
+        elif [[ $num_sleeps -gt 500 ]]; then
             inf ""
             err "Failed waiting for rook and ceph system pods to enter a valid Running state"
             inf ""
             ${use_path}/view-system-pods.sh
+            echo "" >> /tmp/boot.log
+            echo "rook ceph agent:" >> /tmp/boot.log
+            kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-ceph-agent >> /tmp/boot.log
+            echo "" >> /tmp/boot.log
+            echo "rook ceph operator:" >> /tmp/boot.log
+            kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-ceph-operator >> /tmp/boot.log
+            echo "" >> /tmp/boot.log
+            echo "rook ceph discover:" >> /tmp/boot.log
+            kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-discover >> /tmp/boot.log
+            echo "" >> /tmp/boot.log
+            echo "rook ceph system pods:" >> /tmp/boot.log
+            ${use_path}/view-system-pods.sh >> /tmp/boot.log
             inf ""
             exit 1 
         fi
