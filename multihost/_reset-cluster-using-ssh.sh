@@ -49,6 +49,7 @@ deploy_resources="1"
 deploy_stack="1"
 use_go_exports="export GOPATH=\$HOME/go/bin && export PATH=\$PATH:\$GOPATH:\$GOPATH/bin"
 install_go="1"
+update_kube="1"
 storage_type="ceph"
 object_store=""
 namespace="default"
@@ -129,6 +130,14 @@ if [[ "${install_go}" == "1" ]]; then
     for i in $nodes; do
         anmt "installing go on ${i}: ssh ${login_user}@${i} '/opt/deploy-to-kubernetes/tools/install-go.sh'"
         ssh ${login_user}@${i} "/opt/deploy-to-kubernetes/tools/install-go.sh"
+    done
+    inf ""
+fi
+
+if [[ "${update_kube}" == "1" ]]; then
+    for i in $nodes; do
+        anmt "updating k8 on ${i}: ssh ${login_user}@${i} '/opt/deploy-to-kubernetes/tools/update-k8.sh'"
+        ssh ${login_user}@${i} "/opt/deploy-to-kubernetes/tools/update-k8.sh"
     done
     inf ""
 fi
