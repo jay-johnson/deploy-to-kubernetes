@@ -142,3 +142,6 @@ rook/ceph/tls-s3.yml
 # Minio S3 test files
 download-run-s3-test.txt
 run-s3-test.txt
+
+# Ceph
+ceph/ceph-helm

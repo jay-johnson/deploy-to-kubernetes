@@ -55,6 +55,8 @@ do
     contains_equal=$(echo ${i} | grep "=")
     if [[ "${i}" == "prod" ]]; then
         cert_env="prod"
+    elif [[ "${i}" == "new-ceph" ]]; then
+        storage_type="new-ceph"
     elif [[ "${i}" == "ceph" ]]; then
         storage_type="ceph"
     elif [[ "${i}" == "nfs" ]]; then

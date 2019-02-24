@@ -1,0 +1,16 @@
+network:
+  public:   172.21.0.0/20
+  cluster:   172.21.0.0/20
+
+osd_devices:
+  - name: dev-sdd
+    device: /dev/sdd
+    zap: "1"
+  - name: dev-sde
+    device: /dev/sde
+    zap: "1"
+
+storageclass:
+  name: ceph-rbd
+  pool: rbd
+  user_id: k8s
