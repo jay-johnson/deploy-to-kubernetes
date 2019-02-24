@@ -37,7 +37,7 @@ if [[ -e ./ceph/show-ceph-status.sh ]]; then
     use_path="./ceph"
 fi
 
-files="show-ceph-status.sh show-ceph-rados-df.sh show-ceph-df.sh show-ceph-osd-status.sh show-pods.sh"
+files="show-ceph-status.sh show-ceph-rados-df.sh show-ceph-df.sh show-ceph-osd-status.sh show-ceph-rbd-ls.sh show-pods.sh"
 for f in ${files}; do
     ${use_path}/${f}
 done

@@ -36,7 +36,7 @@ anmt "----------------------------------------------"
 good "Getting Ceph osd status:"
 pod_name=$(kubectl get pods --ignore-not-found -n ${use_namespace} | grep -v keyring- | grep "ceph-rgw-" | awk '{print $1}' | tail -1)
 if [[ "${pod_name}" == "" ]]; then
-    err "Did not find a ceph-mon pod running - please check ceph:"
+    err "Did not find a ceph-rgw pod running - please check ceph:"
     err "kubectl get pods -n ${use_namespace}"
     exit 1
 else
