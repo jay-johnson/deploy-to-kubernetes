@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-mount
+  labels:
+    integration-test: busybox-mount
+spec:
+  containers:
+  - image: busybox:glibc
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "ls -l /var/lib/ceph/mon/bootstrap-mds/ceph.keyring;"]
+    name: busybox
+    volumeMounts:
+    - mountPath: /var/lib/ceph
+      name: test-volume
+  volumes:
+  - name: test-volume
+    hostPath:
+      # directory location on host
+      path: /var/lib/ceph/mon/bootstrap-mds/ceph.keyring

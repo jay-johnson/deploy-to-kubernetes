@@ -5,7 +5,8 @@ network:
 osd_devices:
   - name: dev-vdb1
     device: /dev/vdb1
-    zap: "1"
+    journal: /dev/sdf
+    zap: "0"
 
 storageclass:
   name: ceph-rbd

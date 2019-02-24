@@ -135,4 +135,30 @@ Please run the ``_uninstall.sh`` if you see this kind of error when running the 
     [errno 1] error connecting to the cluster
     command terminated with exit code 1
 
+OSD Issues
+==========
+
+Take a look at the ``osd-dev-vdb`` pod logs
+
+::
+
+    ./logs-osd-prepare-pod.sh
+
+OSD Pod Prepare is Unable to Zap
+--------------------------------
+
+::
+
+    Traceback (most recent call last):
+    File "/usr/sbin/ceph-disk", line 9, in <module>
+        load_entry_point('ceph-disk==1.0.0', 'console_scripts', 'ceph-disk')()
+    File "/usr/lib/python2.7/dist-packages/ceph_disk/main.py", line 5717, in run
+        main(sys.argv[1:])
+    File "/usr/lib/python2.7/dist-packages/ceph_disk/main.py", line 5668, in main
+        args.func(args)
+    File "/usr/lib/python2.7/dist-packages/ceph_disk/main.py", line 4737, in main_zap
+        zap(dev)
+    File "/usr/lib/python2.7/dist-packages/ceph_disk/main.py", line 1681, in zap
+        raise Error('not full block device; cannot zap', dev)
+    ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb1
 

@@ -153,7 +153,6 @@ pod:
           cpu: "2000m"
 
 secrets:
-  namespace: ceph
   keyrings:
     mon: ceph-mon-keyring
     mds: ceph-bootstrap-mds-keyring
@@ -255,8 +254,8 @@ ceph:
     mgr: true
   storage:
     # will have $NAMESPACE/{osd,mon} appended
-    osd_directory: /var/lib
-    mon_directory: /var/lib
+    osd_directory: /var/lib/ceph-helm
+    mon_directory: /var/lib/ceph-helm
     # use /var/log for fluentd to collect ceph log
     # mon_log: /var/log/ceph/mon
     # osd_log: /var/log/ceph/osd
@@ -274,11 +273,13 @@ osd_directory:
 # has important data from another application, it will be *LOST*
 # /!\ /!\
 enable_zap_and_potentially_lose_data: false
-#osd_devices:
-#  - name: dev-sdc
-#    device: /dev/sdc
-#    journal: /dev/sdf
-#    zap: "1"
+# Zap failed on 2019-02-24:
+# ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb1
+# osd_devices:
+#   - name: dev-vdb1
+#     device: /dev/vdb1
+#     journal: /dev/sdf
+#     zap: "0"
 
 bootstrap:
   enabled: false
