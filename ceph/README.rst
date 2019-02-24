@@ -109,6 +109,27 @@ With the cluster running you can quickly check the cluster status with:
 ::
 
     ./cluster-status.sh
+    --------------------------------------------------
+    Getting Ceph cluster status:
+
+    kubectl -n ceph exec -ti ceph-mon-gtx7h -c ceph-mon -- ceph -s
+    cluster:
+        id:     6cd2b8fb-4a50-43c0-9495-02c9a4438c87
+        health: HEALTH_OK
+
+    services:
+        mon: 3 daemons, quorum master1.example.com,master2.example.com,master3.example.com
+        mgr: master2.example.com(active)
+        mds: cephfs-1/1/1 up  {0=mds-ceph-mds-85b4fbb478-vj2vs=up:active}
+        osd: 3 osds: 3 up, 3 in
+        rgw: 1 daemon active
+
+    data:
+        pools:   6 pools, 48 pgs
+        objects: 208 objects, 3359 bytes
+        usage:   324 MB used, 284 GB / 284 GB avail
+        pgs:     48 active+clean
+
 
 Debugging
 =========
@@ -147,6 +168,8 @@ Take a look at the ``osd-dev-vdb`` pod logs
 OSD Pod Prepare is Unable to Zap
 --------------------------------
 
+To fix this error below, make sure the ``ceph-overrides.yaml`` is using the correct ``/dev/vdb`` path:
+
 ::
 
     Traceback (most recent call last):
@@ -162,3 +185,12 @@ OSD Pod Prepare is Unable to Zap
         raise Error('not full block device; cannot zap', dev)
     ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb1
 
+OSD unable to find IP Address
+-----------------------------
+
+To fix this error below, make sure to either remove the ``network`` definitions in the ``ceph-overrides.yaml``.
+
+::
+
+    + exec /usr/bin/ceph-osd --cluster ceph -f -i 2 --setuser ceph --setgroup disk
+    2019-02-24 08:53:40.592021 7f4313687e00 -1 unable to find any IP address in networks '172.21.0.0/20' interfaces ''

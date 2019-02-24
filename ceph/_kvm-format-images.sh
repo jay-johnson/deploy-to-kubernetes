@@ -54,7 +54,7 @@ function format_as_xfs() {
 
         # https://serverfault.com/questions/258152/fdisk-partition-in-single-line
         anmt "Setting up ${node} partition for /dev/vdb"
-        ssh root@${node} "printf \"o\nn\np\n1\n\n\nw\n\" | sudo fdisk /dev/vdb"
+        ssh root@${node} "printf \"\nn\np\n1\n\n\nw\n\" | sudo fdisk /dev/vdb"
 
         # or manually:
         # echo "# run on as root on the vm to format the disk in the vm:"
@@ -91,6 +91,8 @@ function format_as_xfs() {
 function umount_device() {
     for node in $nodes; do
         ssh root@${node} "umount /dev/vdb1"
+        anmt "Setting up ${node} partition for /dev/vdb"
+        ssh root@${node} "printf \"d\n1\nd\n\nw\n\" | sudo fdisk /dev/vdb"
         ssh root@${node} "df -h | grep vdb"
     done
 }
