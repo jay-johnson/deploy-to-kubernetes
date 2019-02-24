@@ -1,3 +1,10 @@
+network:
+  public: 192.168.0.0/16
+  cluster: 192.168.0.0/16
+  port:
+    mon: 6789
+    rgw: 8088
+
 # check cluster status with:
 # ./ceph/cluster-status.sh
 # or:

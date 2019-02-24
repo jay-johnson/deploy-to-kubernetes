@@ -84,9 +84,16 @@ if [[ -e ./ceph/test-mounts.yml ]]; then
     use_path="./ceph"
 fi
 test_mount_path="${use_path}/test-mounts.yml"
+test_pvc_path="${use_path}/test-pvc.yml"
 if [[ -e ${test_mount_path} ]]; then
     kubectl delete --ignore-not-found -f ${test_mount_path}
 fi
+if [[ -e ${test_pvc_path} ]]; then
+    kubectl delete --ignore-not-found -f ${test_pvc_path}
+fi
+
+inf "deleting any orphaned ceph pv's"
+kubectl delete --ignore-not-found pv $(kubectl get pv | grep ceph-rbd | grep -v rook | awk '{print $1}')
 
 if [[ "${format_images}" == "1" ]]; then
     ${use_path}/_kvm-format-images.sh

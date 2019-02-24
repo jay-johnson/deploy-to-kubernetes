@@ -1,16 +1,21 @@
-Running a Ceph Cluster on Kubernetes
-====================================
+Running a Distributed Ceph Cluster on a Kubernetes Cluster
+==========================================================
+
+Overview
+--------
+
+This guide `automates the install of a native ceph cluster inside a running kubernetes native cluster <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__. It requires creating and attaching 3 additional hard drive disk images (each ``100 GB``) to each of your kubernetes cluster vms (tested on 3 CentOS 7). This guide assumes your kubernetes cluster is using ``kvm`` with ``virsh`` for running the ``attach-disk`` commands.
+
+By default, the disk images will be installed at: ``/cephdata/m[123]/k8-centos-m[123]``. These disks will be automatically partitioned and formatted using `ceph zap <http://docs.ceph.com/docs/mimic/ceph-volume/lvm/zap/>`__, and zap will format each disk using the `recommended XFS filesystem <http://docs.ceph.com/docs/jewel/rados/configuration/filesystem-recommendations/>`__.
+
+.. note:: This is a work in progress.
+
+Background
+----------
 
 This installer was built to replace Rook-Ceph after hitting cluster stability after ~30 days in 2019. The steps are taken from the Ceph Helm installer:
 
 http://docs.ceph.com/docs/mimic/start/kube-helm/
-
-Set Up
-======
-
-This guide is for setting up a ceph cluster inside kubernetes and using attached disk images that are attached to 3 CentOS 7 vm's running in KVM.
-
-By default, the disk images will be installed at: ``/cephdata/m[123]/k8-centos-m[123]``.
 
 Build KVM HDD Images
 ====================
@@ -51,7 +56,24 @@ With automatic ssh root login access, you can run this to partition, mount and f
 
 ::
 
-    ./_kvm-format-images.sh
+    ./ceph/_kvm-format-images.sh
+
+Install Ceph on All Kubernetes Nodes
+====================================
+
+Please add ``ceph-common`` to all nodes before deploying ceph.
+
+For additional set up please refer to the official ceph docs:
+
+http://docs.ceph.com/docs/master/install/get-packages/
+
+For CentOS 7 you can run:
+
+::
+
+    echo "installing ceph from steps on: http://docs.ceph.com/docs/master/install/get-packages/"
+    sudo rpm --import "https://download.ceph.com/keys/release.asc"
+    sudo yum install -y ceph-common
 
 Deploy Ceph Cluster
 ===================
@@ -80,29 +102,28 @@ Show Pods
 
     --------------------------------------------------
     Getting Ceph pods with:
-
     kubectl get pods -n ceph
 
     NAME                                        READY   STATUS      RESTARTS   AGE
-    ceph-mds-85b4fbb478-9fhf4                   1/1     Running     1          8m25s
-    ceph-mds-keyring-generator-92fbx            0/1     Completed   0          8m25s
-    ceph-mgr-588577d89f-758qx                   1/1     Running     0          8m25s
-    ceph-mgr-keyring-generator-xjqn4            0/1     Completed   0          8m25s
-    ceph-mon-cd2mr                              3/3     Running     0          8m25s
-    ceph-mon-check-549b886885-jsx9k             1/1     Running     0          8m25s
-    ceph-mon-keyring-generator-rlvjh            0/1     Completed   0          8m25s
-    ceph-mon-mc75f                              3/3     Running     0          8m25s
-    ceph-mon-r2kdj                              3/3     Running     0          8m25s
-    ceph-namespace-client-key-generator-qhmcz   0/1     Completed   0          8m25s
-    ceph-osd-dev-vdb-6xbr9                      1/1     Running     0          8m25s
-    ceph-osd-dev-vdb-lmhcc                      1/1     Running     0          8m25s
-    ceph-osd-dev-vdb-vlfw2                      1/1     Running     0          8m25s
-    ceph-osd-keyring-generator-429cj            0/1     Completed   0          8m25s
-    ceph-rbd-provisioner-5cf47cf8d5-9fplr       1/1     Running     0          8m25s
-    ceph-rbd-provisioner-5cf47cf8d5-gcqrr       1/1     Running     0          8m25s
-    ceph-rgw-7b9677854f-k6hj7                   1/1     Running     0          8m25s
-    ceph-rgw-keyring-generator-8cv49            0/1     Completed   0          8m25s
-    ceph-storage-keys-generator-bvw8d           0/1     Completed   0          8m25s
+    ceph-mds-85b4fbb478-wjmxb                   1/1     Running     1          4m38s
+    ceph-mds-keyring-generator-pvh4l            0/1     Completed   0          4m38s
+    ceph-mgr-588577d89f-w8p8v                   1/1     Running     1          4m38s
+    ceph-mgr-keyring-generator-76l5r            0/1     Completed   0          4m38s
+    ceph-mon-429mk                              3/3     Running     0          4m39s
+    ceph-mon-6fvv6                              3/3     Running     0          4m39s
+    ceph-mon-75n4t                              3/3     Running     0          4m39s
+    ceph-mon-check-549b886885-cb64q             1/1     Running     0          4m38s
+    ceph-mon-keyring-generator-q26p2            0/1     Completed   0          4m38s
+    ceph-namespace-client-key-generator-bbvt2   0/1     Completed   0          4m38s
+    ceph-osd-dev-vdb-96v7h                      1/1     Running     0          4m39s
+    ceph-osd-dev-vdb-g9zkg                      1/1     Running     0          4m39s
+    ceph-osd-dev-vdb-r5fxr                      1/1     Running     0          4m39s
+    ceph-osd-keyring-generator-6pg77            0/1     Completed   0          4m38s
+    ceph-rbd-provisioner-5cf47cf8d5-kbfvt       1/1     Running     0          4m38s
+    ceph-rbd-provisioner-5cf47cf8d5-pwj4s       1/1     Running     0          4m38s
+    ceph-rgw-7b9677854f-8d7s5                   1/1     Running     1          4m38s
+    ceph-rgw-keyring-generator-284kp            0/1     Completed   0          4m38s
+    ceph-storage-keys-generator-bc6dq           0/1     Completed   0          4m38s
 
 Check Cluster Status
 ====================
@@ -111,28 +132,27 @@ With the cluster running you can quickly check the cluster status with:
 
 ::
 
-    ./cluster-status.sh
+    ./ceph/cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
-    kubectl -n ceph exec -ti ceph-mon-gtx7h -c ceph-mon -- ceph -s
+    kubectl -n ceph exec -ti ceph-mon-check-549b886885-cb64q -c ceph-mon -- ceph -s
     cluster:
-        id:     6cd2b8fb-4a50-43c0-9495-02c9a4438c87
+        id:     aa06915f-3cf6-4f74-af69-9afb41bf464d
         health: HEALTH_OK
 
     services:
         mon: 3 daemons, quorum master1.example.com,master2.example.com,master3.example.com
         mgr: master2.example.com(active)
-        mds: cephfs-1/1/1 up  {0=mds-ceph-mds-85b4fbb478-vj2vs=up:active}
+        mds: cephfs-1/1/1 up  {0=mds-ceph-mds-85b4fbb478-wjmxb=up:active}
         osd: 3 osds: 3 up, 3 in
         rgw: 1 daemon active
 
     data:
-        pools:   6 pools, 48 pgs
+        pools:   7 pools, 148 pgs
         objects: 208 objects, 3359 bytes
-        usage:   324 MB used, 284 GB / 284 GB avail
-        pgs:     48 active+clean
-
+        usage:   325 MB used, 284 GB / 284 GB avail
+        pgs:     148 active+clean
 
 Debugging
 =========
@@ -141,7 +161,60 @@ When setting up new devices with kubernetes you will see the ``osd`` pods failin
 
 ::
 
-    ./describe-osd.sh
+    ./ceph/describe-osd.sh
+
+Watch all Ceph Logs with Kubetail
+---------------------------------
+
+When testing a configuration change or debugging something it can help to see what all the pods are doing using `kubetail <https://github.com/johanhaleby/kubetail>`__
+
+::
+
+    ./ceph/logs-kt-ceph.sh
+
+or manually with:
+
+::
+
+    kubetail ceph -c cluster-log-tailer -n ceph
+
+Watch the Ceph Mon Logs with Kubetail
+-------------------------------------
+
+::
+
+    kubetail ceph-mon -c cluster-log-tailer -n ceph
+
+Attach Successful but Mounting a Ceph PVC fails
+-----------------------------------------------
+
+Even if the cluster is stable, your pv's can attach but fail to mount due to:
+
+::
+
+    Events:
+    Type     Reason                  Age                 From                          Message
+    ----     ------                  ----                ----                          -------
+    Normal   Scheduled               3m25s               default-scheduler             Successfully assigned default/busybox-mount to master3.example.com
+    Normal   SuccessfulAttachVolume  3m25s               attachdetach-controller       AttachVolume.Attach succeeded for volume "pvc-907ae639-3880-11e9-85a5-525400275ad4"
+    Warning  FailedMount             82s                 kubelet, master3.example.com  Unable to mount volumes for pod "busybox-mount_default(24ac4333-3881-11e9-85a5-525400275ad4)": timeout expired waiting for volumes to attach or mount for pod "default"/"busybox-mount". list of unmounted volumes=[storage]. list of unattached volumes=[storage default-token-6f9vj]
+    Warning  FailedMount             45s (x8 over 109s)  kubelet, master3.example.com  MountVolume.WaitForAttach failed for volume "pvc-907ae639-3880-11e9-85a5-525400275ad4" : fail to check rbd image status with: (executable file not found in $PATH), rbd output: ()
+
+To fix this please:
+
+#.  Install ``ceph-common`` on each kubernetes node.
+
+#.  Uninstall the ceph cluster with:
+
+    ::
+
+        ./ceph/_uninstall.sh -f
+
+#.  Delete Remaining pv's
+
+    ::
+
+        kubectl delete --ignore-not-found pv $(kubectl get pv | grep ceph-rbd | grep -v rook | awk '{print $1}')
 
 Previous Cluster Cleanup Failed
 -------------------------------
@@ -150,7 +223,7 @@ Please run the ``_uninstall.sh`` if you see this kind of error when running the 
 
 ::
 
-    ./cluster-status.sh
+    ./ceph/cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
@@ -162,11 +235,38 @@ Please run the ``_uninstall.sh`` if you see this kind of error when running the 
 OSD Issues
 ==========
 
-Take a look at the ``osd-dev-vdb`` pod logs
+When debugging ceph ``osd`` issues, please start by reviewing the pod logs with:
 
 ::
 
-    ./logs-osd-prepare-pod.sh
+    ./ceph/logs-osd-prepare-pod.sh
+
+OSD Pool Failed to Initialize
+-----------------------------
+
+Depending on how many disks and the capacity of the ceph cluster, your first time creating the ``osd pool`` startup may hit an error during this command:
+
+::
+
+    kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph osd pool create rbd 256
+
+With an error like:
+
+::
+
+    creating osd pool
+    Error ERANGE:  pg_num 256 size 3 would mean 840 total pgs, which exceeds max 600 (mon_max_pg_per_osd 200 * num_in_osds 3)
+    command terminated with exit code 34
+    initializing osd
+    rbd: error opening default pool 'rbd'
+    Ensure that the default pool has been created or specify an alternate pool name.
+    command terminated with exit code 2
+
+Please reduce the number at the end of the ``ceph osd pool create rbd 256`` to:
+
+::
+
+    kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph osd pool create rbd 100
 
 OSD Pod Prepare is Unable to Zap
 --------------------------------
@@ -309,7 +409,7 @@ To uninstall the ceph cluster and leave the mounted KVM disks ``/dev/vdb`` untou
 
 ::
 
-    ./_uninstall.sh
+    ./ceph/_uninstall.sh
 
 Uninstall and Reformat KVM Images
 ---------------------------------
@@ -320,4 +420,4 @@ To uninstall the ceph cluster and reformat the mounted KVM disks ``/dev/vdb``:
 
 ::
 
-    ./_uninstall.sh -f
+    ./ceph/_uninstall.sh -f

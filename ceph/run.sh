@@ -111,7 +111,6 @@ pwd
 inf "installing ceph with helm:"
 inf "helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml -f ${use_path}/ceph-overrides.yaml"
 helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml -f ${use_path}/ceph-overrides.yaml
-inf ""
 
 inf "kubectl get pods -n ${namespace}"
 kubectl get pods -n ${namespace}

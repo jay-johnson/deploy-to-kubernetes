@@ -28,16 +28,9 @@ else
     }
 fi
 
+use_namespace="ceph"
+
+anmt "--------------------------------------------------"
+anmt "Tailing all Ceph logs with kubetail:"
 inf ""
-anmt "----------------------------------------------"
-good "Getting all Ceph reports:"
-
-use_path="."
-if [[ -e ./ceph/show-ceph-status.sh ]]; then
-    use_path="./ceph"
-fi
-
-files="show-ceph-status.sh show-ceph-rados-df.sh show-ceph-df.sh show-ceph-osd-status.sh show-ceph-rbd-ls.sh show-pods.sh"
-for f in ${files}; do
-    ${use_path}/${f}
-done
+kubetail ceph -n ceph

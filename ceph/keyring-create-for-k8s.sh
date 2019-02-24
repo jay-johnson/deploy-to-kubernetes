@@ -29,6 +29,7 @@ else
 fi
 
 use_namespace="ceph"
+pg_num=100
 
 anmt "--------------------------------------------------"
 anmt "Creating Keyring for Ceph cluster storageClass ceph-rbd:"
@@ -42,7 +43,7 @@ else
     good "kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- bash"
     key_secret_raw=$(kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph auth get-or-create-key client.k8s mon 'allow r' osd 'allow rwx pool=rbd' | base64)
     good "created pvc-ceph-client-key with value: ${key_secret_raw}"
-    use_path="./"
+    use_path="."
     secret_file=./pvc-ceph-client-key-secret.yml
     if [[ -e ./ceph/template-pvc-ceph-client-key-secret.yml ]]; then
         use_path="./ceph"
@@ -53,8 +54,13 @@ else
     if [[ -e /opt/k8/config ]]; then
         export KUBE_CONFIG=/opt/k8/config
     fi
+
+    inf "deleting secret if exists: ${secret_file}"
+    kubectl delete --ignore-not-found -f ${secret_file}
+
     inf "applying secret: ${secret_file}"
     kubectl apply -f ${secret_file}
+
     inf "getting secret: ${secret_file}"
     kubectl get secret -n ceph pvc-ceph-client-key
 
@@ -62,7 +68,7 @@ else
     kubectl -n ceph get secrets/pvc-ceph-client-key -o json | jq '.metadata.namespace = "default"' | kubectl create -f -
 
     anmt "creating osd pool"
-    kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph osd pool create rbd 256
+    kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph osd pool create rbd ${pg_num}
 
     anmt "initializing osd"
     kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- rbd pool init rbd
