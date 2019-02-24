@@ -145,3 +145,4 @@ run-s3-test.txt
 
 # Ceph
 ceph/ceph-helm
+ceph/pvc-ceph-client-key-secret.yml

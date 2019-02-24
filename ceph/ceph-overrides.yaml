@@ -1,9 +1,24 @@
+# check cluster status with:
+# ./ceph/cluster-status.sh
+# or:
+# kubectl -n ceph exec -ti CEPH_MON_POD_NAME -c ceph-mon -- ceph -s
 osd_devices:
   - name: dev-vdb
     device: /dev/vdb
     zap: "1"
 
+# create keyring for k8s user
+# kubectl -n ceph exec -ti CEPH_MON_POD_NAME -c ceph-mon -- bash
 storageclass:
+  provision_storage_class: true
+  provisioner: ceph.com/rbd
   name: ceph-rbd
+  monitors: null
   pool: rbd
+  admin_id: admin
+  admin_secret_name: pvc-ceph-conf-combined-storageclass
+  admin_secret_namespace: ceph
   user_id: k8s
+  user_secret_name: pvc-ceph-client-key
+  image_format: "2"
+  image_features: layering

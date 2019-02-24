@@ -29,9 +29,17 @@ else
 fi
 
 use_namespace="ceph"
+app_name=""
 
-anmt "--------------------------------------------------"
-good "Getting Ceph pods with:"
-good "kubectl get pods -n ${use_namespace}"
 inf ""
-kubectl get pods -n ${use_namespace}
+anmt "----------------------------------------------"
+good "Getting Ceph rados df:"
+pod_name=$(kubectl get pods --ignore-not-found -n ${use_namespace} | grep -v keyring- | grep "ceph-rgw-" | awk '{print $1}' | tail -1)
+if [[ "${pod_name}" == "" ]]; then
+    err "Did not find a ceph-mon pod running - please check ceph:"
+    err "kubectl get pods -n ${use_namespace}"
+    exit 1
+else
+    inf "kubectl -n ${use_namespace} exec -it ${pod_name} -- rados df"
+    kubectl -n ${use_namespace} exec -it ${pod_name} -- rados df
+fi

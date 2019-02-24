@@ -91,10 +91,21 @@ function format_as_xfs() {
 function umount_device() {
     for node in $nodes; do
         ssh root@${node} "umount /dev/vdb1"
+        ssh root@${node} "umount /dev/vdb"
         anmt "Setting up ${node} partition for /dev/vdb"
         ssh root@${node} "printf \"d\n1\nd\n\nw\n\" | sudo fdisk /dev/vdb"
         ssh root@${node} "df -h | grep vdb"
     done
 }
 
+function check_mounts() {
+    anmt "---------------------"
+    anmt "Checking mounted /dev paths on the cluster"
+    for node in $nodes; do
+        good "${node} has: df -h | grep '/dev'"
+        ssh root@${node} "df -h | grep '/dev'"
+    done
+}
+
 umount_device
+check_mounts

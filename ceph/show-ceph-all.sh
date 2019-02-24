@@ -28,10 +28,16 @@ else
     }
 fi
 
-use_namespace="ceph"
-
-anmt "--------------------------------------------------"
-good "Getting Ceph pods with:"
-good "kubectl get pods -n ${use_namespace}"
 inf ""
-kubectl get pods -n ${use_namespace}
+anmt "----------------------------------------------"
+good "Getting all Ceph reports:"
+
+use_path="./"
+if [[ -e ./ceph/show-ceph-status.sh ]]; then
+    use_path="./ceph"
+fi
+
+files="show-ceph-status.sh show-ceph-rados-df.sh show-ceph-df.sh show-ceph-osd-status.sh show-pods.sh"
+for f in ${files}; do
+    ${use_path}/${f}
+done

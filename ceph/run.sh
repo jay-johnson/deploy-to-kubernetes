@@ -126,13 +126,19 @@ inf "kubectl get pods -n ${namespace}"
 kubectl get pods -n ${namespace}
 inf ""
 
-anmt "sleeping 10s to let the cluster start"
-sleep 10
+anmt "sleeping 20s to let the cluster start"
+sleep 20
 ${use_path}/cluster-status.sh
 inf ""
 
 inf "kubectl get pods -n ${namespace}"
 kubectl get pods -n ${namespace}
 inf ""
+
+anmt "creating pvc-ceph-client-key secret"
+${use_path}/keyring-create-for-k8s.sh
+inf ""
+
+${use_path}/show-ceph-all.sh
 
 good "done deploying: ceph into ${namespace} namespace"
