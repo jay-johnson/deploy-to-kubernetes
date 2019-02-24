@@ -3,10 +3,9 @@ network:
   cluster:   172.21.0.0/20
 
 osd_devices:
-  - name: dev-vdb1
-    device: /dev/vdb1
-    journal: /dev/sdf
-    zap: "0"
+  - name: dev-vdb
+    device: /dev/vdb
+    zap: "1"
 
 storageclass:
   name: ceph-rbd

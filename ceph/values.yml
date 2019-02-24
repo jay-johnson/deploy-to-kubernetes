@@ -272,12 +272,12 @@ osd_directory:
 # to this cluster, if a drive belonged to another cluster or
 # has important data from another application, it will be *LOST*
 # /!\ /!\
-enable_zap_and_potentially_lose_data: false
+enable_zap_and_potentially_lose_data: true
 # Zap failed on 2019-02-24:
-# ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb1
+# ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb
 # osd_devices:
-#   - name: dev-vdb1
-#     device: /dev/vdb1
+#   - name: dev-vdb
+#     device: /dev/vdb
 #     journal: /dev/sdf
 #     zap: "0"
 
