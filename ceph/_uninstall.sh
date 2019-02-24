@@ -2,8 +2,11 @@
 
 # use the bash_colors.sh file
 found_colors="./tools/bash_colors.sh"
+up_found_colors="../tools/bash_colors.sh"
 if [[ "${DISABLE_COLORS}" == "" ]] && [[ "${found_colors}" != "" ]] && [[ -e ${found_colors} ]]; then
     . ${found_colors}
+elif [[ "${DISABLE_COLORS}" == "" ]] && [[ "${up_found_colors}" != "" ]] && [[ -e ${up_found_colors} ]]; then
+    . ${up_found_colors}
 else
     inf() {
         echo "$@"
@@ -70,6 +73,16 @@ if [[ "${found_ns}" != "0" ]]; then
 fi
 
 kubectl delete storageclass --ignore-not-found ceph-rbd
+
+test_mount_path="./ceph/test-mounts.yml"
+if [[ ! -e ${test_mount_path} ]]; then
+    if [[ -e ./test-mounts.yml ]]; then
+        test_mount_path="./test-mounts.yml"
+    fi
+fi
+if [[ -e ${test_mount_path} ]]; then
+    kubectl delete --ignore-not-found -f ${test_mount_path}
+fi
 
 hosts_to_clean="master1.example.com master2.example.com master3.example.com"
 for h in ${hosts_to_clean}; do
