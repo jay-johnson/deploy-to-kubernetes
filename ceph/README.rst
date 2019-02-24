@@ -305,13 +305,19 @@ Show Ceph Rados DF
 Uninstall
 =========
 
-To cleanly uninstall the ceph cluster run:
+To uninstall the ceph cluster and leave the mounted KVM disks ``/dev/vdb`` untouched:
 
 ::
 
     ./_uninstall.sh
-    # this will destroy all data
-    # across the cluster by reformatting
-    # the /dev/vdb block devices in
-    # each vm
-    ./_kvm-format-images.sh
+
+Uninstall and Reformat KVM Images
+---------------------------------
+
+To uninstall the ceph cluster and reformat the mounted KVM disks ``/dev/vdb``:
+
+.. warning:: Running this will destroy all data across the cluster by reformatting the /dev/vdb block devices in each vm
+
+::
+
+    ./_uninstall.sh -f

@@ -34,6 +34,11 @@ inf ""
 
 verbose=0
 namespace="ceph"
+format_images="0"
+
+if [[ "${1}" == "-f" ]]; then
+    format_images="1"
+fi
 
 test_helm=$(helm list | grep ceph | wc -l)
 if [[ "${test_helm}" != "0" ]]; then
@@ -74,14 +79,17 @@ fi
 
 kubectl delete storageclass --ignore-not-found ceph-rbd
 
-test_mount_path="./ceph/test-mounts.yml"
-if [[ ! -e ${test_mount_path} ]]; then
-    if [[ -e ./test-mounts.yml ]]; then
-        test_mount_path="./test-mounts.yml"
-    fi
+use_path="./"
+if [[ -e ./ceph/test-mounts.yml ]]; then
+    use_path="./ceph"
 fi
+test_mount_path="${use_path}/test-mounts.yml"
 if [[ -e ${test_mount_path} ]]; then
     kubectl delete --ignore-not-found -f ${test_mount_path}
+fi
+
+if [[ "${format_images}" == "1" ]]; then
+    ${use_path}/_kvm-format-images.sh
 fi
 
 hosts_to_clean="master1.example.com master2.example.com master3.example.com"
