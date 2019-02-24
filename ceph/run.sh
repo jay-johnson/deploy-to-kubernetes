@@ -110,22 +110,27 @@ fi
 pwd
 inf "installing ceph with helm:"
 inf "helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml -f ${use_path}/ceph-overrides.yaml"
-# use the overrides file if your nodes have a dedicated device like /dev/sda or /dev/sdb
-# helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml -f ${use_path}/ceph-overrides.yaml
-helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml
+helm install --name=ceph ceph/ceph --namespace=${namespace} -f ${use_path}/values.yml -f ${use_path}/ceph-overrides.yaml
 inf ""
 
-inf ""
-inf ""
-inf ""
-anmt "checking ceph cluster status:"
-inf "kubectl -n ${namespace} exec -ti ceph-mon-cppdk -c ceph-mon -- ceph -s"
-kubectl -n ${namespace} exec -ti ceph-mon-cppdk -c ceph-mon -- ceph -s
-inf ""
-inf ""
+inf "kubectl get pods -n ${namespace}"
+kubectl get pods -n ${namespace}
 inf ""
 
-inf "checking ${namespace} pods"
+anmt "sleeping 10s to let the cluster start"
+sleep 10
+${use_path}/cluster-status.sh
+inf ""
+
+inf "kubectl get pods -n ${namespace}"
+kubectl get pods -n ${namespace}
+inf ""
+
+anmt "sleeping 10s to let the cluster start"
+sleep 10
+${use_path}/cluster-status.sh
+inf ""
+
 inf "kubectl get pods -n ${namespace}"
 kubectl get pods -n ${namespace}
 inf ""

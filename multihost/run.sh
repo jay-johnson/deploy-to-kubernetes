@@ -37,7 +37,7 @@ ceph_node_labels="ceph-mon=enabled ceph-mgr=enabled ceph-osd=enabled ceph-rgw=en
 # The ceph-osd-device-<name> label is created based on the osd_devices
 # name value defined in our ceph-overrides.yaml.
 # From our example above we will have the two following label: ceph-osd-device-dev-sdb and ceph-osd-device-dev-sdc.
-ceph_device_labels="ceph-osd-device-dev-sdd=enabled ceph-osd-device-dev-sde=enabled"
+ceph_device_labels="ceph-osd-device-dev-vdb=enabled ceph-osd-device-dev-vdb1=enabled"
 namespace="default"
 labels_for_m1="frontend=enabled backend=disabled datascience=disabled ceph=enabled minio=enabled splunk=disabled"
 labels_for_m2="frontend=enabled backend=enabled datascience=enabled ceph=enabled minio=disabled splunk=disabled"

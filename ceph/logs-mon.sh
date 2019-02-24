@@ -33,7 +33,13 @@ use_namespace="ceph"
 anmt "--------------------------------------------------"
 anmt "Tailing Ceph logs with:"
 inf ""
-good "kubectl -n ${use_namespace} logs ceph-mon-cppdk -c cluster-log-tailer"
 inf ""
-kubectl -n ${use_namespace} logs ceph-mon-cppdk -c cluster-log-tailer
-
+mon_pod=$(kubectl get pods --ignore-not-found -n ${use_namespace} | grep -v keyring- | grep "ceph-mon-" | awk '{print $1}' | tail -1)
+if [[ "${mon_pod}" == "" ]]; then
+    err "Did not find a ceph-mon pod running - please check ceph:"
+    err "kubectl get pods -n ${use_namespace}"
+    exit 1
+else
+    good "kubectl -n ${use_namespace} logs ${mon_pod} -c cluster-log-tailer"
+    kubectl -n ${use_namespace} logs ${mon_pod} -c cluster-log-tailer
+fi

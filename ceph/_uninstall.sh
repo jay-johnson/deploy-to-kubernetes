@@ -75,6 +75,11 @@ hosts_to_clean="master1.example.com master2.example.com master3.example.com"
 for h in ${hosts_to_clean}; do
     inf "uninstalling ceph on kube master: ${h}"
     ssh root@${h} "rm -rf /var/lib/ceph-helm"
+    ssh root@${h} "rm -rf /var/lib/ceph/*"
+    ssh root@${h} "ls -l /var/lib/ceph/*"
 done
+
+rm -f ceph-helm/ceph/ceph-*.tgz
+rm -f ceph-helm/ceph/helm-toolkit-*.tgz
 
 good "done deleting: ceph"

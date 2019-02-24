@@ -255,8 +255,8 @@ ceph:
     mgr: true
   storage:
     # will have $NAMESPACE/{osd,mon} appended
-    osd_directory: /var/lib/ceph-helm
-    mon_directory: /var/lib/ceph-helm
+    osd_directory: /var/lib
+    mon_directory: /var/lib
     # use /var/log for fluentd to collect ceph log
     # mon_log: /var/log/ceph/mon
     # osd_log: /var/log/ceph/osd
