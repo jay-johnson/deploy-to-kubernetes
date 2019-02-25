@@ -1,18 +1,18 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: busybox-mount
+  name: ceph-tester
   labels:
-    integration-test: busybox-mount
+    integration-test: ceph-tester
 spec:
   volumes:
   - name: storage
     persistentVolumeClaim:
-      claimName: test-pv-claim
+      claimName: test-ceph-pv-claim
   containers:
   - image: busybox:glibc
     command: [ "/bin/sh", "-c", "--" ]
-    args: [ "ls -l /testing;"]
+    args: [ "ls -l /testing; df -h /testing; exit 0"]
     name: busybox
     volumeMounts:
     - mountPath: "/testing"

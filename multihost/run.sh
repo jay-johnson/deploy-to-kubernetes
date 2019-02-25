@@ -74,58 +74,53 @@ done
 anmt "-------------------------"
 anmt "applying multihost labels"
 
-inf ""
-inf "detecting if deploying to a Kubernetes cluster deployed over multiple hosts:"
+anmt ""
+anmt "detecting if deploying to a Kubernetes cluster deployed over multiple hosts:"
 num_nodes=$(kubectl get nodes -o wide | grep Ready | wc -l)
 if [[ "${num_nodes}" != "1" ]]; then
-    anmt "finding updated multihost labels: kubectl get nodes --show-labels -o wide"
-    kubectl get nodes --show-labels -o wide
-    inf ""
+    anmt "finding labels to update across the nodes: kubectl get nodes --show-labels -o wide"
+    # kubectl get nodes --show-labels -o wide
 
-    inf "getting lables for all cluster nodes"
+    # anmt "getting lables for all cluster nodes"
     node_name_m1=$(kubectl get nodes | grep master1 | awk '{print $1}')
     node_name_m2=$(kubectl get nodes | grep master2 | awk '{print $1}')
     node_name_m3=$(kubectl get nodes | grep master3 | awk '{print $1}')
     test_exists_m1=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m1})
     test_exists_m2=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m2})
     test_exists_m3=$(kubectl get nodes --show-labels -o wide | grep ${node_name_m3})
-    inf ""
 
     for i in $labels_for_m1; do
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m1} | grep '${i}' | wc -l)
-        inf "Setting master1 label: ${i} with: kubectl label nodes ${node_name_m1} $i --overwrite"
-        kubectl label nodes ${node_name_m1} ${i} --overwrite
+        # anmt "Setting master1 label: ${i} with: kubectl label nodes ${node_name_m1} $i --overwrite"
+        kubectl label nodes ${node_name_m1} ${i} --overwrite >> /dev/null 2>&1
     done
-    inf ""
 
     for i in $labels_for_m2; do
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m2} | grep '${i}' | wc -l)
-        inf "Setting master2 label: ${i} with: kubectl label nodes ${node_name_m2} $i --overwrite"
-        kubectl label nodes ${node_name_m2} ${i} --overwrite
+        # anmt "Setting master2 label: ${i} with: kubectl label nodes ${node_name_m2} $i --overwrite"
+        kubectl label nodes ${node_name_m2} ${i} --overwrite >> /dev/null 2>&1
     done
-    inf ""
 
     for i in $labels_for_m3; do
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m3} | grep '${i}' | wc -l)
-        inf "Setting master3 label: ${i} with: kubectl label nodes ${node_name_m3} $i --overwrite"
-        kubectl label nodes ${node_name_m3} ${i} --overwrite
+        # anmt "Setting master3 label: ${i} with: kubectl label nodes ${node_name_m3} $i --overwrite"
+        kubectl label nodes ${node_name_m3} ${i} --overwrite >> /dev/null 2>&1
     done
-    inf ""
 else
     nodename=$(kubectl get nodes | awk '{print $1}' | tail -1)
-    inf " - detected only ${num_nodes} ready node in the Kubernetes cluster named: ${nodename} - setting labels"
+    anmt " - detected only ${num_nodes} ready node in the Kubernetes cluster named: ${nodename} - setting labels"
     test_exists_m1=$(kubectl get nodes --show-labels -o wide | grep ${nodename})
     for i in $all_labels_for_single_host; do
         label_name=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $1}')
         label_value=$(echo ${i} | sed -e 's/=/ /g' | awk '{print $2}')
         test_exists=$(echo ${test_exists_m1} | grep ${i} | wc -l)
-        inf "Setting ${nodename} label: ${i} with: kubectl label nodes ${nodename} $i --overwrite"
+        anmt "Setting ${nodename} label: ${i} with: kubectl label nodes ${nodename} $i --overwrite"
         kubectl label nodes ${nodename} ${i} --overwrite
     done
 fi
