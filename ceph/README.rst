@@ -455,7 +455,7 @@ Stop ``strace`` that will prevent ``gdb`` tracing next:
     <http://www.gnu.org/software/gdb/bugs/>.
     Attaching to process 18516
 
-At this point if a vm gets to this point in the kubernetes cluster then the server gets rebooted.
+If a vm gets to this point then the server gets rebooted.
 
 Here are other operational debugging tools that were used with cluster start up below:
 
