@@ -287,7 +287,7 @@ If not please continue to the next debugging section below.
 Orphaned fdisk Processes
 ------------------------
 
-If you have use ``./_uninstall.sh -f`` there is the potential the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
+If you have to use the ``./_uninstall.sh -f`` command there is the potential the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
 
 If your cluster hits this issue I have to reboot my server.
 
