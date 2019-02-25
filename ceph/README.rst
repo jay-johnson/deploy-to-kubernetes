@@ -284,6 +284,64 @@ If connectivity was the fixed on all the nodes then please ``./_uninstall.sh -f`
 
 If not please continue to the next debugging section below.
 
+Orphaned fdisk Processes
+------------------------
+
+If you have use ``./_uninstall.sh -f`` there is the potential the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
+
+If your cluster hits this issue I have to reboot my server.
+
+.. note:: This guide does not handle single kubernetes vm outages at the moment.
+
+For the record, here's some attempts to kill this process:
+
+::
+
+    root@master3:~# ps auwwx | grep fdisk
+    root     18516  0.0  0.0 112508   976 ?        D    06:33   0:00 fdisk /dev/vdb
+    root     21957  0.0  0.0 112704   952 pts/1    S+   06:37   0:00 grep --color fdisk
+    root@master3:~# kill -9 18516
+    root@master3:~# ps auwwx | grep fdisk
+    root     18516  0.0  0.0 112508   976 ?        D    06:33   0:00 fdisk /dev/vdb
+    root     22031  0.0  0.0 112704   952 pts/1    S+   06:37   0:00 grep --color fdisk
+
+::
+
+    root@master3:~# strace -p 18516
+    strace: Process 18516 attached
+    # no more logs after waiting +60 seconds
+    strace: Process 18516 attached
+    ^C
+    ^C
+    ^C
+    ^C^Z
+    [1]+  Stopped                 strace -p 18516
+    # so did strace just die by touching that pid?
+
+What is ``fdisk`` using on the filesystem?
+
+Notice multiple ``ssh pipe`` resources are in use below. Speculation here: are those pipes the ``fdisk`` wait prompt over a closed ssh session (I am guessing but who knows)?
+
+::
+
+    root@master3:~# lsof -p 18516
+    COMMAND   PID USER   FD   TYPE DEVICE  SIZE/OFF      NODE NAME
+    fdisk   18516 root  cwd    DIR  253,0       271 100663361 /root
+    fdisk   18516 root  rtd    DIR  253,0       285        64 /
+    fdisk   18516 root  txt    REG  253,0    200456  33746609 /usr/sbin/fdisk
+    fdisk   18516 root  mem    REG  253,0 106070960      1831 /usr/lib/locale/locale-archive
+    fdisk   18516 root  mem    REG  253,0   2173512  33556298 /usr/lib64/libc-2.17.so
+    fdisk   18516 root  mem    REG  253,0     20112  33556845 /usr/lib64/libuuid.so.1.3.0
+    fdisk   18516 root  mem    REG  253,0    261488  33556849 /usr/lib64/libblkid.so.1.1.0
+    fdisk   18516 root  mem    REG  253,0    164240  33556291 /usr/lib64/ld-2.17.so
+    fdisk   18516 root    0r  FIFO    0,9       0t0    847143 pipe
+    fdisk   18516 root    1w  FIFO    0,9       0t0    845563 pipe
+    fdisk   18516 root    2w  FIFO    0,9       0t0    845564 pipe
+    fdisk   18516 root    3u   BLK 252,16     0t512      1301 /dev/vdb
+    root@master3:~#
+
+At this point if a vm hits this point the server was rebooted.
+
 Check osd pods
 --------------
 
