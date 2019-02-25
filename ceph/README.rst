@@ -4,7 +4,7 @@ Running a Distributed Ceph Cluster on a Kubernetes Cluster
 Overview
 --------
 
-This guide `automates installing a native ceph cluster inside a running kubernetes native cluster <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__. It requires creating and attaching 3 additional hard drive disk images to 3 kubernetes cluster vms (tested on 3 CentOS 7 vm's). This guide assumes your kubernetes cluster is using ``kvm`` with ``virsh`` for running the ``attach-disk`` commands (it was tested with kubernetes version ``1.13.3``).
+This guide `automates installing a native ceph cluster inside a running kubernetes native cluster <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__. It requires creating and attaching 3 additional hard drive disk images to 3 kubernetes cluster vm's (tested on CentOS 7). This guide assumes your kubernetes cluster is using ``kvm`` with ``virsh`` for running the ``attach-disk`` commands (it was tested with kubernetes version ``1.13.3``).
 
 By default, the disk images will be installed at: ``/cephdata/m[123]/k8-centos-m[123]``. These disks will be automatically partitioned and formatted using `ceph zap <http://docs.ceph.com/docs/mimic/ceph-volume/lvm/zap/>`__, and zap will format each disk using the `recommended XFS filesystem <http://docs.ceph.com/docs/jewel/rados/configuration/filesystem-recommendations/>`__.
 
