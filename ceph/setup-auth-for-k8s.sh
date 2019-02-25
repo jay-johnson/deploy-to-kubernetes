@@ -41,7 +41,8 @@ if [[ "${pod_name}" == "" ]]; then
     exit 1
 else
     good "kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- bash"
-    key_secret_raw=$(kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph auth get-or-create-key client.k8s mon 'allow r' osd 'allow rwx pool=rbd' | base64)
+    key_secret_raw=$(kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph auth get-or-create-key client.k8s mon 'allow r' osd 'allow rwx pool=rbd')
+    key_secret_raw=$(kubectl -n ceph exec -ti ${pod_name} -c ceph-mon -- ceph auth get-key client.k8s | base64)
     good "created pvc-ceph-client-key with value: ${key_secret_raw}"
     use_path="."
     secret_file=./pvc-ceph-client-key-secret.yml

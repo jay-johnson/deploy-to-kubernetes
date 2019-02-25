@@ -70,6 +70,11 @@ anmt "- Ceph S3 with python: http://docs.ceph.com/docs/mimic/radosgw/s3/python/"
 anmt "- Ceph deploy with Helm: http://docs.ceph.com/docs/mimic/start/kube-helm/"
 inf ""
 
+anmt "----------------------------------------------------------------------------------------------"
+anmt "setting ceph labels on kubernetes nodes"
+${use_path}/../multihost/run.sh new-ceph
+inf ""
+
 # Deploying Ceph with Helm
 # http://docs.ceph.com/docs/mimic/start/kube-helm/
 
@@ -102,6 +107,14 @@ if [[ "${helm_has_ceph_chart}" == "0" ]]; then
     inf ""
     inf "adding ceph to helm repo"
     ${use_path}/add-ceph-to-helm.sh
+    last_status=$?
+    if [[ "${last_status}" != "0" ]]; then
+        err "Stopping due to error during ${use_path}/add-ceph-to-helm.sh"
+        exit 1
+    else
+        good "checking helm repo list"
+        helm repo list
+    fi
     inf ""
 else
     inf "found ceph in local chart repo"
@@ -135,7 +148,7 @@ kubectl get pods -n ${namespace}
 inf ""
 
 anmt "creating pvc-ceph-client-key secret"
-${use_path}/keyring-create-for-k8s.sh
+${use_path}/setup-auth-for-k8s.sh
 inf ""
 
 ${use_path}/show-ceph-all.sh

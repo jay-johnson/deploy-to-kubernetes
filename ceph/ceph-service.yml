@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ceph-mon
+  namespace: default
+spec:
+  type: ExternalName
+  externalName: ceph-mon.ceph.svc.cluster.local
+  ports:
+  - port: 6789

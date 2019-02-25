@@ -54,7 +54,7 @@ function format_as_xfs() {
 
         # https://serverfault.com/questions/258152/fdisk-partition-in-single-line
         anmt "Setting up ${node} partition for /dev/vdb"
-        ssh root@${node} "printf \"\nn\np\n1\n\n\nw\n\" | sudo fdisk /dev/vdb"
+        ssh root@${node} "printf \"\nn\np\n1\n\n\nw\nq\n\" | sudo fdisk /dev/vdb"
 
         # or manually:
         # echo "# run on as root on the vm to format the disk in the vm:"
@@ -88,24 +88,57 @@ function format_as_xfs() {
     done
 }
 
-function umount_device() {
+function umount_devices() {
+    anmt "--------------------------------"
+    anmt "Unmounting /dev/vdb devices on the cluster vms"
     for node in $nodes; do
-        ssh root@${node} "umount /dev/vdb1"
-        ssh root@${node} "umount /dev/vdb"
-        anmt "Setting up ${node} partition for /dev/vdb"
-        ssh root@${node} "printf \"d\n1\nd\n\nw\n\" | sudo fdisk /dev/vdb"
-        ssh root@${node} "df -h | grep vdb"
+        good " - ${node} umount /dev/vdb and /dev/vdb1"
+        ssh root@${node} "umount /dev/vdb1" >> /dev/null 2>&1
+        ssh root@${node} "umount /dev/vdb" >> /dev/null 2>&1
+    done
+}
+
+function partition_devices() {
+    anmt "--------------------------------"
+    anmt "Partitioning /dev/vdb devices on the cluster vms"
+    for node in $nodes; do
+        anmt " - ${node} sleeping umount on /dev/vdb"
+        sleep 5
+        anmt " - ${node} partitioning with fdisk /dev/vdb"
+        ssh root@${node} "printf \"d\n1\nd\n\nw\nq\n\" | sudo fdisk /dev/vdb"
+        sleep 2
+        good " - ${node} done partitioning with fdisk /dev/vdb"
+        anmt "--------------------------------"
     done
 }
 
 function check_mounts() {
-    anmt "---------------------"
-    anmt "Checking mounted /dev paths on the cluster"
+    anmt "--------------------------------"
+    anmt "Checking mounted /dev paths on the cluster vms"
     for node in $nodes; do
-        good "${node} has: df -h | grep '/dev'"
+        good " - ${node} has: df -h | grep '/dev'"
+        ssh root@${node} "df -h | grep vdb"
         ssh root@${node} "df -h | grep '/dev'"
+        good " - ${node} done partitioning with fdisk /dev/vdb"
+        anmt "--------------------------------"
     done
 }
 
-umount_device
+function check_on_fdisk_orphaned_processes() {
+    anmt "--------------------------------"
+    anmt "Checking for orphaned fdisk processes on the cluster vms"
+    for node in $nodes; do
+        num_fdisk=$(ssh root@${node} "ps auwwx | grep fdisk | grep -v grep | grep '/dev/vdb' | wc -l")
+        if [[ "${num_fdisk}" != "0" ]]; then
+            err " - Error Detected ${node} has fdisk orphans: ${num_fdisk}"
+            exit 1
+        else
+            good " - ${node} has ${num_fdisk} fdisk orphans"
+        fi
+    done
+}
+
+umount_devices
+partition_devices
 check_mounts
+check_on_fdisk_orphaned_processes

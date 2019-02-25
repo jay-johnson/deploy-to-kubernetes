@@ -4,11 +4,11 @@ Running a Distributed Ceph Cluster on a Kubernetes Cluster
 Overview
 --------
 
-This guide `automates the install of a native ceph cluster inside a running kubernetes native cluster <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__. It requires creating and attaching 3 additional hard drive disk images (each ``100 GB``) to each of your kubernetes cluster vms (tested on 3 CentOS 7). This guide assumes your kubernetes cluster is using ``kvm`` with ``virsh`` for running the ``attach-disk`` commands.
+This guide `automates installing a native ceph cluster inside a running kubernetes native cluster <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__. It requires creating and attaching 3 additional hard drive disk images to 3 kubernetes cluster vms (tested on 3 CentOS 7 vm's). This guide assumes your kubernetes cluster is using ``kvm`` with ``virsh`` for running the ``attach-disk`` commands (it was tested with kubernetes version ``1.13.3``).
 
 By default, the disk images will be installed at: ``/cephdata/m[123]/k8-centos-m[123]``. These disks will be automatically partitioned and formatted using `ceph zap <http://docs.ceph.com/docs/mimic/ceph-volume/lvm/zap/>`__, and zap will format each disk using the `recommended XFS filesystem <http://docs.ceph.com/docs/jewel/rados/configuration/filesystem-recommendations/>`__.
 
-.. note:: This is a work in progress.
+.. note:: This is a work in progress and things will likely change. This guide will be updated as progress proceeds.
 
 Background
 ----------
@@ -54,6 +54,8 @@ With automatic ssh root login access, you can run this to partition, mount and f
 
 .. warning:: Please be careful running this as it can delete any previously saved data.
 
+.. warning:: Please be aware that ``fdisk`` can also hang and requires hard rebooting the cluster if orphaned ``fdisk`` processes get stuck. Please let me know if you have a way to get around this. There are many discussions like `the process that would not die <https://www.linuxquestions.org/questions/slackware-14/the-process-that-would-not-die-can%27t-kill-fdisk-378204/>`__ about this issue on the internet.
+
 ::
 
     ./ceph/_kvm-format-images.sh
@@ -61,19 +63,18 @@ With automatic ssh root login access, you can run this to partition, mount and f
 Install Ceph on All Kubernetes Nodes
 ====================================
 
-Please add ``ceph-common`` to all nodes before deploying ceph.
+Please add ``ceph-common``, ``centos-release-ceph-luminous`` and ``lsof`` to all kubernetes node vm's before deploying ceph.
 
 For additional set up please refer to the official ceph docs:
 
 http://docs.ceph.com/docs/master/install/get-packages/
 
-For CentOS 7 you can run:
+For CentOS 7 you can run the `./ceph/install-ceph-tools.sh <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/ceph/install-ceph-tools.sh>`__ script or the commands:
 
 ::
 
-    echo "installing ceph from steps on: http://docs.ceph.com/docs/master/install/get-packages/"
     sudo rpm --import "https://download.ceph.com/keys/release.asc"
-    sudo yum install -y ceph-common
+    sudo yum install -y ceph-common centos-release-ceph-luminous lsof
 
 Deploy Ceph Cluster
 ===================
@@ -84,22 +85,30 @@ Ceph requires running a local Helm repo server (just like the Redis cluster does
 
     ./ceph/run.sh
 
-Show Cluster Logs
-=================
+Watch all Ceph Logs with Kubetail
+=================================
+
+With `kubetail <https://github.com/johanhaleby/kubetail>`__ installed you can watch all the ceph pods at once with:
 
 ::
 
-    ./ceph/logs.sh
+    ./ceph/logs-kt-ceph.sh
+
+or manually with:
+
+::
+
+    kubetail ceph -c cluster-log-tailer -n ceph
+
 
 Show Pods
 =========
 
+View the ceph cluster pods with:
+
 ::
 
     ./ceph/show-pods.sh
-
-::
-
     --------------------------------------------------
     Getting Ceph pods with:
     kubectl get pods -n ceph
@@ -162,21 +171,6 @@ When setting up new devices with kubernetes you will see the ``osd`` pods failin
 ::
 
     ./ceph/describe-osd.sh
-
-Watch all Ceph Logs with Kubetail
----------------------------------
-
-When testing a configuration change or debugging something it can help to see what all the pods are doing using `kubetail <https://github.com/johanhaleby/kubetail>`__
-
-::
-
-    ./ceph/logs-kt-ceph.sh
-
-or manually with:
-
-::
-
-    kubetail ceph -c cluster-log-tailer -n ceph
 
 Watch the Ceph Mon Logs with Kubetail
 -------------------------------------

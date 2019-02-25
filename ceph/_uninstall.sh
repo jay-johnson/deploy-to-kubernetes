@@ -78,8 +78,9 @@ if [[ "${found_ns}" != "0" ]]; then
 fi
 
 kubectl delete storageclass --ignore-not-found ceph-rbd
+kubectl delete secret --ignore-not-found pvc-ceph-client-key
 
-use_path="./"
+use_path="."
 if [[ -e ./ceph/test-mounts.yml ]]; then
     use_path="./ceph"
 fi
@@ -97,17 +98,26 @@ kubectl delete --ignore-not-found pv $(kubectl get pv | grep ceph-rbd | grep -v 
 
 if [[ "${format_images}" == "1" ]]; then
     ${use_path}/_kvm-format-images.sh
+    last_status=$?
+    if [[ "${last_status}" != "0" ]]; then
+        err "Stopping due to error during ${use_path}/_kvm-format-images.sh"
+        exit 1
+    fi
 fi
 
+anmt "--------------------------------"
+anmt "Cleaning ceph volumes on cluster vms"
 hosts_to_clean="master1.example.com master2.example.com master3.example.com"
 for h in ${hosts_to_clean}; do
-    inf "uninstalling ceph on kube master: ${h}"
-    ssh root@${h} "rm -rf /var/lib/ceph-helm"
-    ssh root@${h} "rm -rf /var/lib/ceph/*"
-    ssh root@${h} "ls -l /var/lib/ceph/*"
+    good " - ${h} uninstalling ceph volumes"
+    ssh root@${h} "rm -rf /var/lib/ceph-helm" >> /dev/null 2>&1
+    ssh root@${h} "rm -rf /var/lib/ceph/*" >> /dev/null 2>&1
+    ssh root@${h} "rm -rf /etc/ceph" >> /dev/null 2>&1
+    ssh root@${h} "ls -l /var/lib/ceph/*" >> /dev/null 2>&1
 done
+inf ""
 
-rm -f ceph-helm/ceph/ceph-*.tgz
-rm -f ceph-helm/ceph/helm-toolkit-*.tgz
+rm -f ceph-helm/ceph/ceph-*.tgz >> /dev/null 2>&1
+rm -f ceph-helm/ceph/helm-toolkit-*.tgz >> /dev/null 2>&1
 
 good "done deleting: ceph"

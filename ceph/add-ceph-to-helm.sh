@@ -28,18 +28,26 @@ else
     }
 fi
 
-inf ""
 inf "checking if helm is running already"
 helm_running=$(ps auwwx | grep helm | grep serve | wc -l)
 if [[ "${helm_running}" == "0" ]]; then
-    inf "starting local helm server"
+    anmt "starting local helm server"
     helm serve &
+    anmt " - sleeping"
+    sleep 5
+    helm_running=$(ps auwwx | grep helm | grep serve | wc -l)
+    if [[ "${helm_running}" == "0" ]]; then
+        err "failed starting local helm server"
+        exit 1
+    else
+        good "helm is running"
+    fi
 else
     inf " - helm is already serving charts"
 fi
 inf ""
 
-inf "adding ceph repo to the helm charts"
+anmt "adding ceph repo to the helm charts"
 last_dir=$(pwd)
 if [[ ! -e ./ceph-overrides.yaml ]]; then
     cd ceph
@@ -50,6 +58,10 @@ if [[ ! -e ./ceph-helm ]]; then
 fi
 cd ceph-helm/ceph
 ls
+inf ""
+
+anmt "updating helm repo"
+helm repo update
 inf ""
 
 inf "building ceph-helm chart"
