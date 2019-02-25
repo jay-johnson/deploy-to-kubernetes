@@ -17,6 +17,31 @@ This installer was built to replace Rook-Ceph after hitting cluster stability af
 
 http://docs.ceph.com/docs/mimic/start/kube-helm/
 
+Add the Ceph Mon Cluster Service FQDN to /etc/hosts
+===================================================
+
+Before starting, please ensure each kubernetes vm has the following entries in ``/etc/hosts``:
+
+**m1**
+
+::
+
+    sudo echo "192.168.0.101    ceph-mon.ceph.svc.cluster.local" >> /etc/hosts
+
+**m2**
+
+::
+
+    sudo echo "192.168.0.102    ceph-mon.ceph.svc.cluster.local" >> /etc/hosts
+
+**m3**
+
+::
+
+    sudo echo "192.168.0.103    ceph-mon.ceph.svc.cluster.local" >> /etc/hosts
+
+.. note:: Missing this step can result in `some debugging <https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#kubernetes-ceph-cluster-debugging-guide>`__
+
 Build KVM HDD Images
 ====================
 
@@ -210,6 +235,71 @@ Verify Pod has Mounted Volume inside Container
 
     kubectl describe pod ceph-tester
 
+Verify Ceph is Handling Data
+----------------------------
+
+::
+
+    ./cluster-status.sh
+
+::
+
+    ./show-ceph-osd-status.sh
+
+    ----------------------------------------------
+    Getting Ceph osd status:
+    kubectl -n ceph exec -it ceph-rgw-7b9677854f-lcr77 -- ceph osd status
+    +----+---------------------+-------+-------+--------+---------+--------+---------+-----------+
+    | id |         host        |  used | avail | wr ops | wr data | rd ops | rd data |   state   |
+    +----+---------------------+-------+-------+--------+---------+--------+---------+-----------+
+    | 0  | master2.example.com |  141M | 94.8G |    0   |     0   |    1   |    16   | exists,up |
+    | 1  | master1.example.com |  141M | 94.8G |    0   |     0   |    0   |     0   | exists,up |
+    | 2  | master3.example.com |  141M | 94.8G |    0   |     0   |    0   |     0   | exists,up |
+    +----+---------------------+-------+-------+--------+---------+--------+---------+-----------+
+
+Delete Ceph Tester Pod
+----------------------
+
+::
+
+    kubectl delete -f test/mount-pv-in-pod.yml
+
+Recreate Ceph Tester Pod
+------------------------
+
+::
+
+    kubectl apply -f test/mount-pv-in-pod.yml
+
+View Logs from Previous Pod
+---------------------------
+
+::
+
+    kubectl logs -f $(kubectl get po | grep ceph-tester | awk '{print $1}')
+
+Notice the last entries in the log show the timestamp changed in the logs like:
+
+::
+
+    kubectl logs -f $(kubectl get po | grep ceph-tester | awk '{print $1}')
+    total 20
+    drwx------    2 root     root         16384 Feb 25 07:31 lost+found
+    -rw-r--r--    1 root     root            29 Feb 25 07:33 updated
+    Filesystem                Size      Used Available Use% Mounted on
+    /dev/rbd0               975.9M      2.5M    957.4M   0% /testing
+    last update:
+    Mon Feb 25 07:33:34 UTC 2019
+    Mon Feb 25 08:29:27 UTC 2019
+
+Cleanup Ceph Tester Pod
+-----------------------
+
+::
+
+    kubectl delete -f test/mount-pv-in-pod.yml
+    kubectl delete -f test/pvc.yml
+
 Kubernetes Ceph Cluster Debugging Guide
 =======================================
 
@@ -241,7 +331,7 @@ May show something similar to this for why it failed:
 
 If ``ceph-mon.ceph.svc.cluster.local`` is not found, manually add it to ``/etc/hosts`` on all nodes.
 
-**M1** node:
+**m1** node:
 
 ::
 
@@ -254,7 +344,7 @@ Confirm connectivity
 
     telnet ceph-mon.ceph.svc.cluster.local 6789
 
-**M2** node:
+**m2** node:
 
 ::
 
@@ -267,7 +357,7 @@ Confirm connectivity
 
     telnet ceph-mon.ceph.svc.cluster.local 6789
 
-**M3** node:
+**m3** node:
 
 ::
 
