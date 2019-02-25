@@ -40,7 +40,7 @@ Before starting, please ensure each kubernetes vm has the following entries in `
 
     sudo echo "192.168.0.103    ceph-mon.ceph.svc.cluster.local" >> /etc/hosts
 
-.. note:: Missing this step can result in `some debugging <https://github.com/jay-johnson/deploy-to-kubernetes/tree/master/ceph#kubernetes-ceph-cluster-debugging-guide>`__
+.. note:: Missing this step can result in `some debugging <https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#kubernetes-ceph-cluster-debugging-guide>`__
 
 Build KVM HDD Images
 ====================
