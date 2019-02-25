@@ -20,11 +20,17 @@ http://docs.ceph.com/docs/mimic/start/kube-helm/
 Build KVM HDD Images
 ====================
 
+Change to the ``ceph`` directory.
+
+::
+
+    cd ceph
+
 Generate ``100 GB`` hdd images for the ceph cluster with 1 qcow2 image for each of the three vm's:
 
 ::
 
-    ./ceph/kvm-build-images.sh
+    ./kvm-build-images.sh
 
 The files are saved here:
 
@@ -45,7 +51,7 @@ This will attach each ``100 GB`` image to the correct vm: ``m1``, ``m2`` or ``m3
 
 ::
 
-    ./ceph/kvm-attach-images.sh
+    ./kvm-attach-images.sh
 
 Format Disks in VM
 ==================
@@ -58,7 +64,7 @@ With automatic ssh root login access, you can run this to partition, mount and f
 
 ::
 
-    ./ceph/_kvm-format-images.sh
+    ./_kvm-format-images.sh
 
 Install Ceph on All Kubernetes Nodes
 ====================================
@@ -83,7 +89,7 @@ Ceph requires running a local Helm repo server (just like the Redis cluster does
 
 ::
 
-    ./ceph/run.sh
+    ./run.sh
 
 Watch all Ceph Logs with Kubetail
 =================================
@@ -92,7 +98,7 @@ With `kubetail <https://github.com/johanhaleby/kubetail>`__ installed you can wa
 
 ::
 
-    ./ceph/logs-kt-ceph.sh
+    ./logs-kt-ceph.sh
 
 or manually with:
 
@@ -108,7 +114,7 @@ View the ceph cluster pods with:
 
 ::
 
-    ./ceph/show-pods.sh
+    ./show-pods.sh
     --------------------------------------------------
     Getting Ceph pods with:
     kubectl get pods -n ceph
@@ -141,7 +147,7 @@ With the cluster running you can quickly check the cluster status with:
 
 ::
 
-    ./ceph/cluster-status.sh
+    ./cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
@@ -163,14 +169,129 @@ With the cluster running you can quickly check the cluster status with:
         usage:   325 MB used, 284 GB / 284 GB avail
         pgs:     148 active+clean
 
-Debugging
-=========
+Validate a Pod can Mount a Persistent Volume on the Ceph Cluster in Kubernetes
+==============================================================================
 
-When setting up new devices with kubernetes you will see the ``osd`` pods failing and here is a tool to describe one of the pods quickly.
+Run these steps to walk through integration testing your kubernetes cluster can host persistent volumes for pods running on a ceph cluster inside kubernetes. This means your data is backed to an attached storage disk on the host vm in:
+
+.. note:: If any of these steps fail please refer to the `Kubernetes Ceph Cluster Debugging Guide <https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#kubernetes-ceph-cluster-debugging-guide.html>`__
 
 ::
 
-    ./ceph/describe-osd.sh
+    ls /cephdata/*/*
+    /cephdata/m1/k8-centos-m1  /cephdata/m2/k8-centos-m2  /cephdata/m3/k8-centos-m3
+
+Create PVC
+----------
+
+::
+
+    kubectl apply -f test/pvc.yml
+
+Verify PVC is Bound
+-------------------
+
+::
+
+    kubectl get pvc | grep test-ceph
+    test-ceph-pv-claim        Bound    pvc-a715256d-38c3-11e9-8e7c-525400275ad4   1Gi        RWO            ceph-rbd          46s
+
+Create Pod using PVC as a mounted volume
+----------------------------------------
+
+::
+
+    kubectl apply -f test/mount-pv-in-pod.yml
+
+Verify Pod has Mounted Volume inside Container
+----------------------------------------------
+
+::
+
+    kubectl describe pod ceph-tester
+
+Kubernetes Ceph Cluster Debugging Guide
+=======================================
+
+The ceph-tester failed to start
+-------------------------------
+
+If your integration test fails mounting the test persistent volume follow these steps to try and debug the issue:
+
+Check if the ``ceph-mon`` service is missing a ClusterIP:
+
+::
+
+    get svc -n ceph
+    NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+    ceph-mon   ClusterIP   None            <none>        6789/TCP   11m
+    ceph-rgw   ClusterIP   10.102.90.139   <none>        8088/TCP   11m
+
+See if there is a log in the ``ceph-tester`` showing the error.
+
+::
+
+    kubectl describe po ceph-tester
+
+May show something similar to this for why it failed:
+
+::
+
+    server name not found: ceph-mon.ceph.svc.cluster.local
+
+If ``ceph-mon.ceph.svc.cluster.local`` is not found, manually add it to ``/etc/hosts`` on all nodes.
+
+**M1** node:
+
+::
+
+    # on m1 /etc/hosts add:
+    192.168.0.101    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+**M2** node:
+
+::
+
+    # on m2 /etc/hosts add:
+    192.168.0.102    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+**M3** node:
+
+::
+
+    # on m3 /etc/hosts add:
+    192.168.0.103    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+If connectivity was the fixed on all the nodes then please ``./_uninstall.sh -f`` and then reinstall with ``./run.sh``
+
+If not please continue to the next debugging section below.
+
+Check osd pods
+--------------
+
+When setting up new devices with kubernetes you will see the ``osd`` pods failing and here is a tool to describe one of the pods quickly:
+
+::
+
+    ./describe-osd.sh
 
 Watch the Ceph Mon Logs with Kubetail
 -------------------------------------
@@ -202,7 +323,7 @@ To fix this please:
 
     ::
 
-        ./ceph/_uninstall.sh -f
+        ./_uninstall.sh -f
 
 #.  Delete Remaining pv's
 
@@ -217,7 +338,7 @@ Please run the ``_uninstall.sh`` if you see this kind of error when running the 
 
 ::
 
-    ./ceph/cluster-status.sh
+    ./cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
@@ -233,7 +354,7 @@ When debugging ceph ``osd`` issues, please start by reviewing the pod logs with:
 
 ::
 
-    ./ceph/logs-osd-prepare-pod.sh
+    ./logs-osd-prepare-pod.sh
 
 OSD Pool Failed to Initialize
 -----------------------------
@@ -300,14 +421,14 @@ Show All
 
 ::
 
-    ./ceph/show-ceph-all.sh
+    ./show-ceph-all.sh
 
 Show Cluster Status
 -------------------
 
 ::
 
-    ./ceph/show-ceph-status.sh
+    ./show-ceph-status.sh
 
 ::
 
@@ -336,7 +457,7 @@ Show Ceph DF
 
 ::
 
-    ./ceph/show-ceph-df.sh
+    ./show-ceph-df.sh
 
 ::
 
@@ -360,7 +481,7 @@ Show Ceph OSD Status
 
 ::
 
-    ./ceph/show-ceph-osd-status.sh
+    ./show-ceph-osd-status.sh
 
 ::
 
@@ -379,7 +500,7 @@ Show Ceph Rados DF
 
 ::
 
-    ./ceph/show-ceph-rados-df.sh
+    ./show-ceph-rados-df.sh
 
 ::
 
@@ -403,7 +524,7 @@ To uninstall the ceph cluster and leave the mounted KVM disks ``/dev/vdb`` untou
 
 ::
 
-    ./ceph/_uninstall.sh
+    ./_uninstall.sh
 
 Uninstall and Reformat KVM Images
 ---------------------------------
@@ -414,4 +535,4 @@ To uninstall the ceph cluster and reformat the mounted KVM disks ``/dev/vdb``:
 
 ::
 
-    ./ceph/_uninstall.sh -f
+    ./_uninstall.sh -f

@@ -105,7 +105,7 @@ function partition_devices() {
         anmt " - ${node} sleeping umount on /dev/vdb"
         sleep 5
         anmt " - ${node} partitioning with fdisk /dev/vdb"
-        ssh root@${node} "printf \"d\n1\nd\n\nw\nq\n\" | sudo fdisk /dev/vdb"
+        ssh root@${node} "printf \"d\n1\nd\nw\nq\n\" | sudo fdisk /dev/vdb"
         sleep 2
         good " - ${node} done partitioning with fdisk /dev/vdb"
         anmt "--------------------------------"

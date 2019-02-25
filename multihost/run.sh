@@ -78,7 +78,10 @@ anmt ""
 anmt "detecting if deploying to a Kubernetes cluster deployed over multiple hosts:"
 num_nodes=$(kubectl get nodes -o wide | grep Ready | wc -l)
 if [[ "${num_nodes}" != "1" ]]; then
-    anmt "finding labels to update across the nodes: kubectl get nodes --show-labels -o wide"
+    anmt "syncing labels to across all nodes."
+    inf ""
+    anmt "when done you can review manually with: "
+    anmt "kubectl get nodes --show-labels -o wide"
     # kubectl get nodes --show-labels -o wide
 
     # anmt "getting lables for all cluster nodes"
