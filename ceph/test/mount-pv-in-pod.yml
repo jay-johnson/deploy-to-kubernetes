@@ -12,7 +12,7 @@ spec:
   containers:
   - image: busybox:glibc
     command: [ "/bin/sh", "-c", "--" ]
-    args: [ "ls -l /testing; df -h /testing; exit 0"]
+    args: [ "ls -l /testing; df -h /testing; echo 'last update: '; cat /testing/updated; date > /testing/updated; tail -f /testing/updated"]
     name: busybox
     volumeMounts:
     - mountPath: "/testing"
