@@ -73,7 +73,7 @@ sys.path.insert(
 setup(
     name='deploy-to-kubernetes',
     cmdclass={'test': PyTest},
-    version='1.0.6',
+    version='1.0.7',
     description=(
         'Deployment tooling for managing '
         'a distributed AI stack on Kubernetes. Projects using '

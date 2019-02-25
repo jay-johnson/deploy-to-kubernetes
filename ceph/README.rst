@@ -13,7 +13,7 @@ By default, the disk images will be installed at: ``/cephdata/m[123]/k8-centos-m
 Background
 ----------
 
-This installer was built to replace Rook-Ceph after hitting cluster stability after ~30 days in 2019. The steps are taken from the Ceph Helm installer:
+This installer was built to replace Rook-Ceph after encountering cluster stability issues after ~30 days of uptime in 2019. The steps are taken from the Ceph Helm installer:
 
 http://docs.ceph.com/docs/mimic/start/kube-helm/
 
@@ -370,14 +370,14 @@ Confirm connectivity
 
     telnet ceph-mon.ceph.svc.cluster.local 6789
 
-If connectivity was the fixed on all the nodes then please ``./_uninstall.sh -f`` and then reinstall with ``./run.sh``
+If connectivity was fixed on all the kubernetes nodes then please ``./_uninstall.sh`` and then reinstall with ``./run.sh``
 
 If not please continue to the next debugging section below.
 
 Orphaned fdisk Processes
 ------------------------
 
-If you have to use the ``./_uninstall.sh -f`` command there is the potential the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
+If you have to use the ``./_uninstall.sh -f`` to uninstall and re-partition the disk images, there is a chance the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
 
 If your cluster hits this issue I have to reboot my server.
 
@@ -455,7 +455,7 @@ Stop ``strace`` that will prevent ``gdb`` tracing next:
     <http://www.gnu.org/software/gdb/bugs/>.
     Attaching to process 18516
 
-At this point if a vm hits gets here the server gets rebooted.
+At this point if a vm gets to this point in the kubernetes cluster then the server gets rebooted.
 
 Here are other operational debugging tools that were used with cluster start up below:
 
