@@ -340,7 +340,34 @@ Notice multiple ``ssh pipe`` resources are in use below. Speculation here: are t
     fdisk   18516 root    3u   BLK 252,16     0t512      1301 /dev/vdb
     root@master3:~#
 
-At this point if a vm hits this point the server was rebooted.
+Stop ``strace`` that will prevent ``gdb`` tracing next:
+
+::
+
+    root@master3:~# ps auwwx | grep 26177
+    root     14082  0.0  0.0 112704   952 pts/0    S+   07:02   0:00 grep --color 26177
+    root     26177  0.0  0.0   7188   600 ?        S    06:41   0:00 strace -p 18516
+    root@master3:~# kill -9 26177
+
+``gdb`` also hangs when trying `this stackoverflow <https://superuser.com/questions/963612/closing-open-file-without-killing-the-process>`__:
+
+::
+
+    gdb -p 18516
+    GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-110.el7
+    Copyright (C) 2013 Free Software Foundation, Inc.
+    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+    and "show warranty" for details.
+    This GDB was configured as "x86_64-redhat-linux-gnu".
+    For bug reporting instructions, please see:
+    <http://www.gnu.org/software/gdb/bugs/>.
+    Attaching to process 18516
+
+At this point if a vm hits gets here the server gets rebooted.
+
+Here are other operational debugging tools that were used with cluster start up below:
 
 Check osd pods
 --------------
