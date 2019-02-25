@@ -20,11 +20,17 @@ http://docs.ceph.com/docs/mimic/start/kube-helm/
 Build KVM HDD Images
 ====================
 
+Change to the ``ceph`` directory.
+
+::
+
+    cd ceph
+
 Generate ``100 GB`` hdd images for the ceph cluster with 1 qcow2 image for each of the three vm's:
 
 ::
 
-    ./ceph/kvm-build-images.sh
+    ./kvm-build-images.sh
 
 The files are saved here:
 
@@ -45,7 +51,7 @@ This will attach each ``100 GB`` image to the correct vm: ``m1``, ``m2`` or ``m3
 
 ::
 
-    ./ceph/kvm-attach-images.sh
+    ./kvm-attach-images.sh
 
 Format Disks in VM
 ==================
@@ -58,7 +64,7 @@ With automatic ssh root login access, you can run this to partition, mount and f
 
 ::
 
-    ./ceph/_kvm-format-images.sh
+    ./_kvm-format-images.sh
 
 Install Ceph on All Kubernetes Nodes
 ====================================
@@ -83,7 +89,7 @@ Ceph requires running a local Helm repo server (just like the Redis cluster does
 
 ::
 
-    ./ceph/run.sh
+    ./run.sh
 
 Watch all Ceph Logs with Kubetail
 =================================
@@ -92,7 +98,7 @@ With `kubetail <https://github.com/johanhaleby/kubetail>`__ installed you can wa
 
 ::
 
-    ./ceph/logs-kt-ceph.sh
+    ./logs-kt-ceph.sh
 
 or manually with:
 
@@ -108,7 +114,7 @@ View the ceph cluster pods with:
 
 ::
 
-    ./ceph/show-pods.sh
+    ./show-pods.sh
     --------------------------------------------------
     Getting Ceph pods with:
     kubectl get pods -n ceph
@@ -141,7 +147,7 @@ With the cluster running you can quickly check the cluster status with:
 
 ::
 
-    ./ceph/cluster-status.sh
+    ./cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
@@ -163,14 +169,214 @@ With the cluster running you can quickly check the cluster status with:
         usage:   325 MB used, 284 GB / 284 GB avail
         pgs:     148 active+clean
 
-Debugging
-=========
+Validate a Pod can Mount a Persistent Volume on the Ceph Cluster in Kubernetes
+==============================================================================
 
-When setting up new devices with kubernetes you will see the ``osd`` pods failing and here is a tool to describe one of the pods quickly.
+Run these steps to walk through integration testing your kubernetes cluster can host persistent volumes for pods running on a ceph cluster inside kubernetes. This means your data is backed to an attached storage disk on the host vm in:
+
+.. note:: If any of these steps fail please refer to the `Kubernetes Ceph Cluster Debugging Guide <https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#kubernetes-ceph-cluster-debugging-guide.html>`__
 
 ::
 
-    ./ceph/describe-osd.sh
+    ls /cephdata/*/*
+    /cephdata/m1/k8-centos-m1  /cephdata/m2/k8-centos-m2  /cephdata/m3/k8-centos-m3
+
+Create PVC
+----------
+
+::
+
+    kubectl apply -f test/pvc.yml
+
+Verify PVC is Bound
+-------------------
+
+::
+
+    kubectl get pvc | grep test-ceph
+    test-ceph-pv-claim        Bound    pvc-a715256d-38c3-11e9-8e7c-525400275ad4   1Gi        RWO            ceph-rbd          46s
+
+Create Pod using PVC as a mounted volume
+----------------------------------------
+
+::
+
+    kubectl apply -f test/mount-pv-in-pod.yml
+
+Verify Pod has Mounted Volume inside Container
+----------------------------------------------
+
+::
+
+    kubectl describe pod ceph-tester
+
+Kubernetes Ceph Cluster Debugging Guide
+=======================================
+
+The ceph-tester failed to start
+-------------------------------
+
+If your integration test fails mounting the test persistent volume follow these steps to try and debug the issue:
+
+Check if the ``ceph-mon`` service is missing a ClusterIP:
+
+::
+
+    get svc -n ceph
+    NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+    ceph-mon   ClusterIP   None            <none>        6789/TCP   11m
+    ceph-rgw   ClusterIP   10.102.90.139   <none>        8088/TCP   11m
+
+See if there is a log in the ``ceph-tester`` showing the error.
+
+::
+
+    kubectl describe po ceph-tester
+
+May show something similar to this for why it failed:
+
+::
+
+    server name not found: ceph-mon.ceph.svc.cluster.local
+
+If ``ceph-mon.ceph.svc.cluster.local`` is not found, manually add it to ``/etc/hosts`` on all nodes.
+
+**M1** node:
+
+::
+
+    # on m1 /etc/hosts add:
+    192.168.0.101    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+**M2** node:
+
+::
+
+    # on m2 /etc/hosts add:
+    192.168.0.102    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+**M3** node:
+
+::
+
+    # on m3 /etc/hosts add:
+    192.168.0.103    ceph-mon.ceph.svc.cluster.local
+
+Confirm connectivity
+
+::
+
+    telnet ceph-mon.ceph.svc.cluster.local 6789
+
+If connectivity was the fixed on all the nodes then please ``./_uninstall.sh -f`` and then reinstall with ``./run.sh``
+
+If not please continue to the next debugging section below.
+
+Orphaned fdisk Processes
+------------------------
+
+If you have use ``./_uninstall.sh -f`` there is the potential the partition tool ``fdisk`` can hang. If this happens it should hang the ``./_uninstall.sh -f`` and be detected by the user or the script (hopefully).
+
+If your cluster hits this issue I have to reboot my server.
+
+.. note:: This guide does not handle single kubernetes vm outages at the moment.
+
+For the record, here's some attempts to kill this process:
+
+::
+
+    root@master3:~# ps auwwx | grep fdisk
+    root     18516  0.0  0.0 112508   976 ?        D    06:33   0:00 fdisk /dev/vdb
+    root     21957  0.0  0.0 112704   952 pts/1    S+   06:37   0:00 grep --color fdisk
+    root@master3:~# kill -9 18516
+    root@master3:~# ps auwwx | grep fdisk
+    root     18516  0.0  0.0 112508   976 ?        D    06:33   0:00 fdisk /dev/vdb
+    root     22031  0.0  0.0 112704   952 pts/1    S+   06:37   0:00 grep --color fdisk
+
+::
+
+    root@master3:~# strace -p 18516
+    strace: Process 18516 attached
+    # no more logs after waiting +60 seconds
+    strace: Process 18516 attached
+    ^C
+    ^C
+    ^C
+    ^C^Z
+    [1]+  Stopped                 strace -p 18516
+    # so did strace just die by touching that pid?
+
+What is ``fdisk`` using on the filesystem?
+
+Notice multiple ``ssh pipe`` resources are in use below. Speculation here: are those pipes the ``fdisk`` wait prompt over a closed ssh session (I am guessing but who knows)?
+
+::
+
+    root@master3:~# lsof -p 18516
+    COMMAND   PID USER   FD   TYPE DEVICE  SIZE/OFF      NODE NAME
+    fdisk   18516 root  cwd    DIR  253,0       271 100663361 /root
+    fdisk   18516 root  rtd    DIR  253,0       285        64 /
+    fdisk   18516 root  txt    REG  253,0    200456  33746609 /usr/sbin/fdisk
+    fdisk   18516 root  mem    REG  253,0 106070960      1831 /usr/lib/locale/locale-archive
+    fdisk   18516 root  mem    REG  253,0   2173512  33556298 /usr/lib64/libc-2.17.so
+    fdisk   18516 root  mem    REG  253,0     20112  33556845 /usr/lib64/libuuid.so.1.3.0
+    fdisk   18516 root  mem    REG  253,0    261488  33556849 /usr/lib64/libblkid.so.1.1.0
+    fdisk   18516 root  mem    REG  253,0    164240  33556291 /usr/lib64/ld-2.17.so
+    fdisk   18516 root    0r  FIFO    0,9       0t0    847143 pipe
+    fdisk   18516 root    1w  FIFO    0,9       0t0    845563 pipe
+    fdisk   18516 root    2w  FIFO    0,9       0t0    845564 pipe
+    fdisk   18516 root    3u   BLK 252,16     0t512      1301 /dev/vdb
+    root@master3:~#
+
+Stop ``strace`` that will prevent ``gdb`` tracing next:
+
+::
+
+    root@master3:~# ps auwwx | grep 26177
+    root     14082  0.0  0.0 112704   952 pts/0    S+   07:02   0:00 grep --color 26177
+    root     26177  0.0  0.0   7188   600 ?        S    06:41   0:00 strace -p 18516
+    root@master3:~# kill -9 26177
+
+``gdb`` also hangs when trying `this stackoverflow <https://superuser.com/questions/963612/closing-open-file-without-killing-the-process>`__:
+
+::
+
+    gdb -p 18516
+    GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-110.el7
+    Copyright (C) 2013 Free Software Foundation, Inc.
+    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+    and "show warranty" for details.
+    This GDB was configured as "x86_64-redhat-linux-gnu".
+    For bug reporting instructions, please see:
+    <http://www.gnu.org/software/gdb/bugs/>.
+    Attaching to process 18516
+
+At this point if a vm hits gets here the server gets rebooted.
+
+Here are other operational debugging tools that were used with cluster start up below:
+
+Check osd pods
+--------------
+
+When setting up new devices with kubernetes you will see the ``osd`` pods failing and here is a tool to describe one of the pods quickly:
+
+::
+
+    ./describe-osd.sh
 
 Watch the Ceph Mon Logs with Kubetail
 -------------------------------------
@@ -202,7 +408,7 @@ To fix this please:
 
     ::
 
-        ./ceph/_uninstall.sh -f
+        ./_uninstall.sh -f
 
 #.  Delete Remaining pv's
 
@@ -217,7 +423,7 @@ Please run the ``_uninstall.sh`` if you see this kind of error when running the 
 
 ::
 
-    ./ceph/cluster-status.sh
+    ./cluster-status.sh
     --------------------------------------------------
     Getting Ceph cluster status:
 
@@ -233,7 +439,7 @@ When debugging ceph ``osd`` issues, please start by reviewing the pod logs with:
 
 ::
 
-    ./ceph/logs-osd-prepare-pod.sh
+    ./logs-osd-prepare-pod.sh
 
 OSD Pool Failed to Initialize
 -----------------------------
@@ -300,14 +506,14 @@ Show All
 
 ::
 
-    ./ceph/show-ceph-all.sh
+    ./show-ceph-all.sh
 
 Show Cluster Status
 -------------------
 
 ::
 
-    ./ceph/show-ceph-status.sh
+    ./show-ceph-status.sh
 
 ::
 
@@ -336,7 +542,7 @@ Show Ceph DF
 
 ::
 
-    ./ceph/show-ceph-df.sh
+    ./show-ceph-df.sh
 
 ::
 
@@ -360,7 +566,7 @@ Show Ceph OSD Status
 
 ::
 
-    ./ceph/show-ceph-osd-status.sh
+    ./show-ceph-osd-status.sh
 
 ::
 
@@ -379,7 +585,7 @@ Show Ceph Rados DF
 
 ::
 
-    ./ceph/show-ceph-rados-df.sh
+    ./show-ceph-rados-df.sh
 
 ::
 
@@ -403,7 +609,7 @@ To uninstall the ceph cluster and leave the mounted KVM disks ``/dev/vdb`` untou
 
 ::
 
-    ./ceph/_uninstall.sh
+    ./_uninstall.sh
 
 Uninstall and Reformat KVM Images
 ---------------------------------
@@ -414,4 +620,4 @@ To uninstall the ceph cluster and reformat the mounted KVM disks ``/dev/vdb``:
 
 ::
 
-    ./ceph/_uninstall.sh -f
+    ./_uninstall.sh -f

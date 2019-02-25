@@ -84,10 +84,10 @@ use_path="."
 if [[ -e ./ceph/test-mounts.yml ]]; then
     use_path="./ceph"
 fi
-test_mount_path="${use_path}/test-mounts.yml"
-test_pvc_path="${use_path}/test-pvc.yml"
-if [[ -e ${test_mount_path} ]]; then
-    kubectl delete --ignore-not-found -f ${test_mount_path}
+test_pod_pv_with_ceph_works="${use_path}/test/mount-pv-in-pod.yml"
+test_pvc_path="${use_path}/test/pvc.yml"
+if [[ -e ${test_pod_pv_with_ceph_works} ]]; then
+    kubectl delete --ignore-not-found -f ${test_pod_pv_with_ceph_works}
 fi
 if [[ -e ${test_pvc_path} ]]; then
     kubectl delete --ignore-not-found -f ${test_pvc_path}
