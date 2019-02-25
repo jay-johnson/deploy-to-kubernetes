@@ -1,0 +1,429 @@
+# Copyright 2017 The Openstack-Helm Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+deployment:
+  ceph: true
+  storage_secrets: true
+  client_secrets: true
+  rbd_provisioner: true
+  rgw_keystone_user_and_endpoints: false
+
+images:
+  ks_user: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+  ks_service: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+  ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+  bootstrap: docker.io/ceph/daemon:tag-build-master-luminous-ubuntu-16.04
+  dep_check: docker.io/kolla/ubuntu-source-kubernetes-entrypoint:4.0.0
+  daemon: docker.io/ceph/daemon:tag-build-master-luminous-ubuntu-16.04
+  ceph_config_helper: docker.io/port/ceph-config-helper:v1.7.5
+  rbd_provisioner: quay.io/external_storage/rbd-provisioner:v0.1.1
+  minimal: docker.io/alpine:latest
+  pull_policy: "IfNotPresent"
+
+labels:
+  jobs:
+    node_selector_key: ceph-mon
+    node_selector_value: enabled
+  mon:
+    node_selector_key: ceph-mon
+    node_selector_value: enabled
+  mds:
+    node_selector_key: ceph-mds
+    node_selector_value: enabled
+  osd:
+    node_selector_key: ceph-osd
+    node_selector_value: enabled
+  rgw:
+    node_selector_key: ceph-rgw
+    node_selector_value: enabled
+  mgr:
+    node_selector_key: ceph-mgr
+    node_selector_value: enabled
+
+pod:
+  dns_policy: "ClusterFirstWithHostNet"
+  replicas:
+    rgw: 1
+    mon_check: 1
+    rbd_provisioner: 2
+    mgr: 1
+  affinity:
+      anti:
+        type:
+          default: preferredDuringSchedulingIgnoredDuringExecution
+        topologyKey:
+          default: kubernetes.io/hostname
+  resources:
+    enabled: false
+    osd:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1024Mi"
+        cpu: "1000m"
+    mds:
+      requests:
+        memory: "10Mi"
+        cpu: "250m"
+      limits:
+        memory: "50Mi"
+        cpu: "500m"
+    mon:
+      requests:
+        memory: "50Mi"
+        cpu: "250m"
+      limits:
+        memory: "100Mi"
+        cpu: "500m"
+    mon_check:
+      requests:
+        memory: "5Mi"
+        cpu: "250m"
+      limits:
+        memory: "50Mi"
+        cpu: "500m"
+    rgw:
+      requests:
+        memory: "5Mi"
+        cpu: "250m"
+      limits:
+        memory: "50Mi"
+        cpu: "500m"
+    rbd_provisioner:
+      requests:
+        memory: "5Mi"
+        cpu: "250m"
+      limits:
+        memory: "50Mi"
+        cpu: "500m"
+    mgr:
+      requests:
+        memory: "5Mi"
+        cpu: "250m"
+      limits:
+        memory: "50Mi"
+        cpu: "500m"
+    jobs:
+      bootstrap:
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+        requests:
+          memory: "128Mi"
+          cpu: "500m"
+      secret_provisioning:
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+        requests:
+          memory: "128Mi"
+          cpu: "500m"
+      ks_endpoints:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      ks_service:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      ks_user:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+
+secrets:
+  keyrings:
+    mon: ceph-mon-keyring
+    mds: ceph-bootstrap-mds-keyring
+    osd: ceph-bootstrap-osd-keyring
+    rgw: ceph-bootstrap-rgw-keyring
+    mgr: ceph-bootstrap-mgr-keyring
+    admin: ceph-client-admin-keyring
+  identity:
+    admin: ceph-keystone-admin
+    user: ceph-keystone-user
+    user_rgw: ceph-keystone-user-rgw
+
+# network:
+#  public:   172.21.0.0/20
+#  cluster:   172.21.0.0/20
+#  public: 192.168.0.0/16
+#  cluster: 192.168.0.0/16
+#  port:
+#    mon: 6789
+#    rgw: 8088
+
+conf:
+  rgw_ks:
+    config:
+      rgw_keystone_api_version: 3
+      rgw_keystone_accepted_roles: "admin, _member_"
+      rgw_keystone_implicit_tenants: true
+      rgw_s3_auth_use_keystone: true
+  ceph:
+    override:
+    append:
+    config:
+      global:
+        mon_host: null
+      osd:
+        #ports
+        ms_bind_port_max: 7100
+
+dependencies:
+  mon:
+    jobs:
+    service:
+  osd:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  moncheck:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  rgw:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  mds:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  bootstrap:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  rbd_provisioner:
+    jobs:
+    - service: ceph_mon
+      endpoint: internal
+  ks_user:
+    services:
+    - service: identity
+      endpoint: internal
+  ks_service:
+    services:
+    - service: identity
+      endpoint: internal
+  ks_endpoints:
+    jobs:
+    - ceph-ks-service
+    services:
+    - service: identity
+      endpoint: internal
+  mgr:
+    jobs:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+  ceph_commands:
+    services:
+    - service: ceph_mon
+      endpoint: internal
+
+ceph:
+  rgw_keystone_auth: false
+  enabled:
+    mds: true
+    rgw: true
+    mgr: true
+  storage:
+    # will have $NAMESPACE/{osd,mon} appended
+    osd_directory: /var/lib/ceph-helm
+    mon_directory: /var/lib/ceph-helm
+    # use /var/log for fluentd to collect ceph log
+    # mon_log: /var/log/ceph/mon
+    # osd_log: /var/log/ceph/osd
+
+osd_directory:
+  enabled: false
+
+# To use OSD devices
+# journal is optional
+# /!\ /!\
+# To allow for a disk to be zapped, set zap: "1" on each
+# device and enable_zap_and_potentially_lose_data: true
+# While we prevent you from zapping a drive that belonged
+# to this cluster, if a drive belonged to another cluster or
+# has important data from another application, it will be *LOST*
+# /!\ /!\
+enable_zap_and_potentially_lose_data: true
+# Zap failed on 2019-02-24:
+# ceph_disk.main.Error: Error: not full block device; cannot zap: /dev/vdb
+# osd_devices:
+#   - name: dev-vdb
+#     device: /dev/vdb
+#     journal: /dev/sdf
+#     zap: "0"
+
+bootstrap:
+  enabled: false
+  script: |
+    ceph -s
+    function ensure_pool () {
+      ceph osd pool stats $1 || ceph osd pool create $1 $2
+    }
+    ensure_pool volumes 8
+
+# Uncomment below to enable mgr modules
+# For a list of available modules:
+#  http://docs.ceph.com/docs/master/mgr/
+# This overrides mgr_initial_modules (default: restful, status)
+# Any module not listed here will be disabled
+ceph_mgr_enabled_modules:
+  - restful
+  - status
+
+# You can configure your mgr modules
+# below. Each module has its own set
+# of key/value. Refer to the doc
+# above for more info. For example:
+#ceph_mgr_modules_config:
+#  dashboard:
+#    port: 7000
+#  localpool:
+#    failure_domain: host
+#    subtree: rack
+#    pg_num: "128"
+#    num_rep: "3"
+#    min_size: "2"
+
+# You can run any ceph commands upon deployment
+# or upgrade by setting the following.
+# These will be executed via kubectl exec
+# Do *not* use ';' it is used internally as a delimiter
+#ceph_commands:
+# - ceph osd pool create <pool> <pg_num>
+# - ceph osd crush tunables <tunables>
+
+# if you change provision_storage_class to false
+# it is presumed you manage your own storage
+# class definition externally
+# storageclass:
+#   provision_storage_class: true
+#   provisioner: ceph.com/rbd
+#   name: general
+#   monitors: null
+#   pool: rbd
+#   admin_id: admin
+#   admin_secret_name: pvc-ceph-conf-combined-storageclass
+#   admin_secret_namespace: ceph
+#   user_id: admin
+#   user_secret_name: pvc-ceph-client-key
+#   image_format: "2"
+#   image_features: layering
+
+endpoints:
+  cluster_domain_suffix: cluster.local
+  identity:
+    name: keystone
+    namespace: null
+    auth:
+      admin:
+        region_name: RegionOne
+        username: admin
+        password: password
+        project_name: admin
+        user_domain_name: default
+        project_domain_name: default
+      user:
+        role: admin
+        region_name: RegionOne
+        username: swift
+        password: password
+        project_name: service
+        user_domain_name: default
+        project_domain_name: default
+    hosts:
+      default: keystone-api
+      public: keystone
+    host_fqdn_override:
+      default: null
+    path:
+      default: /v3
+    scheme:
+      default: http
+    port:
+      admin:
+        default: 35357
+      api:
+        default: 80
+  object_store:
+    name: swift
+    namespace: null
+    hosts:
+      default: ceph-rgw
+    host_fqdn_override:
+      default: null
+    path:
+      default: /swift/v1
+    scheme:
+      default: http
+    port:
+      api:
+        default: 8088
+  ceph_mon:
+    namespace: null
+    hosts:
+      default: ceph-mon
+    host_fqdn_override:
+      default: null
+    port:
+      mon:
+        default: 6789
+
+
+manifests:
+  configmap_bin_clients: true
+  configmap_bin_ks: true
+  configmap_bin: true
+  configmap_etc: true
+  configmap_templates: true
+  daemonset_mon: true
+  daemonset_osd: true
+  deployment_mds: true
+  deployment_moncheck: true
+  deployment_rbd_provisioner: true
+  deployment_rgw: true
+  deployment_mgr: true
+  job_bootstrap: true
+  job_keyring: true
+  job_ks_endpoints: true
+  job_ks_service: true
+  job_ks_user: true
+  job_namespace_client_key_cleaner: true
+  job_namespace_client_key: true
+  job_storage_admin_keys: true
+  job_storage_admin_keys_cleaner: true
+  secret_keystone_rgw: true
+  secret_keystone: true
+  service_mon: true
+  service_rgw: true
+  storageclass: true

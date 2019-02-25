@@ -33,6 +33,11 @@ deploy_suffix=""
 cert_env="dev"
 storage_type="ceph"
 object_store=""
+ceph_node_labels="ceph-mon=enabled ceph-mgr=enabled ceph-osd=enabled ceph-rgw=enabled ceph-mds=enabled"
+# The ceph-osd-device-<name> label is created based on the osd_devices
+# name value defined in our ceph-overrides.yaml.
+# From our example above we will have the two following label: ceph-osd-device-dev-sdb and ceph-osd-device-dev-sdc.
+ceph_device_labels="ceph-osd-device-dev-vdb=enabled ceph-osd-device-dev-vdb1=enabled"
 namespace="default"
 labels_for_m1="frontend=enabled backend=disabled datascience=disabled ceph=enabled minio=enabled splunk=disabled"
 labels_for_m2="frontend=enabled backend=enabled datascience=enabled ceph=enabled minio=disabled splunk=disabled"
@@ -43,6 +48,11 @@ for i in "$@"
 do
     if [[ "${i}" == "prod" ]]; then
         cert_env="prod"
+    elif [[ "${i}" == "new-ceph" ]]; then
+        storage_type="new-ceph"
+        labels_for_m1="${labels_for_m1} ${ceph_node_labels} ${ceph_device_labels}"
+        labels_for_m2="${labels_for_m2} ${ceph_node_labels} ${ceph_device_labels}"
+        labels_for_m3="${labels_for_m3} ${ceph_node_labels} ${ceph_device_labels}"
     elif [[ "${i}" == "ceph" ]]; then
         storage_type="ceph"
     elif [[ "${i}" == "cephs3" ]]; then

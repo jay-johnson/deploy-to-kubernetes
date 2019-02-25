@@ -9,7 +9,8 @@ This guide was built for deploying the `AntiNex stack of docker containers <http
 
 - `Managing a Multi-Host Kubernetes Cluster with an External DNS Server <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-an-external-dns-server>`__
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
-- `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
+- `A Native Ceph Cluster for Persistent Volumes <http://docs.ceph.com/docs/mimic/start/kube-helm/>`__
+- `A Third-party Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
 - `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__

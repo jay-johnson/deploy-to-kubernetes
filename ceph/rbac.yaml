@@ -1,0 +1,109 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: ceph-all
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces", "secrets", "configmaps", "endpoints", "services", "deployments", "persistentvolumeclaims"]
+  verbs: ["get", "list", "create", "delete", "patch"]
+- apiGroups: ["extensions"]
+  resources: ["daemonsets","deployments", "replicasets"]
+  verbs: ["get", "create", "delete", "update", "list", "patch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "create", "delete", "update", "patch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "create", "watch", "delete", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: ceph-sc
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumes", "persistentvolumeclaims", "events","secrets"]
+  verbs: ["get", "list", "create", "delete", "watch", "update"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "create", "delete", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kube-system-cm
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["create", "list", "get", "delete", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: role-ceph
+  namespace: ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ceph-all
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: role-kube-system
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-system-cm
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: role-ceph-in-ceph
+  namespace: ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ceph-all
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: ceph
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: role-ceph-sc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ceph-sc
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-system
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: role-ceph-sc-ns-ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ceph-sc
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: ceph
+
+
