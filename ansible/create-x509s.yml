@@ -15,6 +15,7 @@
     - set_fact: aeceph_server_key="./ssl/aeceph_server_key.pem"
     - set_fact: aeprometheus_server_key="./ssl/aeprometheus_server_key.pem"
     - set_fact: ae_server_key="./ssl/ae_server_key.pem"
+    - set_fact: grafana_server_key="./ssl/grafana_server_key.pem"
     - set_fact: jenkins_server_key="./ssl/jenkins_server_key.pem"
     - set_fact: webserver_server_key="./ssl/webserver_server_key.pem"
     - set_fact: restapi_server_key="./ssl/restapi_server_key.pem"
@@ -38,6 +39,7 @@
     - set_fact: aeceph_server_csr="./ssl/aeceph_server.csr"
     - set_fact: aeprometheus_server_csr="./ssl/aeprometheus_server.csr"
     - set_fact: ae_server_csr="./ssl/ae_server.csr"
+    - set_fact: grafana_server_csr="./ssl/grafana_server.csr"
     - set_fact: jenkins_server_csr="./ssl/jenkins_server.csr"
     - set_fact: webserver_server_csr="./ssl/webserver_server.csr"
     - set_fact: restapi_server_csr="./ssl/restapi_server.csr"
@@ -61,6 +63,7 @@
     - set_fact: aeceph_server_cert="./ssl/aeceph_server_cert.pem"
     - set_fact: aeprometheus_server_cert="./ssl/aeprometheus_server_cert.pem"
     - set_fact: ae_server_cert="./ssl/ae_server_cert.pem"
+    - set_fact: grafana_server_cert="./ssl/grafana_server_cert.pem"
     - set_fact: jenkins_server_cert="./ssl/jenkins_server_cert.pem"
     - set_fact: webserver_server_cert="./ssl/webserver_server_cert.pem"
     - set_fact: restapi_server_cert="./ssl/restapi_server_cert.pem"
@@ -99,6 +102,7 @@
     - set_fact: aeceph_fqdn="aeceph.example.com"
     - set_fact: aeprometheus_fqdn="aeprometheus.example.com"
     - set_fact: ae_fqdn="ae.example.com"
+    - set_fact: grafana_fqdn="grafana.example.com"
     - set_fact: jenkins_fqdn="jenkins.example.com"
     - set_fact: webserver_fqdn="www.example.com"
     - set_fact: restapi_fqdn="api.example.com"
@@ -140,6 +144,8 @@
       set_fact: aeprometheus_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{aeprometheus_fqdn}}"
     - name: Set AE Server Subject={{ae_fqdn}}
       set_fact: ae_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{ae_fqdn}}"
+    - name: Set Grafana Subject={{grafana_fqdn}}
+      set_fact: grafana_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{grafana_fqdn}}"
     - name: Set Webserver Subject={{webserver_fqdn}}
       set_fact: webserver_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{webserver_fqdn}}"
     - name: Set REST API Subject={{restapi_fqdn}}
@@ -216,6 +222,10 @@
     - name: Create AE Server Key
       command: openssl genrsa \
         -out {{ae_server_key}} 4096
+
+    - name: Create Grafana Key
+      command: openssl genrsa \
+        -out {{grafana_server_key}} 4096
 
     - name: Create Jenkins Server Key
       command: openssl genrsa \
@@ -332,6 +342,13 @@
         -sha256 -new \
         -key {{ae_server_key}} \
         -out {{ae_server_csr}}
+
+    - name: Create Grafana CSR -subj={{grafana_subject}}
+      command: openssl req \
+        -subj {{grafana_subject}} \
+        -sha256 -new \
+        -key {{grafana_server_key}} \
+        -out {{grafana_server_csr}}
 
     - name: Create Jenkins Server CSR -subj={{jenkins_subject}}
       command: openssl req \
@@ -668,6 +685,16 @@
         -CAcreateserial -out {{ae_server_cert}} \
         -extfile {{dst_ext_file}}
 
+    - name: Generate Analysis Engine Grafana Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{grafana_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{grafana_server_cert}} \
+        -extfile {{dst_ext_file}}
+
     - name: Create Client Key
       command: openssl genrsa \
         -out {{client_key}} 4096
@@ -747,6 +774,10 @@
 
     - name: Testing AE Server Cert is a subdomain of fqdn={{fqdn}}
       shell: openssl x509 -in {{ae_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Testing Grafana Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{grafana_server_cert}} -text -noout | grep {{fqdn}} | wc -l
       register: test_server_cert
 
     - name: Testing Jenkins Server Cert is a subdomain of fqdn={{fqdn}}
