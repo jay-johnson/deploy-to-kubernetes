@@ -11,6 +11,10 @@
     - set_fact: redis_server_key="./ssl/redis_server_key.pem"
     - set_fact: jupyter_server_key="./ssl/jupyter_server_key.pem"
     - set_fact: aejupyter_server_key="./ssl/aejupyter_server_key.pem"
+    - set_fact: aeminio_server_key="./ssl/aeminio_server_key.pem"
+    - set_fact: aeceph_server_key="./ssl/aeceph_server_key.pem"
+    - set_fact: aeprometheus_server_key="./ssl/aeprometheus_server_key.pem"
+    - set_fact: ae_server_key="./ssl/ae_server_key.pem"
     - set_fact: jenkins_server_key="./ssl/jenkins_server_key.pem"
     - set_fact: webserver_server_key="./ssl/webserver_server_key.pem"
     - set_fact: restapi_server_key="./ssl/restapi_server_key.pem"
@@ -30,6 +34,10 @@
     - set_fact: redis_server_csr="./ssl/redis_server.csr"
     - set_fact: jupyter_server_csr="./ssl/jupyter_server.csr"
     - set_fact: aejupyter_server_csr="./ssl/aejupyter_server.csr"
+    - set_fact: aeminio_server_csr="./ssl/aeminio_server.csr"
+    - set_fact: aeceph_server_csr="./ssl/aeceph_server.csr"
+    - set_fact: aeprometheus_server_csr="./ssl/aeprometheus_server.csr"
+    - set_fact: ae_server_csr="./ssl/ae_server.csr"
     - set_fact: jenkins_server_csr="./ssl/jenkins_server.csr"
     - set_fact: webserver_server_csr="./ssl/webserver_server.csr"
     - set_fact: restapi_server_csr="./ssl/restapi_server.csr"
@@ -49,6 +57,10 @@
     - set_fact: redis_server_cert="./ssl/redis_server_cert.pem"
     - set_fact: jupyter_server_cert="./ssl/jupyter_server_cert.pem"
     - set_fact: aejupyter_server_cert="./ssl/aejupyter_server_cert.pem"
+    - set_fact: aeminio_server_cert="./ssl/aeminio_server_cert.pem"
+    - set_fact: aeceph_server_cert="./ssl/aeceph_server_cert.pem"
+    - set_fact: aeprometheus_server_cert="./ssl/aeprometheus_server_cert.pem"
+    - set_fact: ae_server_cert="./ssl/ae_server_cert.pem"
     - set_fact: jenkins_server_cert="./ssl/jenkins_server_cert.pem"
     - set_fact: webserver_server_cert="./ssl/webserver_server_cert.pem"
     - set_fact: restapi_server_cert="./ssl/restapi_server_cert.pem"
@@ -83,6 +95,10 @@
     - set_fact: redis_fqdn="redis.example.com"
     - set_fact: jupyter_fqdn="jupyter.example.com"
     - set_fact: aejupyter_fqdn="aejupyter.example.com"
+    - set_fact: aeminio_fqdn="aeminio.example.com"
+    - set_fact: aeceph_fqdn="aeceph.example.com"
+    - set_fact: aeprometheus_fqdn="aeprometheus.example.com"
+    - set_fact: ae_fqdn="ae.example.com"
     - set_fact: jenkins_fqdn="jenkins.example.com"
     - set_fact: webserver_fqdn="www.example.com"
     - set_fact: restapi_fqdn="api.example.com"
@@ -116,6 +132,14 @@
       set_fact: jupyter_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{jupyter_fqdn}}"
     - name: Set AE Jupyter Subject={{aejupyter_fqdn}}
       set_fact: aejupyter_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{aejupyter_fqdn}}"
+    - name: Set AE Minio Subject={{aeminio_fqdn}}
+      set_fact: aeminio_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{aeminio_fqdn}}"
+    - name: Set AE Ceph Subject={{aeceph_fqdn}}
+      set_fact: aeceph_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{aeceph_fqdn}}"
+    - name: Set AE Prometheus Subject={{aeprometheus_fqdn}}
+      set_fact: aeprometheus_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{aeprometheus_fqdn}}"
+    - name: Set AE Server Subject={{ae_fqdn}}
+      set_fact: ae_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{ae_fqdn}}"
     - name: Set Webserver Subject={{webserver_fqdn}}
       set_fact: webserver_subject="/C={{country}}/ST={{state}}/L={{location}}/O={{org}}/OU={{org_unit}}/CN={{fqdn}}/SAN:dns={{webserver_fqdn}}"
     - name: Set REST API Subject={{restapi_fqdn}}
@@ -176,6 +200,22 @@
     - name: Create AE Jupyter Server Key
       command: openssl genrsa \
         -out {{aejupyter_server_key}} 4096
+
+    - name: Create AE Minio Server Key
+      command: openssl genrsa \
+        -out {{aeminio_server_key}} 4096
+
+    - name: Create AE Ceph Server Key
+      command: openssl genrsa \
+        -out {{aeceph_server_key}} 4096
+
+    - name: Create AE Prometheus Server Key
+      command: openssl genrsa \
+        -out {{aeprometheus_server_key}} 4096
+
+    - name: Create AE Server Key
+      command: openssl genrsa \
+        -out {{ae_server_key}} 4096
 
     - name: Create Jenkins Server Key
       command: openssl genrsa \
@@ -264,6 +304,34 @@
         -sha256 -new \
         -key {{aejupyter_server_key}} \
         -out {{aejupyter_server_csr}}
+
+    - name: Create AE Minio Server CSR -subj={{aeminio_subject}}
+      command: openssl req \
+        -subj {{aeminio_subject}} \
+        -sha256 -new \
+        -key {{aeminio_server_key}} \
+        -out {{aeminio_server_csr}}
+
+    - name: Create AE Ceph Server CSR -subj={{aeceph_subject}}
+      command: openssl req \
+        -subj {{aeceph_subject}} \
+        -sha256 -new \
+        -key {{aeceph_server_key}} \
+        -out {{aeceph_server_csr}}
+
+    - name: Create AE Prometheus Server CSR -subj={{aeprometheus_subject}}
+      command: openssl req \
+        -subj {{aeprometheus_subject}} \
+        -sha256 -new \
+        -key {{aeprometheus_server_key}} \
+        -out {{aeprometheus_server_csr}}
+
+    - name: Create AE Server CSR -subj={{ae_subject}}
+      command: openssl req \
+        -subj {{ae_subject}} \
+        -sha256 -new \
+        -key {{ae_server_key}} \
+        -out {{ae_server_csr}}
 
     - name: Create Jenkins Server CSR -subj={{jenkins_subject}}
       command: openssl req \
@@ -560,6 +628,46 @@
         -CAcreateserial -out {{aejupyter_server_cert}} \
         -extfile {{dst_ext_file}}
 
+    - name: Generate Analysis Engine Minio Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{aeminio_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{aeminio_server_cert}} \
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Analysis Engine Ceph Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{aeceph_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{aeceph_server_cert}} \
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Analysis Engine Prometheus Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{aeprometheus_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{aeprometheus_server_cert}} \
+        -extfile {{dst_ext_file}}
+
+    - name: Generate Analysis Engine Server Signed Server Cert
+      command: openssl x509 \
+        -req \
+        -days {{valid_days}} \
+        -sha256 -in {{ae_server_csr}} \
+        -CA {{ca_file}} \
+        -CAkey {{ca_private_key}} \
+        -CAcreateserial -out {{ae_server_cert}} \
+        -extfile {{dst_ext_file}}
+
     - name: Create Client Key
       command: openssl genrsa \
         -out {{client_key}} 4096
@@ -611,13 +719,34 @@
         msg: "Please check the server cert={{jupyter_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
       when: test_server_cert.stdout != "2"
 
+    - name: Testing AE Jupyter Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{aejupyter_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
     - name: Verifying AE Jupyter Server Cert
       fail:
         msg: "Please check the server cert={{aejupyter_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
       when: test_server_cert.stdout != "2"
 
-    - name: Testing AE Jupyter Server Cert is a subdomain of fqdn={{fqdn}}
-      shell: openssl x509 -in {{aejupyter_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+    - name: Testing AE Minio Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{aeminio_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Verifying AE Minio Server Cert
+      fail:
+        msg: "Please check the server cert={{aeminio_server_cert}} was created correctly {{fqdn}} count={{test_server_cert}}"
+      when: test_server_cert.stdout != "2"
+
+    - name: Testing AE Ceph Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{aeceph_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Testing AE Prometheus Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{aeprometheus_server_cert}} -text -noout | grep {{fqdn}} | wc -l
+      register: test_server_cert
+
+    - name: Testing AE Server Cert is a subdomain of fqdn={{fqdn}}
+      shell: openssl x509 -in {{ae_server_cert}} -text -noout | grep {{fqdn}} | wc -l
       register: test_server_cert
 
     - name: Testing Jenkins Server Cert is a subdomain of fqdn={{fqdn}}
