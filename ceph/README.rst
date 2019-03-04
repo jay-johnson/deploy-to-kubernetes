@@ -306,7 +306,7 @@ Kubernetes Ceph Cluster Debugging Guide
 Confirm Ceph OSD pods are using the KVM Mounted Disks
 -----------------------------------------------------
 
-If you cluster is in a ``HEALTH_WARN`` state with a message about ``low on available space``:
+If the cluster is in a ``HEALTH_WARN`` state with a message about ``low on available space``:
 
 ::
 
@@ -345,11 +345,11 @@ If you see something like:
     detected at least one Ceph OSD mount failure
     Please review the Ceph debugging guide: https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#confirm-ceph-osd-pods-are-using-the-kvm-mounted-disks for more details on how to fix this issue
 
-Then the correct storage disk(s) failed to mount correctly, and ceph is using the wrong disk for extened, persistent storage on the vm. This can put your ceph cluster into a ``HEALTH_WARN`` state as seen in the cluster status script.
+Then the correct storage disk(s) failed to mount correctly, and ceph is using the wrong disk for extended, persistent storage on the vm. This can put your ceph cluster into a ``HEALTH_WARN`` state as seen above in the cluster status script.
 
 To fix this error, please either use the ``./_kvm-format-images.sh`` (if you are ok reformatting all previous ceph data on the disks) or manually with the following steps:
 
-#.  Fix /etc/fstab on all vms
+#.  Fix ``/etc/fstab`` on all vms
 
     .. warning:: Only run these steps this when the cluster can be taken down as it will interrupt services
 
@@ -360,19 +360,41 @@ To fix this error, please either use the ``./_kvm-format-images.sh`` (if you are
         cat /etc/fstab | grep vdb1
         /dev/vdb1 /var/lib/ceph  xfs     defaults    0 0
 
-    For any vm that does not have the ``/etc/fstab`` entry, please run this to as root to set them up manually:
+    For any vm that does not have the ``/etc/fstab`` entry, please run these commands as root to set them up manually:
+
+#.  Delete the bad mountpoint: ``/var/lib/ceph``
 
     ::
 
         rm -rf /var/lib/ceph
 
-    Add the new entry:
+#.  Add the new ``/dev/vdb`` entry to ``/etc/fstab``
 
     ::
 
         sudo echo "/dev/vdb1 /var/lib/ceph  xfs     defaults    0 0" >> /etc/fstab
 
-#.  Reboot all impacted vms and confirm the mounts worked
+#.  Mount the disk
+
+    ::
+
+        mount /dev/vdb1 /var/lib/ceph
+
+#.  Uninstall Ceph
+
+    .. warning:: this will impact any pods using the ``ceph-rbd`` storageClass
+
+    ::
+
+        ./_uninstall.sh
+
+#.  Reinstall Ceph or Reboot all impacted vms
+
+    ::
+
+        ./run.sh
+
+#.  Confirm the Mounts Worked
 
     ::
 
