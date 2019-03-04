@@ -351,7 +351,7 @@ To fix this error, please either use the ``./_kvm-format-images.sh`` (if you are
 
 #.  Fix ``/etc/fstab`` on all vms
 
-    .. warning:: Only run these steps this when the cluster can be taken down as it will interrupt services
+    .. warning:: Only run these steps when the cluster can be taken down as it will interrupt services
 
     Confirm the ``/etc/fstab`` entry has the correct value:
 
