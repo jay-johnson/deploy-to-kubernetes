@@ -303,6 +303,81 @@ Cleanup Ceph Tester Pod
 Kubernetes Ceph Cluster Debugging Guide
 =======================================
 
+Confirm Ceph OSD pods are using the KVM Mounted Disks
+-----------------------------------------------------
+
+If you cluster is in a ``HEALTH_WARN`` state with a message about ``low on available space``:
+
+::
+
+    ./cluster-status.sh
+    --------------------------------------------------
+    Getting Ceph cluster status:
+
+    kubectl -n ceph exec -ti ceph-mon-kjcqq -c ceph-mon -- ceph -s
+    cluster:
+        id:     747d4fc1-2d18-423a-96fe-43419f8fe9cd
+        health: HEALTH_WARN
+                mons master2.example.com,master3.example.com are low on available space
+
+Then please confirm the vms all mounted the correct storage disks for ceph. This could be due to your ``/etc/fstab`` entries failing to mount (say after a cluster reboot), which we can quickly check with:
+
+::
+
+    ./check-kvm-disk-mounts.sh
+
+If you see something like:
+
+::
+
+    --------------------------------------------------
+    Checking Ceph OSD Pod Mountpoints for /dev/vdb1:
+
+    checking: ceph-osd-dev-vdb-5dv8l
+    kubectl -n ceph exec -it ceph-osd-dev-vdb-5dv8l -- df -h /var/lib/ceph/
+    failed: ceph-osd-dev-vdb-5dv8l is using /dev/mapper/centos-root
+    checking: ceph-osd-dev-vdb-s77lh
+    kubectl -n ceph exec -it ceph-osd-dev-vdb-s77lh -- df -h /var/lib/ceph/
+    failed: ceph-osd-dev-vdb-s77lh is using /dev/mapper/centos-root
+    checking: ceph-osd-dev-vdb-vxvd7
+    kubectl -n ceph exec -it ceph-osd-dev-vdb-vxvd7 -- df -h /var/lib/ceph/
+    failed: ceph-osd-dev-vdb-vxvd7 is using /dev/mapper/centos-root
+    detected at least one Ceph OSD mount failure
+    Please review the Ceph debugging guide: https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html#confirm-ceph-osd-pods-are-using-the-kvm-mounted-disks for more details on how to fix this issue
+
+Then the correct storage disk(s) failed to mount correctly, and ceph is using the wrong disk for extened, persistent storage on the vm. This can put your ceph cluster into a ``HEALTH_WARN`` state as seen in the cluster status script.
+
+To fix this error, please either use the ``./_kvm-format-images.sh`` (if you are ok reformatting all previous ceph data on the disks) or manually with the following steps:
+
+#.  Fix /etc/fstab on all vms
+
+    .. warning:: Only run these steps this when the cluster can be taken down as it will interrupt services
+
+    Confirm the ``/etc/fstab`` entry has the correct value:
+
+    ::
+
+        cat /etc/fstab | grep vdb1
+        /dev/vdb1 /var/lib/ceph  xfs     defaults    0 0
+
+    For any vm that does not have the ``/etc/fstab`` entry, please run this to as root to set them up manually:
+
+    ::
+
+        rm -rf /var/lib/ceph
+
+    Add the new entry:
+
+    ::
+
+        sudo echo "/dev/vdb1 /var/lib/ceph  xfs     defaults    0 0" >> /etc/fstab
+
+#.  Reboot all impacted vms and confirm the mounts worked
+
+    ::
+
+        ./check-kvm-disk-mounts.sh
+
 The ceph-tester failed to start
 -------------------------------
 

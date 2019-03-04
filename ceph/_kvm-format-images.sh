@@ -71,13 +71,16 @@ function format_as_xfs() {
         anmt "Formatting /dev/vdb1 as xfs"
         ssh root@${node} "mkfs.xfs -f /dev/vdb1"
 
+        anmt "Removing previous mountpoint if exists: ${node}:/var/lib/ceph"
+        ssh root@${node} "rm -rf /var/lib/ceph >> /dev/null"
+
         anmt "Creating /dev/vdb1 mountpoint: /var/lib/ceph"
-        ssh root@${node} "mkdir -p -m 777 /var/lib/ceph"
+        ssh root@${node} "mkdir -p -m 775 /var/lib/ceph >> /dev/null"
 
         # ssh root@${node} "umount /dev/vdb1"
         ssh root@${node} "mount /dev/vdb1 /var/lib/ceph"
 
-        test_exists=$(ssh root@${node} "cat /etc/fstab | grep vdb1 | wc -l")
+        test_exists=$(ssh root@${node} "cat /etc/fstab | grep vdb1 | grep xfs | wc -l")
         if [[ "${test_exists}" == "0" ]]; then
             anmt "Adding /dev/vdb1 to /etc/fstab"
             ssh root@${node} "echo \"/dev/vdb1 /var/lib/ceph  xfs     defaults    0 0\" >> /etc/fstab"
