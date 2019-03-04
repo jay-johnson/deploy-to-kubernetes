@@ -382,7 +382,7 @@ To fix this error, please either use the ``./_kvm-format-images.sh`` (if you are
 
 #.  Uninstall Ceph
 
-    .. warning:: Running ``../_uninstall.sh`` will impact any pods using the ``ceph-rbd`` storageClass
+    .. warning:: Running ``./_uninstall.sh`` will impact any pods using the ``ceph-rbd`` storageClass
 
     ::
 
