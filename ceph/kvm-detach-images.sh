@@ -32,6 +32,7 @@ for node in $nodes; do
         echo "virsh detach-disk ${node} \
             ${image_path}"
         virsh detach-disk ${node} \
-            ${image_path}
+            ${image_path} \
+	    --persistent
     fi
 done
