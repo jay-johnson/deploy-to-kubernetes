@@ -49,12 +49,15 @@ pv_deployment_type="all-pvs"
 multihost_labeler="./multihost/run.sh"
 is_ubuntu=$(uname -a | grep -i ubuntu | wc -l)
 install_on_centos="1"
+start_services="1"
 
 for i in "$@"
 do
     contains_equal=$(echo ${i} | grep "=")
     if [[ "${i}" == "prod" ]]; then
         cert_env="prod"
+    elif [[ "${i}" == "clean" ]]; then
+        start_services="0"
     elif [[ "${i}" == "new-ceph" ]]; then
         storage_type="new-ceph"
     elif [[ "${i}" == "ceph" ]]; then
@@ -211,10 +214,12 @@ if [[ "${multihost_labeler}" != "" ]] && [[ -e ${multihost_labeler} ]]; then
     ${multihost_labeler} ${cert_env} ${storage_type} ${extra_params}
 fi
 
-if [[ -e ./pvs/create-pvs.sh ]]; then
-    good "creating persistent volumes"
-    ./pvs/create-pvs.sh ${cert_env} ${storage_type} ${pv_deployment_type}
-    inf ""
+if [[ "${start_services}" == "1" ]]; then
+    if [[ -e ./pvs/create-pvs.sh ]]; then
+        good "creating persistent volumes"
+        ./pvs/create-pvs.sh ${cert_env} ${storage_type} ${pv_deployment_type}
+        inf ""
+    fi
 fi
 
 anmt "---------------------------------------------"

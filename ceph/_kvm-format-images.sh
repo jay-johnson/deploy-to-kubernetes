@@ -119,27 +119,26 @@ function delete_partitions_and_reformat_disks() {
         ssh root@${node} "mkdir -p -m 775 /var/lib/ceph >> /dev/null"
 
         # ssh root@${node} "umount /dev/vdb1"
-        anmt "${node} - mounting /dev/vdb1 to /var/lib/ceph"
-        ssh root@${node} "mount /dev/vdb1 /var/lib/ceph"
+        # anmt "${node} - mounting /dev/vdb1 to /var/lib/ceph"
+        # ssh root@${node} "mount /dev/vdb1 /var/lib/ceph"
 
-        check_disk_filesystem=$(ssh root@${node} "df -Th /var/lib/ceph | grep vdb | grep xfs | wc -l")
-        if [[ "${check_disk_filesystem}" == "0" ]]; then
-            err "Failed to mount ${node}:/dev/vdb1 as xfs filesystem to /var/lib/ceph"
-            anmt "Please fix this node and retry:"
-            anmt "ssh root@${node}"
-        fi
+        # check_disk_filesystem=$(ssh root@${node} "df -Th /var/lib/ceph | grep vdb | grep xfs | wc -l")
+        # if [[ "${check_disk_filesystem}" == "0" ]]; then
+        #     err "Failed to mount ${node}:/dev/vdb1 as xfs filesystem to /var/lib/ceph"
+        #     anmt "Please fix this node and retry:"
+        #     anmt "ssh root@${node}"
+        # fi
 
-        test_exists=$(ssh root@${node} "cat /etc/fstab | grep vdb1 | grep xfs | wc -l")
-        if [[ "${test_exists}" == "0" ]]; then
-            anmt "adding /dev/vdb1 to /etc/fstab"
-            ssh root@${node} "echo \"/dev/vdb1 /var/lib/ceph  xfs     defaults    0 0\" >> /etc/fstab"
-        fi
+        # test_exists=$(ssh root@${node} "cat /etc/fstab | grep vdb1 | grep xfs | wc -l")
+        # if [[ "${test_exists}" == "0" ]]; then
+        #     anmt "adding /dev/vdb1 to /etc/fstab"
+        #     ssh root@${node} "echo \"/dev/vdb1 /var/lib/ceph  xfs     defaults    0 0\" >> /etc/fstab"
+        # fi
 
         anmt "${node} - checking mounts"
-        ssh root@${node} "df -Th | grep vdb1"
+        ssh root@${node} "fdisk -l /dev/vdb"
         anmt "--------------------------------------------"
     done
 }
 
 delete_partitions_and_reformat_disks
-check_mounts

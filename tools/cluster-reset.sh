@@ -45,5 +45,10 @@ fi
 inf "running: kubeadm reset -f"
 kubeadm reset -f
 
-inf "running: ./prepare.sh splunk ceph"
-./prepare.sh splunk ceph
+if [[ "${1}" == "clean" ]]; then
+    inf "running: ./prepare.sh clean"
+    ./prepare.sh clean
+else
+    inf "running: ./prepare.sh splunk ceph"
+    ./prepare.sh splunk ceph
+fi
