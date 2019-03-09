@@ -3,13 +3,14 @@ Deploying a Distributed AI Stack to Kubernetes on CentOS
 
 .. image:: https://i.imgur.com/xO4CbfN.png
 
-Install and manage a Kubernetes cluster (version 1.13.3) with helm on a single CentOS 7 vm or in multi-host mode that runs the cluster on 3 CentOS 7 vms. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
+Install and manage a Kubernetes cluster (version 1.13.4) with helm on a single CentOS 7 vm or in multi-host mode that runs the cluster on 3 CentOS 7 vms. Once running, you can deploy a distributed, scalable python stack capable of delivering a resilient REST service with JWT for authentication and Swagger for development. This service uses a decoupled REST API with two distinct worker backends for routing simple database read and write tasks vs long-running tasks that can use a Redis cache and do not need a persistent database connection. This is handy for not only simple CRUD applications and use cases, but also serving a secure multi-tenant environment where multiple users manage long-running tasks like training deep neural networks that are capable of making near-realtime predictions.
 
-This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ on a Kubernetes single host or multi-host cluster:
+This guide was built for deploying the `AntiNex stack of docker containers <https://github.com/jay-johnson/train-ai-with-django-swagger-jwt>`__ and the `Stock Analysis Engine <https://github.com/AlgoTraders/stock-analysis-engine>`__ on a Kubernetes single host or multi-host cluster.
 
 - `Managing a Multi-Host Kubernetes Cluster with an External DNS Server <https://github.com/jay-johnson/deploy-to-kubernetes/blob/master/multihost#managing-a-multi-host-kubernetes-cluster-with-an-external-dns-server>`__
 - `Cert Manager with Let's Encrypt SSL support <https://github.com/jetstack/cert-manager>`__
-- `A Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
+- `A Native Ceph Cluster for Persistent Volume Management with KVM <https://deploy-to-kubernetes.readthedocs.io/en/latest/ceph.html>`__
+- `A Third-party Rook Ceph Cluster for Persistent Volumes <https://rook.io/docs/rook/master/ceph-quickstart.html>`__
 - `Minio S3 Object Store <https://docs.minio.io/docs/deploy-minio-on-kubernetes.html>`__
 - `Redis <https://hub.docker.com/r/bitnami/redis/>`__
 - `Postgres <https://github.com/CrunchyData/crunchy-containers>`__
