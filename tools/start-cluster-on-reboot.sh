@@ -188,9 +188,9 @@ if [[ "${start_ae}" == "1" ]]; then
         cur_date=$(date)
     done
 
-    if [[ -e ./k8/deploy_build_from_latest.sh ]]; then
+    if [[ -e ./k8/deploy-latest.sh ]]; then
         echo "deploying latest datasets from s3 to k8 and local docker redis" >> ${log}
-        ./k8/deploy_build_from_latest.sh >> ${log} 2>&1
+        ./k8/deploy-latest.sh >> ${log} 2>&1
     fi
 else
     echo "not deploying AE" >> ${log}

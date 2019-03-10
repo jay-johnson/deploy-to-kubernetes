@@ -273,6 +273,8 @@ if [[ "${deploy_stack}" == "1" ]]; then
     anmt "deploying stack using: ssh ${login_user}@${initial_master} 'cert_env=${cert_env} && cd ${deploy_dir} && export KUBECONFIG=/etc/kubernetes/admin.conf && ${use_go_exports} && ${deploy_dir}/start.sh ${deploy_splunk} ${storage_type} ${cert_env}'"
     ssh ${login_user}@${initial_master} "cert_env=${cert_env} && cd ${deploy_dir} && export KUBECONFIG=/etc/kubernetes/admin.conf && ${use_go_exports} && ${deploy_dir}/start.sh ${deploy_splunk} ${storage_type} ${cert_env}"
     inf ""
+else
+    anmt "Not deploying stack with ${deploy_dir}/start.sh ${deploy_splunk} ${storage_type} ${cert_env}"
 fi
 
 if [[ "${deploy_resources}" == "1" ]] || [[ "${deploy_stack}" == "1" ]]; then
