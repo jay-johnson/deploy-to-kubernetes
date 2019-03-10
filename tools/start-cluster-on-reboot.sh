@@ -39,9 +39,11 @@ echo "starting vms"
 vms="bastion m1 m2 m3"
 for vm in $vms; do
     running_test=$(virsh list | grep ${vm} | wc -l)
-    if [[ "${running_test}" == "0" ]]; then
-        echo "importing ${vm}" >> ${log}
-        virsh define /data/kvm/disks/${vm}.xml 2>&1
+    if [[ -e /data/kvm/disks/${vm}.xml ]]; then
+        if [[ "${running_test}" == "0" ]]; then
+            echo "importing ${vm}" >> ${log}
+            virsh define /data/kvm/disks/${vm}.xml 2>&1
+        fi
     fi
     running_test=$(virsh list | grep ${vm} | grep running | wc -l)
     if [[ "${running_test}" == "0" ]]; then
