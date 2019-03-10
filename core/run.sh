@@ -1,28 +1,12 @@
 #!/bin/bash
 
 # use the bash_colors.sh file
-found_colors="./tools/bash_colors.sh"
-if [[ "${DISABLE_COLORS}" == "" ]] && [[ "${found_colors}" != "" ]] && [[ -e ${found_colors} ]]; then
-    . ${found_colors}
-else
-    inf() {
-        echo "$@"
-    }
-    anmt() {
-        echo "$@"
-    }
-    good() {
-        echo "$@"
-    }
-    err() {
-        echo "$@"
-    }
-    critical() {
-        echo "$@"
-    }
-    warn() {
-        echo "$@"
-    }
+if [[ -e /opt/deploy-to-kubernetes/tools/bash_colors.sh ]]; then
+    source /opt/deploy-to-kubernetes/tools/bash_colors.sh
+elif [[ -e ./tools/bash_colors.sh ]]; then
+    source ./tools/bash_colors.sh
+elif [[ -e ../tools/bash_colors.sh ]]; then
+    source ../tools/bash_colors.sh
 fi
 
 deploy_suffix=""

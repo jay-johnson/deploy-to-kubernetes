@@ -3,30 +3,12 @@
 # usage: ./multihost/_reset-cluster-using-ssh.sh dev ceph
 # optional usage: ./multihost/_reset-cluster-using-ssh.sh dev ceph labeler=/opt/deploy-to-kubernetes/multihost/run.sh dockerdir=/var/lib/docker deploy_dir=/opt/deploy-to-kubernetes rookdir=/var/lib/rook
 
-found_colors="./tools/bash_colors.sh"
-if [[ "${DISABLE_COLORS}" == "" ]] && [[ "${found_colors}" != "" ]] && [[ -e ${found_colors} ]]; then
-    . ${found_colors}
-elif [[ "${DISABLE_COLORS}" == "" ]] && [[ "../${found_colors}" != "" ]] && [[ -e ../${found_colors} ]]; then
-    . ${found_colors}
-else
-    inf() {
-        echo "$@"
-    }
-    anmt() {
-        echo "$@"
-    }
-    good() {
-        echo "$@"
-    }
-    err() {
-        echo "$@"
-    }
-    critical() {
-        echo "$@"
-    }
-    warn() {
-        echo "$@"
-    }
+if [[ -e /opt/deploy-to-kubernetes/tools/bash_colors.sh ]]; then
+    source /opt/deploy-to-kubernetes/tools/bash_colors.sh
+elif [[ -e ./tools/bash_colors.sh ]]; then
+    source ./tools/bash_colors.sh
+elif [[ -e ../tools/bash_colors.sh ]]; then
+    source ../tools/bash_colors.sh
 fi
 
 # this assumes the current user has root ssh access to the following hosts:
@@ -47,6 +29,11 @@ update_kube="1"
 delete_docker="0"
 apply_dns="1"
 debug="0"
+
+cur_date=$(date)
+anmt "-----------------------------------------------"
+anmt "${cur_date} - start - resetting kubernetes cluster to clean state"
+
 for i in "$@"
 do
     contains_equal=$(echo ${i} | grep "=")
@@ -72,7 +59,6 @@ do
         fi
     fi
 done
-
 
 anmt "---------------------------------------------------------"
 anmt "resetting kubernetes multihost cluster on nodes: ${nodes}"
@@ -222,5 +208,9 @@ fi
 anmt "getting cluster status"
 kubectl get nodes -o wide --show-labels
 inf ""
+
+cur_date=$(date)
+anmt "${cur_date} - done - resetting kubernetes cluster to clean state"
+anmt "-----------------------------------------------"
 
 exit 0

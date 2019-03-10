@@ -1,58 +1,69 @@
 #!/bin/bash
 
-start_clean="1"
+start_clean="0"
 start_registry="1"
 
 # Start the Stock Analysis Engine on reboot
 # https://github.com/AlgoTraders/stock-analysis-engine
-start_ae="0"
+start_ae="1"
+# AE with ceph - work in progress
+start_ae_ceph="0"
 start_docker_compose_in_repo="/opt/sa"
 
 # Start antinex on the cluster with: start_antinex="1"
 # 0 = do not deploy and leave the cluster empty
 # on startup
 # https://github.com/jay-johnson/deploy-to-kubernetes
-start_antinex="0"
+start_antinex="1"
 
 # assumes ssh root access
 ssh_user="root"
 # to each of these fqdns:
 nodes="master1.example.com master2.example.com master3.example.com"
+vms="bastion m1 m2 m3"
 
 export PATH=${PATH}:/usr/bin:/snap/bin
 export KUBECONFIG=/opt/k8/config
 
-log=/tmp/boot.log
+if [[ -e /opt/sa/analysis_engine/scripts/common_bash.sh ]]; then
+    source /opt/sa/analysis_engine/scripts/common_bash.sh
+elif [[ -e ${start_docker_compose_in_repo}/analysis_engine/scripts/common_bash.sh ]]; then
+    source ${start_docker_compose_in_repo}/analysis_engine/scripts/common_bash.sh
+elif [[ -e ./analysis_engine/scripts/common_bash.sh ]]; then
+    source ./analysis_engine/scripts/common_bash.sh
+fi
+
+cur_date=$(date)
+anmt "---------------------------------------------------------"
+anmt "${cur_date} - starting vms and kubernetes cluster"
+
 virsh list >> /dev/null 2>&1
 virsh_ready=$?
-cur_date=$(date)
 while [[ "${virsh_ready}" != "0" ]]; do
-    echo "${cur_date} - sleeping before starting vms" >> ${log}
+    anmt "${cur_date} - sleeping before starting vms"
     sleep 10
     virsh list >> /dev/null 2>&1
     virsh_ready=$?
     cur_date=$(date)
 done
 
-echo "starting vms"
-
-vms="bastion m1 m2 m3"
+anmt "starting vms: ${vms}"
 for vm in $vms; do
     running_test=$(virsh list | grep ${vm} | wc -l)
     if [[ -e /data/kvm/disks/${vm}.xml ]]; then
         if [[ "${running_test}" == "0" ]]; then
-            echo "importing ${vm}" >> ${log}
+            anmt "importing ${vm}"
             virsh define /data/kvm/disks/${vm}.xml 2>&1
         fi
     fi
     running_test=$(virsh list | grep ${vm} | grep running | wc -l)
     if [[ "${running_test}" == "0" ]]; then
-        echo "setting autostart for vm with: virsh autostart ${vm}" >> ${log}
-        virsh autostart ${vm} >> ${log} 2>&1
-        echo "starting vm: virsh start ${vm}" >> ${log}
-        virsh start ${vm} >> ${log} 2>&1
+        anmt "setting autostart for vm with: virsh autostart ${vm}"
+        virsh autostart ${vm}
+        anmt "starting vm: virsh start ${vm}"
+        virsh start ${vm}
     else
-        echo " - ${vm} already runnning" >> ${log}
+        good " - ${vm} already runnning"
     fi
 done
 
@@ -62,50 +73,49 @@ if [[ "${start_clean}" == "1" ]]; then
     start_registry=1
 fi
 
-echo "-----------------------------" >> ${log}
-date >> ${log}
-echo "Starting flags:" >> ${log}
-echo "clean=${start_clean}" >> ${log}
-echo "antinex=${start_antinex}" >> ${log}
-echo "ae=${start_ae}" >> ${log}
-echo "-----------------------------" >> ${log}
-cat ${log}
+anmt "-----------------------------"
+date
+anmt "Starting flags:"
+anmt "clean=${start_clean}"
+anmt "antinex=${start_antinex}"
+anmt "ae=${start_ae}"
+anmt "-----------------------------"
 
 if [[ "${start_registry}" == "1" ]]; then
-    echo "starting docker containers" >> ${log}
-    echo "cd ${start_docker_compose_in_repo}" >> ${log}
+    anmt "starting docker containers"
+    inf "cd ${start_docker_compose_in_repo}"
     cd ${start_docker_compose_in_repo}
-    echo " - checking docker" >> ${log}
-    systemctl status docker >> ${log} 2>&1
-    echo " - starting registry" >> ${log}
-    ./compose/start.sh -r >> ${log} 2>&1
+    inf " - checking docker"
+    systemctl status docker
+    inf " - starting registry"
+    ./compose/start.sh -r
 
     cur_date=$(date)
     not_done=$(docker inspect registry | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
     while [[ "${not_done}" == "0" ]]; do
-        echo "${cur_date} - sleeping to let the docker registry start" >> ${log}
+        inf "${cur_date} - sleeping to let the docker registry start"
         sleep 10
         not_done=$(docker inspect registry | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
         cur_date=$(date)
     done
 
     cur_date=$(date)
-    echo "${cur_date} - docker registry in running state:"
+    anmt "${cur_date} - docker registry in running state:"
     docker ps | grep registry
 fi
 
-echo "deploying kubernetes cluster" >> ${log}
-date >> ${log}
-cd /opt/deploy-to-kubernetes/ >> ${log}
+anmt "deploying kubernetes cluster"
+date
+cd /opt/deploy-to-kubernetes/
 
-echo "check login to vms: ${nodes}" >> ${log}
+anmt "check login to vms: ${nodes}"
 no_sleep_yet="0"
 for fqdn in ${nodes}; do
     ssh ${ssh_user}@${fqdn} "date"
     cur_date=$(date)
     not_done=$?
     if [[ "${not_done}" != "0" ]]; then
-        echo "${cur_date} - sleeping to let ${fqdn} start" >> ${log}
+        inf "${cur_date} - sleeping to let ${fqdn} start"
         sleep 10
         no_sleep_yet="1"
         ssh ${ssh_user}@${fqdn} "date"
@@ -117,63 +127,82 @@ done
 # there's probably a cleaner way to detect the vm's can start running k8...
 if [[ "${no_sleep_yet}" == "0" ]]; then
     cur_date=$(date)
-    echo "${cur_date} - sleeping to let vms start" >> ${log}
+    inf "${cur_date} - sleeping to let vms start"
     sleep 30
     cur_date=$(date)
-    echo "${cur_date} - sleeping to let vms start" >> ${log}
+    inf "${cur_date} - sleeping to let vms start"
     sleep 30
     cur_date=$(date)
-    echo "${cur_date} - sleeping to let vms start" >> ${log}
+    inf "${cur_date} - sleeping to let vms start"
     sleep 30
 fi
 
 if [[ "${start_antinex}" == "1" ]]; then
-    ./multihost/_reset-cluster-using-ssh.sh >> ${log}
+    anmt "----------------------------------------"
+    anmt "deploying antinex:"
+    ./multihost/_reset-cluster-using-ssh.sh
+    anmt "----------------------------------------"
 else
-    echo "----------------------------------------" >> ${log}
-    echo "deploying empty cluster with: " >> ${log}
-    echo "./multihost/_clean_reset_install.sh labels=new-ceph" >> ${log}
-    ./multihost/_clean_reset_install.sh labels=new-ceph >> ${log}
-    echo "----------------------------------------" >> ${log}
+    anmt "----------------------------------------"
+    anmt "deploying empty cluster with: "
+    anmt "./multihost/_clean_reset_install.sh labels=new-ceph"
+    ./multihost/_clean_reset_install.sh labels=new-ceph
+    anmt "----------------------------------------"
 fi
-echo "done starting cluster" >> ${log}
-date >> ${log}
+anmt "done starting cluster"
+date
 
-echo "syncing kube config: ${KUBECONFIG}" >> ${log}
-scp -i /opt/k8/id_rsa root@master1.example.com:/etc/kubernetes/admin.conf ${KUBECONFIG} >> ${log}
+anmt "syncing kube config: ${KUBECONFIG}"
+scp -i /opt/k8/id_rsa root@master1.example.com:/etc/kubernetes/admin.conf ${KUBECONFIG}
 
 if [[ ! -e ${KUBECONFIG} ]]; then
-    echo "failed to sync kube config from master1.example.com - stopping" >> ${log}
+    err "failed to sync kube config from master1.example.com - stopping"
     exit 1
 fi
 
-echo "getting nodes" >> ${log}
-/usr/bin/kubectl get nodes -o wide >> ${log}
-date >> ${log}
+anmt "getting nodes"
+kubectl get nodes -o wide
+date
 
-echo "getting pods" >> ${log}
-/usr/bin/kubectl get pods >> ${log}
+amnt "getting pods"
+kubectl get pods
 
 if [[ "${start_ae}" == "1" ]]; then
-    echo "creating ae namespace" >> ${log}
-    /usr/bin/kubectl create namespace ae >> ${log}
+    anmt "----------------------------------------"
+    anmt "deploying ae to cluster"
+
+    inf "creating ae namespace"
+    kubectl create namespace ae
 
     cd ${start_docker_compose_in_repo}
-    ./helm/handle-reboot.sh ./helm/ae/values.yaml /opt/k8/config -c ${start_docker_compose_in_repo} >> ${log} 2>&1
 
-    echo "installing AE secrets" >> ${log}
-    /usr/bin/kubectl apply -f ./k8/secrets/secrets.yml >> ${log}
+    anmt "apply secrets: "
+    kubectl apply -f /k8/secrets/secrets.yml
 
-    echo " - starting redis and minio" >> ${log}
-    ./compose/start.sh -a >> ${log} 2>&1
-    echo " - starting ae stack" >> ${log}
-    ./compose/start.sh -s >> ${log} 2>&1
-    docker ps >> ${log} 2>&1
+    if [[ -e ./k8/secrets/default-secrets.yml ]]; then
+        inf "installing AE secrets namespace: default"
+        kubectl apply -f ./k8/secrets/default-secrets.yml
+    fi
+
+    if [[ "${start_ae_ceph}" == "1" ]]; then
+        anmt "starting AE with helm and ceph"
+        ./helm/handle-reboot.sh ./helm/ae/values.yaml /opt/k8/config -c ${start_docker_compose_in_repo}
+        if [[ -e ./k8/secrets/ae-secrets.yml ]]; then
+            anmt "installing AE secrets namespace: ae"
+            kubectl apply -f ./k8/secrets/ae-secrets.yml
+        fi
+    fi
+
+    inf " - starting docker redis and minio"
+    ./compose/start.sh -a
+    inf " - starting docker ae stack"
+    ./compose/start.sh -s
+    docker ps
 
     cur_date=$(date)
     not_done=$(docker inspect redis | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
     while [[ "${not_done}" == "0" ]]; do
-        echo "${cur_date} - sleeping to let the docker redis start" >> ${log}
+        inf "${cur_date} - sleeping to let the docker redis start"
         sleep 10
         not_done=$(docker inspect redis | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
         cur_date=$(date)
@@ -182,18 +211,19 @@ if [[ "${start_ae}" == "1" ]]; then
     cur_date=$(date)
     not_done=$(docker inspect ae-workers | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
     while [[ "${not_done}" == "0" ]]; do
-        echo "${cur_date} - sleeping to let the docker ae-workers start" >> ${log}
+        inf "${cur_date} - sleeping to let the docker ae-workers start"
         sleep 10
         not_done=$(docker inspect ae-workers | grep -i status | sed -e 's/"/ /g' | awk '{print $3}' | grep -i running | wc -l)
         cur_date=$(date)
     done
 
     if [[ -e ./k8/deploy-latest.sh ]]; then
-        echo "deploying latest datasets from s3 to k8 and local docker redis" >> ${log}
-        ./k8/deploy-latest.sh >> ${log} 2>&1
+        anmt "deploying latest datasets from s3 to k8 and local docker redis"
+        ./k8/deploy-latest.sh
     fi
 else
-    echo "not deploying AE" >> ${log}
+    inf "not deploying AE"
 fi
 
-echo "done" >> ${log}
+anmt "done"
+anmt "---------------------------------------------------------"

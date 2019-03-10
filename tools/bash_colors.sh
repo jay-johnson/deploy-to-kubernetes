@@ -1,18 +1,17 @@
-log=/dev/null
-
 # include dates with 1 otherwise no dates
 export USE_SHOW_DATES=0
 if [[ "${SHOW_DATES}" == "1" ]]; then
     export USE_SHOW_DATES=1
 fi
+
 # include colors with 1 otherwise no colors
-export COLORS_SUPPORTED=0
+export COLORS_SUPPORTED=1
 
 # how to use this:
-# source tools/colors.sh
+# source /opt/deploy-to-kubernetes/tools/bash_colors.sh
 # 
 # now print out the colors:
-# ign testing ignore_message; inf testing info_message; good testing good_message; amnt testing annoucement_message; warn testing warn_message; err testing err_message; critical testing critical_message
+# ign testing ignore_message; inf testing info_message; good testing good_message; anmt testing annoucement_message; warn testing warn_message; err testing err_message; critical testing critical_message
 #
 # want to change colors up? use:
 # show_colors
@@ -123,11 +122,9 @@ green() {
 inf() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;256m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            echo "$(get_date) ${@}"
         else
-            printf "\x1b[38;5;256m%s\e[0m " "${@}"
-            printf "\n"
+            echo "${@}"
         fi
     else
         echo "$(get_date) $@"
