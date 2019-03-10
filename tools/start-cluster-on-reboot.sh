@@ -154,11 +154,6 @@ date >> ${log}
 echo "getting pods" >> ${log}
 /usr/bin/kubectl get pods >> ${log}
 
-if [[ "${}" == "1" ]]; then
-else
-    echo "not deploying antinex" >> ${log}
-fi
-
 if [[ "${start_ae}" == "1" ]]; then
     echo "creating ae namespace" >> ${log}
     /usr/bin/kubectl create namespace ae >> ${log}
