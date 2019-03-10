@@ -99,14 +99,14 @@ cd /opt/deploy-to-kubernetes/ >> ${log}
 echo "check login to vms: ${nodes}" >> ${log}
 no_sleep_yet="0"
 for fqdn in ${nodes}; do
-    ssh -i ${ssh_user}@${fqdn} "date"
+    ssh ${ssh_user}@${fqdn} "date"
     cur_date=$(date)
     not_done=$?
     if [[ "${not_done}" != "0" ]]; then
         echo "${cur_date} - sleeping to let ${fqdn} start" >> ${log}
         sleep 10
         no_sleep_yet="1"
-        ssh -i ${ssh_user}@${fqdn} "date"
+        ssh ${ssh_user}@${fqdn} "date"
         not_done=$?
         cur_date=$(date)
     fi
