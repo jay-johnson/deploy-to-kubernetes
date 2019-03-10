@@ -24,10 +24,11 @@ fi
 vm_name="m1"
 kvm_image_path="${default_disk_location}/${vm_name}.qcow2"
 download_url="http://centos.s.uw.edu/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso"
-download_file="/data/iso/centos-7.iso"
+download_file="/data/isos/centos-7.iso"
 
 if [[ "${1}" != "" ]]; then
     vm_name="${1}"
+    kvm_image_path="${default_disk_location}/${vm_name}.qcow2"
 fi
 if [[ "${2}" != "" ]]; then
     kvm_image_path="${2}"

@@ -125,7 +125,7 @@ yum-config-manager \
     https://download.docker.com/linux/centos/docker-ce.repo
 
 inf "installing docker-ce"
-yum install docker-ce
+yum install -y docker-ce
 
 if [[ "${custom_user}" != "0" ]]; then
     usermod -aG docker jay
