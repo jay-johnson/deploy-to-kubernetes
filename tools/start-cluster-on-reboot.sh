@@ -86,7 +86,7 @@ if [[ "${start_registry}" == "1" ]]; then
     inf "cd ${start_docker_compose_in_repo}"
     cd ${start_docker_compose_in_repo}
     inf " - checking docker"
-    systemctl status docker
+    docker info
     inf " - starting registry"
     ./compose/start.sh -r
 
