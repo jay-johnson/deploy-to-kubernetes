@@ -112,8 +112,8 @@ anmt "check login to vms: ${nodes}"
 no_sleep_yet="0"
 for fqdn in ${nodes}; do
     ssh ${ssh_user}@${fqdn} "date"
-    cur_date=$(date)
     not_done=$?
+    cur_date=$(date)
     if [[ "${not_done}" != "0" ]]; then
         inf "${cur_date} - sleeping to let ${fqdn} start"
         sleep 10
