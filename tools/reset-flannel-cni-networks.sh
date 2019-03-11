@@ -33,7 +33,7 @@ fi
 
 dir_to_check="/var/lib/cni/networks/cbr0"
 anmt "----------------------------------------------------"
-critical "removing flannel-created cni files in directory: ${dir_to_check}"
+anmt "removing flannel-created cni files in directory: ${dir_to_check}"
 
 cur_dir=$(pwd)
 cd ${dir_to_check}
