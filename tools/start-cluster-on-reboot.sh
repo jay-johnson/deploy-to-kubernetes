@@ -164,7 +164,7 @@ anmt "getting nodes"
 kubectl get nodes -o wide
 date
 
-amnt "getting pods"
+anmt "getting pods"
 kubectl get pods
 
 if [[ "${start_ae}" == "1" ]]; then
@@ -176,21 +176,21 @@ if [[ "${start_ae}" == "1" ]]; then
 
     cd ${start_docker_compose_in_repo}
 
-    anmt "apply secrets: "
-    kubectl apply -f /k8/secrets/secrets.yml
+    anmt "applying secrets"
+    kubectl apply -f ./k8/secrets/secrets.yml
 
     if [[ -e ./k8/secrets/default-secrets.yml ]]; then
-        inf "installing AE secrets namespace: default"
+        anmt "installing AE secrets namespace: default"
         kubectl apply -f ./k8/secrets/default-secrets.yml
     fi
 
     if [[ "${start_ae_ceph}" == "1" ]]; then
-        anmt "starting AE with helm and ceph"
-        ./helm/handle-reboot.sh ./helm/ae/values.yaml /opt/k8/config -c ${start_docker_compose_in_repo}
         if [[ -e ./k8/secrets/ae-secrets.yml ]]; then
             anmt "installing AE secrets namespace: ae"
             kubectl apply -f ./k8/secrets/ae-secrets.yml
         fi
+        anmt "starting AE with helm and ceph"
+        ./helm/handle-reboot.sh ./helm/ae/values.yaml /opt/k8/config -c ${start_docker_compose_in_repo}
     fi
 
     inf " - starting docker redis and minio"
