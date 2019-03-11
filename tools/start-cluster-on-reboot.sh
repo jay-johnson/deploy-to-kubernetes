@@ -111,30 +111,29 @@ cd /opt/deploy-to-kubernetes/
 anmt "check login to vms: ${nodes}"
 no_sleep_yet="0"
 for fqdn in ${nodes}; do
-    ssh ${ssh_user}@${fqdn} "date"
-    not_done=$?
+    test_ssh=$(ssh ${ssh_user}@${fqdn} "date" 2>&1)
+    not_done=$(echo "${test_ssh}" | grep 'ssh: ' | wc -l)
     cur_date=$(date)
-    if [[ "${not_done}" != "0" ]]; then
+    while [[ "${not_done}" != "0" ]]; do
         inf "${cur_date} - sleeping to let ${fqdn} start"
         sleep 10
         no_sleep_yet="1"
-        ssh ${ssh_user}@${fqdn} "date"
-        not_done=$?
+        test_ssh=$(ssh ${ssh_user}@${fqdn} "date" 2>&1)
+        not_done=$(echo "${test_ssh}" | grep 'ssh: ' | wc -l)
         cur_date=$(date)
-    fi
+    done
 done
 
 # there's probably a cleaner way to detect the vm's can start running k8...
 if [[ "${no_sleep_yet}" == "0" ]]; then
     cur_date=$(date)
-    inf "${cur_date} - sleeping to let vms start"
-    sleep 30
+    inf "${cur_date} - sleeping to let vms start 2 min left"
+    sleep 60
     cur_date=$(date)
-    inf "${cur_date} - sleeping to let vms start"
-    sleep 30
+    inf "${cur_date} - sleeping to let vms start 1 min left"
+    sleep 60
     cur_date=$(date)
-    inf "${cur_date} - sleeping to let vms start"
-    sleep 30
+    good "${cur_date} - done sleeping"
 fi
 
 if [[ "${start_antinex}" == "1" ]]; then
