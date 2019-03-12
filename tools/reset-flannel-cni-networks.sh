@@ -1,28 +1,12 @@
 #!/bin/bash
 
 # use the bash_colors.sh file
-found_colors="./tools/bash_colors.sh"
-if [[ "${DISABLE_COLORS}" == "" ]] && [[ "${found_colors}" != "" ]] && [[ -e ${found_colors} ]]; then
-    . ${found_colors}
-else
-    inf() {
-        echo "$@"
-    }
-    anmt() {
-        echo "$@"
-    }
-    good() {
-        echo "$@"
-    }
-    err() {
-        echo "$@"
-    }
-    critical() {
-        echo "$@"
-    }
-    warn() {
-        echo "$@"
-    }
+if [[ -e /opt/deploy-to-kubernetes/tools/bash_colors.sh ]]; then
+    source /opt/deploy-to-kubernetes/tools/bash_colors.sh
+elif [[ -e ./tools/bash_colors.sh ]]; then
+    source ./tools/bash_colors.sh
+elif [[ -e ../tools/bash_colors.sh ]]; then
+    source ../tools/bash_colors.sh
 fi
 
 user_test=$(whoami)
@@ -32,7 +16,7 @@ if [[ "${user_test}" != "root" ]]; then
 fi
 
 dir_to_check="/var/lib/cni/networks/cbr0"
-anmt "----------------------------------------------------"
+anmt "-------------------------"
 anmt "removing flannel-created cni files in directory: ${dir_to_check}"
 
 cur_dir=$(pwd)
@@ -43,3 +27,8 @@ for hash in $(tail -n +1 * | egrep '^[A-Za-z0-9]{64,64}$'); do
     fi;
 done
 cd ${cur_dir}
+
+anmt "done - removing flannel-created cni files in directory: ${dir_to_check}"
+anmt "-------------------------"
+
+exit 0
