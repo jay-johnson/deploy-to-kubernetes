@@ -62,7 +62,7 @@ inf ""
 
 # for flannel to work must use the pod network cidr
 inf ""
-good "initializing kubernetes cluster"
+good "initializing kubernetes cluster on host=$(hostname)"
 kubeadm init --pod-network-cidr=10.244.0.0/16
 inf ""
 
@@ -86,8 +86,6 @@ good "installing kubernets CNI addon"
 kubectl -n kube-system apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 inf ""
 
-good "done preparing kubernetes on host=$(hostname)"
-
 anmt "---------------------------------------------"
 anmt "Install the kubernetes config with the following commands or use the ./user-install-kubeconfig.sh:"
 inf ""
@@ -96,5 +94,7 @@ good "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"
 good "sudo chown \$(id -u):\$(id -g) $HOME/.kube/config"
 inf ""
 inf ""
+
+good "done preparing kubernetes on host=$(hostname)"
 
 exit 0
